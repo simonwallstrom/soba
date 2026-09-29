@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "postinstall": "cf workers types",
     "dev": "vite",
     "build": "bun run check && cf build",
     "preview": "vite preview",
