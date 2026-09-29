@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": ".types/node",
+    "tsBuildInfoFile": ".types/node.tsbuildinfo",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["bun"]
+  },
+  "references": [{ "path": "./tsconfig.client.json" }, { "path": "./tsconfig.server.json" }],
+  "include": ["vite.config.ts", "drizzle.config.ts", "src/**/*.test.ts"]
+}

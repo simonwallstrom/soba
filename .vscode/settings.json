@@ -1,0 +1,30 @@
+{
+  "js/ts.experimental.useTsgo": true,
+  "oxc.fmt.configPath": ".oxfmtrc.json",
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {
+    "source.format.oxc": "always",
+    "source.fixAll.oxc": "always"
+  },
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "tailwindCSS.experimental.configFile": "src/client/styles.css",
+  "files.readonlyInclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "files.watcherExclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "search.exclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "oxc.requireConfig": true,
+  "js/ts.tsdk.path": "./node_modules/typescript",
+  "js/ts.preferences.importModuleSpecifier": "shortest",
+  "js/ts.preferences.preferTypeOnlyAutoImports": true
+}
