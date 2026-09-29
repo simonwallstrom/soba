@@ -4,20 +4,18 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "bun run check && vite build",
+    "build": "bun run check && cf build",
     "preview": "vite preview",
-    "deploy": "bun run build && bun run db:migrate:remote && wrangler deploy",
-    "typecheck": "tsc -b tsconfig.json",
-    "types:worker": "wrangler types --env-file .dev.vars.example",
-    "types:check": "wrangler types --check --env-file .dev.vars.example",
+    "deploy": "bun run build && bun run db:migrate:remote && cf deploy --prebuilt",
+    "typecheck": "cf workers types && tsc -b tsconfig.json",
     "db:generate": "drizzle-kit generate",
-    "db:migrate:local": "wrangler d1 migrations apply DB --local --config wrangler.jsonc",
-    "db:migrate:remote": "wrangler d1 migrations apply DB --remote --config wrangler.jsonc",
+    "db:migrate:local": "cf d1 migrations apply 3c45797e-8236-4864-af08-a21627c98756 --dir drizzle/migrations --local --persist-to .cloudflare/state",
+    "db:migrate:remote": "cf d1 migrations apply 3c45797e-8236-4864-af08-a21627c98756 --dir drizzle/migrations",
     "lint": "oxlint .",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
     "hooks:install": "lefthook install",
-    "check": "bun run format:check && bun run lint && bun run types:check && bun run typecheck && bun run test",
+    "check": "bun run format:check && bun run lint && bun run typecheck && bun run test",
     "test": "bun test --isolate"
   },
   "dependencies": {
@@ -37,7 +35,7 @@
     "valibot": "1.5.0"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "1.61.0",
+    "@cloudflare/vite-plugin": "2.0.0-beta.sha-ad79608dd",
     "@tailwindcss/vite": "4.3.3",
     "@tanstack/router-plugin": "1.168.41",
     "@types/bun": "1.4.2",
@@ -45,6 +43,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.1",
+    "cf": "1.0.0-beta.5",
     "drizzle-kit": "0.31.11",
     "lefthook": "2.1.14",
     "oxc-transform-react": "0.151.0",
@@ -53,8 +52,7 @@
     "oxlint-tsgolint": "7.0.2003",
     "tailwindcss": "4.3.3",
     "typescript": "7.0.2",
-    "vite": "8.3.1",
-    "wrangler": "4.142.0"
+    "vite": "8.3.1"
   },
   "packageManager": "bun@1.4.2"
 }

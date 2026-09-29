@@ -1,6 +1,6 @@
 # Soba
 
-Recipe organiser for families. A React SPA with local-first sync, served by a Cloudflare Worker.
+Recipe organiser for families. A React SPA with local-first sync, served by a Cloudflare Worker and configured in `cloudflare.config.ts` with the [cf CLI](https://github.com/cloudflare/cf) (beta).
 
 ## Prerequisites
 
@@ -23,20 +23,19 @@ Fill in `.dev.vars` before starting: Google OAuth credentials, a random `BETTER_
 
 ### Resetting the database
 
-Until launch, schema changes replace `drizzle/migrations/0000_*.sql` instead of adding migrations. Delete `.wrangler/state/v3/d1` and `.wrangler/state/v3/do`, run `bun run db:generate` and `bun run db:migrate:local`, then clear the site data in your browser.
+Until launch, schema changes replace `drizzle/migrations/0000_*.sql` instead of adding migrations. Delete `.cloudflare/state/v3/d1` and `.cloudflare/state/v3/do`, run `bun run db:generate` and `bun run db:migrate:local`, then clear the site data in your browser.
 
 ## Commands
 
 | Command                     | Description                                                  |
 | --------------------------- | ------------------------------------------------------------ |
 | `bun run dev`               | Start the app and Worker API locally                         |
-| `bun run check`             | Check formatting, lint, Worker types, TypeScript, and tests  |
+| `bun run check`             | Check formatting, lint, TypeScript, and tests                |
 | `bun run test`              | Run tests                                                    |
 | `bun run build`             | Check and build for production                               |
 | `bun run preview`           | Preview the production build                                 |
 | `bun run deploy`            | Build, apply remote migrations, and deploy to Cloudflare     |
 | `bun run format`            | Format with Oxfmt                                            |
-| `bun run types:worker`      | Regenerate Worker types after changing `wrangler.jsonc`      |
 | `bun run db:generate`       | Generate D1 migration SQL after changing the database schema |
 | `bun run db:migrate:local`  | Apply D1 migrations locally                                  |
 | `bun run db:migrate:remote` | Apply D1 migrations to the deployed database                 |
@@ -47,7 +46,7 @@ Cloudflare Workers Builds deploys every push to `main` with `bun run deploy`. Th
 
 Setup, one time:
 
-1. Create a D1 database named `soba-db` and add its `database_id` to `wrangler.jsonc`.
+1. Create a D1 database named `soba-db` and add its ID to `cloudflare.config.ts` and the `db:migrate` scripts.
 2. Connect the repository to the `soba` Worker under Workers Builds. Set the deploy command to `bun run deploy`, and set the build variable `BUN_VERSION` to the version in `packageManager`.
 3. Add the `.dev.vars.example` values as Worker secrets, with `BETTER_AUTH_URL` set to the deployed origin.
 4. Add `<origin>/api/auth/callback/google` as a redirect URI on the Google OAuth client.

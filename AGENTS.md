@@ -23,7 +23,7 @@
 - Put reusable product-domain code in `src/client/features/<domain>/`: domain UI, hooks, queries, mutations, and types used across routes. Keep one-route workflows beside their route.
 - Put domain-agnostic primitives in `src/client/components/ui/`, generic composed UI in `src/client/components/particles/`, and infrastructure or true utilities in `src/client/lib/`. Do not put product-domain code in `lib/`.
 - Imports should flow from routes to features, and from features to generic components or `lib/`. Features and generic modules must not import routes; prefer route composition over feature-to-feature coupling.
-- Keep Worker code in `src/server/`. Use `src/shared/` only for code shared across runtimes. Create these folders when their first real module needs them.
+- Keep Worker code in `src/server/`; Worker bindings and exports come from `cloudflare.config.ts`. Use `src/shared/` only for code shared across runtimes. Create these folders when their first real module needs them.
 
 ## Code and tooling
 
@@ -31,5 +31,5 @@
 - Use `@client/*`, `@server/*`, and `@shared/*` aliases. Validate data at network boundaries.
 - Use Tailwind utilities and let Oxfmt sort imports and classes. Do not hand-format against it.
 - Colocate tests as `*.test.ts` beside the module they cover. `tsconfig.node.json` typechecks them with Bun's types, alongside the Vite and Drizzle configs. `bun run test` isolates each file, so module mocks and module-level state never leak between files.
-- Use Bun. Run `bun run check` after changes and `bun run build` when routing, Vite, Worker, or build behavior changes. Regenerate Worker types with `bun run types:worker` after changing Wrangler bindings or compatibility settings.
+- Use Bun. Run `bun run check` after changes and `bun run build` when routing, Vite, Worker, or build behavior changes. Worker config lives in `cloudflare.config.ts`; `bun run typecheck` regenerates the gitignored `.cloudflare/types` from it.
 - Keep dependency versions exact in `package.json`.

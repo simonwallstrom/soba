@@ -10,7 +10,7 @@
     "denyWarnings": true,
     "reportUnusedDisableDirectives": "error"
   },
-  "ignorePatterns": ["src/client/routeTree.gen.ts", "worker-configuration.d.ts"],
+  "ignorePatterns": ["src/client/routeTree.gen.ts", ".cloudflare"],
   "rules": {
     "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }],
     "react/react-in-jsx-scope": "off",

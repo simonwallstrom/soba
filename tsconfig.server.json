@@ -7,8 +7,8 @@
     "outDir": ".types/server",
     "tsBuildInfoFile": ".types/server.tsbuildinfo",
     "lib": ["ES2022"],
-    "types": ["./worker-configuration.d.ts"]
+    "types": ["./.cloudflare/types/index.d.ts"]
   },
-  "include": ["src/server/**/*.ts", "src/shared/**/*.ts"],
+  "include": ["cloudflare.config.ts", "src/server/**/*.ts", "src/shared/**/*.ts"],
   "exclude": ["src/**/*.test.ts"]
 }
