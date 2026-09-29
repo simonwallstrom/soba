@@ -18,7 +18,7 @@
     "format:check": "oxfmt --check .",
     "hooks:install": "lefthook install",
     "check": "bun run format:check && bun run lint && bun run types:check && bun run typecheck && bun run test",
-    "test": "bun test"
+    "test": "bun test --isolate"
   },
   "dependencies": {
     "@livestore/adapter-web": "0.4.0",

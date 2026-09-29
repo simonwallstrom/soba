@@ -30,6 +30,6 @@
 - Use strict TypeScript, `import type` for type-only imports, and direct imports instead of barrels. Keep the client's Hono `AppType` import type-only.
 - Use `@client/*`, `@server/*`, and `@shared/*` aliases. Validate data at network boundaries.
 - Use Tailwind utilities and let Oxfmt sort imports and classes. Do not hand-format against it.
-- Colocate tests as `*.test.ts` beside the module they cover. `tsconfig.node.json` typechecks them with Bun's types, alongside the Vite and Drizzle configs.
+- Colocate tests as `*.test.ts` beside the module they cover. `tsconfig.node.json` typechecks them with Bun's types, alongside the Vite and Drizzle configs. `bun run test` isolates each file, so module mocks and module-level state never leak between files.
 - Use Bun. Run `bun run check` after changes and `bun run build` when routing, Vite, Worker, or build behavior changes. Regenerate Worker types with `bun run types:worker` after changing Wrangler bindings or compatibility settings.
 - Keep dependency versions exact in `package.json`.
