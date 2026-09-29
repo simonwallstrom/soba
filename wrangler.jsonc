@@ -8,6 +8,7 @@
     {
       "binding": "DB",
       "database_name": "soba-db",
+      "database_id": "3c45797e-8236-4864-af08-a21627c98756",
       "migrations_dir": "drizzle/migrations",
     },
   ],
