@@ -19,7 +19,12 @@ import { Route as PublicRequestAccessRouteImport } from './routes/_public/reques
 import { Route as PublicTermsRouteImport } from './routes/_public/terms'
 import { Route as AuthenticatedAppHouseholdRouteImport } from './routes/_authenticated/_app/household'
 import { Route as PublicInviteTokenRouteImport } from './routes/_public/invite.$token'
+import { Route as AuthenticatedAppCollectionsIndexRouteImport } from './routes/_authenticated/_app/collections/index'
+import { Route as AuthenticatedAppDesignSystemIndexRouteImport } from './routes/_authenticated/_app/design-system/index'
+import { Route as AuthenticatedAppMealPlannerIndexRouteImport } from './routes/_authenticated/_app/meal-planner/index'
 import { Route as AuthenticatedAppRecipesIndexRouteImport } from './routes/_authenticated/_app/recipes/index'
+import { Route as AuthenticatedAppSearchIndexRouteImport } from './routes/_authenticated/_app/search/index'
+import { Route as AuthenticatedAppSettingsIndexRouteImport } from './routes/_authenticated/_app/settings/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -69,10 +74,40 @@ const PublicInviteTokenRoute = PublicInviteTokenRouteImport.update({
   path: '/invite/$token',
   getParentRoute: () => PublicLayoutRoute,
 } as any)
+const AuthenticatedAppCollectionsIndexRoute =
+  AuthenticatedAppCollectionsIndexRouteImport.update({
+    id: '/collections/',
+    path: '/collections/',
+    getParentRoute: () => AuthenticatedAppLayoutRoute,
+  } as any)
+const AuthenticatedAppDesignSystemIndexRoute =
+  AuthenticatedAppDesignSystemIndexRouteImport.update({
+    id: '/design-system/',
+    path: '/design-system/',
+    getParentRoute: () => AuthenticatedAppLayoutRoute,
+  } as any)
+const AuthenticatedAppMealPlannerIndexRoute =
+  AuthenticatedAppMealPlannerIndexRouteImport.update({
+    id: '/meal-planner/',
+    path: '/meal-planner/',
+    getParentRoute: () => AuthenticatedAppLayoutRoute,
+  } as any)
 const AuthenticatedAppRecipesIndexRoute =
   AuthenticatedAppRecipesIndexRouteImport.update({
     id: '/recipes/',
     path: '/recipes/',
+    getParentRoute: () => AuthenticatedAppLayoutRoute,
+  } as any)
+const AuthenticatedAppSearchIndexRoute =
+  AuthenticatedAppSearchIndexRouteImport.update({
+    id: '/search/',
+    path: '/search/',
+    getParentRoute: () => AuthenticatedAppLayoutRoute,
+  } as any)
+const AuthenticatedAppSettingsIndexRoute =
+  AuthenticatedAppSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
     getParentRoute: () => AuthenticatedAppLayoutRoute,
   } as any)
 
@@ -84,7 +119,12 @@ export interface FileRoutesByFullPath {
   '/terms': typeof PublicTermsRoute
   '/household': typeof AuthenticatedAppHouseholdRoute
   '/invite/$token': typeof PublicInviteTokenRoute
+  '/collections/': typeof AuthenticatedAppCollectionsIndexRoute
+  '/design-system/': typeof AuthenticatedAppDesignSystemIndexRoute
+  '/meal-planner/': typeof AuthenticatedAppMealPlannerIndexRoute
   '/recipes/': typeof AuthenticatedAppRecipesIndexRoute
+  '/search/': typeof AuthenticatedAppSearchIndexRoute
+  '/settings/': typeof AuthenticatedAppSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,7 +134,12 @@ export interface FileRoutesByTo {
   '/terms': typeof PublicTermsRoute
   '/household': typeof AuthenticatedAppHouseholdRoute
   '/invite/$token': typeof PublicInviteTokenRoute
+  '/collections': typeof AuthenticatedAppCollectionsIndexRoute
+  '/design-system': typeof AuthenticatedAppDesignSystemIndexRoute
+  '/meal-planner': typeof AuthenticatedAppMealPlannerIndexRoute
   '/recipes': typeof AuthenticatedAppRecipesIndexRoute
+  '/search': typeof AuthenticatedAppSearchIndexRoute
+  '/settings': typeof AuthenticatedAppSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -108,7 +153,12 @@ export interface FileRoutesById {
   '/_public/terms': typeof PublicTermsRoute
   '/_authenticated/_app/household': typeof AuthenticatedAppHouseholdRoute
   '/_public/invite/$token': typeof PublicInviteTokenRoute
+  '/_authenticated/_app/collections/': typeof AuthenticatedAppCollectionsIndexRoute
+  '/_authenticated/_app/design-system/': typeof AuthenticatedAppDesignSystemIndexRoute
+  '/_authenticated/_app/meal-planner/': typeof AuthenticatedAppMealPlannerIndexRoute
   '/_authenticated/_app/recipes/': typeof AuthenticatedAppRecipesIndexRoute
+  '/_authenticated/_app/search/': typeof AuthenticatedAppSearchIndexRoute
+  '/_authenticated/_app/settings/': typeof AuthenticatedAppSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -120,7 +170,12 @@ export interface FileRouteTypes {
     | '/terms'
     | '/household'
     | '/invite/$token'
+    | '/collections/'
+    | '/design-system/'
+    | '/meal-planner/'
     | '/recipes/'
+    | '/search/'
+    | '/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -130,7 +185,12 @@ export interface FileRouteTypes {
     | '/terms'
     | '/household'
     | '/invite/$token'
+    | '/collections'
+    | '/design-system'
+    | '/meal-planner'
     | '/recipes'
+    | '/search'
+    | '/settings'
   id:
     | '__root__'
     | '/'
@@ -143,7 +203,12 @@ export interface FileRouteTypes {
     | '/_public/terms'
     | '/_authenticated/_app/household'
     | '/_public/invite/$token'
+    | '/_authenticated/_app/collections/'
+    | '/_authenticated/_app/design-system/'
+    | '/_authenticated/_app/meal-planner/'
     | '/_authenticated/_app/recipes/'
+    | '/_authenticated/_app/search/'
+    | '/_authenticated/_app/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -224,6 +289,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicInviteTokenRouteImport
       parentRoute: typeof PublicLayoutRoute
     }
+    '/_authenticated/_app/collections/': {
+      id: '/_authenticated/_app/collections/'
+      path: '/collections'
+      fullPath: '/collections/'
+      preLoaderRoute: typeof AuthenticatedAppCollectionsIndexRouteImport
+      parentRoute: typeof AuthenticatedAppLayoutRoute
+    }
+    '/_authenticated/_app/design-system/': {
+      id: '/_authenticated/_app/design-system/'
+      path: '/design-system'
+      fullPath: '/design-system/'
+      preLoaderRoute: typeof AuthenticatedAppDesignSystemIndexRouteImport
+      parentRoute: typeof AuthenticatedAppLayoutRoute
+    }
+    '/_authenticated/_app/meal-planner/': {
+      id: '/_authenticated/_app/meal-planner/'
+      path: '/meal-planner'
+      fullPath: '/meal-planner/'
+      preLoaderRoute: typeof AuthenticatedAppMealPlannerIndexRouteImport
+      parentRoute: typeof AuthenticatedAppLayoutRoute
+    }
     '/_authenticated/_app/recipes/': {
       id: '/_authenticated/_app/recipes/'
       path: '/recipes'
@@ -231,18 +317,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRecipesIndexRouteImport
       parentRoute: typeof AuthenticatedAppLayoutRoute
     }
+    '/_authenticated/_app/search/': {
+      id: '/_authenticated/_app/search/'
+      path: '/search'
+      fullPath: '/search/'
+      preLoaderRoute: typeof AuthenticatedAppSearchIndexRouteImport
+      parentRoute: typeof AuthenticatedAppLayoutRoute
+    }
+    '/_authenticated/_app/settings/': {
+      id: '/_authenticated/_app/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedAppSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedAppLayoutRoute
+    }
   }
 }
 
 interface AuthenticatedAppLayoutRouteChildren {
   AuthenticatedAppHouseholdRoute: typeof AuthenticatedAppHouseholdRoute
+  AuthenticatedAppCollectionsIndexRoute: typeof AuthenticatedAppCollectionsIndexRoute
+  AuthenticatedAppDesignSystemIndexRoute: typeof AuthenticatedAppDesignSystemIndexRoute
+  AuthenticatedAppMealPlannerIndexRoute: typeof AuthenticatedAppMealPlannerIndexRoute
   AuthenticatedAppRecipesIndexRoute: typeof AuthenticatedAppRecipesIndexRoute
+  AuthenticatedAppSearchIndexRoute: typeof AuthenticatedAppSearchIndexRoute
+  AuthenticatedAppSettingsIndexRoute: typeof AuthenticatedAppSettingsIndexRoute
 }
 
 const AuthenticatedAppLayoutRouteChildren: AuthenticatedAppLayoutRouteChildren =
   {
     AuthenticatedAppHouseholdRoute: AuthenticatedAppHouseholdRoute,
+    AuthenticatedAppCollectionsIndexRoute:
+      AuthenticatedAppCollectionsIndexRoute,
+    AuthenticatedAppDesignSystemIndexRoute:
+      AuthenticatedAppDesignSystemIndexRoute,
+    AuthenticatedAppMealPlannerIndexRoute:
+      AuthenticatedAppMealPlannerIndexRoute,
     AuthenticatedAppRecipesIndexRoute: AuthenticatedAppRecipesIndexRoute,
+    AuthenticatedAppSearchIndexRoute: AuthenticatedAppSearchIndexRoute,
+    AuthenticatedAppSettingsIndexRoute: AuthenticatedAppSettingsIndexRoute,
   }
 
 const AuthenticatedAppLayoutRouteWithChildren =

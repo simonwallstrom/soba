@@ -22,6 +22,7 @@ export const Route = createFileRoute("/_authenticated/_app/household")({
   loader: () => {
     void queryClient.prefetchQuery(householdOptions);
   },
+  staticData: { breadcrumbs: [{ label: "Household" }] },
   component: Household,
 });
 
@@ -98,7 +99,7 @@ function Household() {
   return (
     <>
       <title>{formatMetaTitle("Household")}</title>
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-8 p-5 lg:p-6">
         {error && <p role="alert">{error}</p>}
 
         <section className="flex flex-col gap-3">

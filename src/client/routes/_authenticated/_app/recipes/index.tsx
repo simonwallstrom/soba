@@ -7,7 +7,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import type { SubmitEvent } from "react";
 
-export const Route = createFileRoute("/_authenticated/_app/recipes/")({ component: Recipes });
+export const Route = createFileRoute("/_authenticated/_app/recipes/")({
+  staticData: { breadcrumbs: [{ label: "Recipes" }] },
+  component: Recipes,
+});
 
 function Recipes() {
   const { household } = Route.useRouteContext();
@@ -37,7 +40,7 @@ function Recipes() {
   return (
     <>
       <title>{formatMetaTitle("Recipes")}</title>
-      <section className="space-y-4">
+      <section className="space-y-4 p-5 lg:p-6">
         <p>Your household’s recipes, saved and synced together.</p>
         <form onSubmit={submit} className="space-y-3">
           <label className="block">

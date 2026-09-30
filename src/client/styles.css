@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 @theme {
-  /* Matches the lightness of neutral-925 (#111111) with olive's hue, between olive-950 and 900. */
   --color-olive-925: oklch(18.6% 0.008 107.2);
 
   --text-base: 0.9375rem; /* 15px */
@@ -13,6 +12,13 @@
   --radius-lg: 0.75rem; /* 12px */
   --radius-xl: 1rem; /* 16px */
   --radius-2xl: 1.25rem; /* 20px */
+}
+
+@layer base {
+  /* Default border and focus-outline colours; components set only widths and offsets. */
+  * {
+    @apply border-black/10 outline-olive-900 dark:border-white/6 dark:outline-olive-200;
+  }
 }
 
 @keyframes fade-in {
