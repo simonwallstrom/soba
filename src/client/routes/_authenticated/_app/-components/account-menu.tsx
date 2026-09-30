@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback } from "@client/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@client/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,10 +15,9 @@ import {
   Settings01Icon,
   UserAdd01Icon,
 } from "@client/components/ui/icons";
-import { signOut } from "@client/lib/auth";
+import { useSignOut } from "@client/lib/use-sign-out";
 import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
-import { useState } from "react";
 
 import { destinations } from "./app-navigation";
 import { sidebarItemStyles } from "./sidebar-link";
@@ -36,22 +35,10 @@ export function AccountMenu({
   user,
   household,
 }: {
-  user: { name: string };
+  user: { name: string; image: string | null };
   household: { name: string };
 }) {
-  const [signingOut, setSigningOut] = useState(false);
-  const [signOutError, setSignOutError] = useState("");
-
-  async function logOut() {
-    setSigningOut(true);
-    setSignOutError("");
-    try {
-      await signOut();
-    } catch {
-      setSignOutError("Could not log out. Please try again.");
-      setSigningOut(false);
-    }
-  }
+  const { logOut, signingOut, signOutError } = useSignOut();
 
   return (
     <DropdownMenu>
@@ -62,14 +49,15 @@ export function AccountMenu({
         )}
       >
         <Avatar className="-ml-0.5" size="sm">
+          {user.image && <AvatarImage alt="" referrerPolicy="no-referrer" src={user.image} />}
           <AvatarFallback
             aria-hidden="true"
             className="bg-olive-800 text-[10px] text-olive-50 dark:bg-olive-200 dark:text-olive-950"
           >
-            {household.name.charAt(0).toUpperCase()}
+            {getInitials(user.name)}
           </AvatarFallback>
         </Avatar>
-        <span className="-ml-0.5 min-w-0 flex-1 truncate text-left">{household.name}</span>
+        <span className="-ml-0.5 min-w-0 flex-1 truncate text-left">{user.name}</span>
         <SelectorIcon className="ml-auto" />
       </DropdownMenuTrigger>
 
@@ -83,6 +71,7 @@ export function AccountMenu({
         <DropdownMenuGroup>
           <DropdownMenuLabel className="flex items-center gap-3 px-2 py-2 text-base font-normal">
             <Avatar>
+              {user.image && <AvatarImage alt="" referrerPolicy="no-referrer" src={user.image} />}
               <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
             </Avatar>
             <span className="min-w-0">

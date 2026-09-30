@@ -12,7 +12,13 @@ export const SIGNED_OUT: Session = { user: null, household: null, canCreateHouse
 const SNAPSHOT_KEY = "soba-session";
 
 const snapshotSchema = v.object({
-  user: v.object({ id: v.string(), name: v.string(), email: v.string() }),
+  user: v.object({
+    id: v.string(),
+    name: v.string(),
+    email: v.string(),
+    // Snapshots saved before avatars were added have no image.
+    image: v.optional(v.nullable(v.string()), null),
+  }),
   household: v.nullable(
     v.object({ id: v.string(), name: v.string(), role: v.picklist(["owner", "member"]) }),
   ),

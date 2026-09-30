@@ -18,7 +18,7 @@ const { queryClient } = await import("@client/lib/query");
 const { clearSession, getSession, invalidateSession, sessionOptions, watchSessionChanges } =
   await import("@client/lib/session");
 const signedIn: Session = {
-  user: { id: "user-1", name: "Test", email: "test@example.com" },
+  user: { id: "user-1", name: "Test", email: "test@example.com", image: null },
   household: { id: "household-1", name: "Test household", role: "owner" },
   canCreateHousehold: false,
 };

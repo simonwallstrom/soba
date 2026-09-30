@@ -40,7 +40,12 @@ const app = new Hono<{ Bindings: Env }>()
     if (!session) return c.json({ user: null, household: null, canCreateHousehold: false });
     const household = await getMembership(session.user.id);
     return c.json({
-      user: { id: session.user.id, name: session.user.name, email: session.user.email },
+      user: {
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        image: session.user.image ?? null,
+      },
       household,
       canCreateHousehold:
         !household && isAllowlisted(session.user.email, c.env.AUTH_ALLOWED_EMAILS),
