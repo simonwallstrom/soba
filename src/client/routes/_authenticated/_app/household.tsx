@@ -1,21 +1,11 @@
+import { householdOptions } from "@client/features/household/members";
 import { api } from "@client/lib/api";
 import { formatMetaTitle } from "@client/lib/meta";
 import { queryClient } from "@client/lib/query";
 import { invalidateSession } from "@client/lib/session";
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-
-const householdOptions = queryOptions({
-  queryKey: ["household"],
-  queryFn: async ({ signal }) => {
-    const response = await api.household.$get({}, { init: { signal } });
-    if (!response.ok) throw new Error(`API returned ${response.status}`);
-    return response.json();
-  },
-  // Keeps the loader's prefetch fresh when the page mounts after the household store opens.
-  staleTime: 30_000,
-});
 
 export const Route = createFileRoute("/_authenticated/_app/household")({
   // Starts the members request without blocking navigation.

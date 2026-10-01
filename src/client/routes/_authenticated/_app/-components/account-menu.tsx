@@ -15,21 +15,13 @@ import {
   Settings01Icon,
   UserAdd01Icon,
 } from "@client/components/ui/icons";
+import { getInitials } from "@client/features/household/members";
 import { useSignOut } from "@client/lib/use-sign-out";
 import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
 
 import { destinations } from "./app-navigation";
 import { sidebarItemStyles } from "./sidebar-link";
-
-function getInitials(name: string) {
-  return name
-    .split(/\s+/u)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-}
 
 export function AccountMenu({
   user,

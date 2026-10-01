@@ -1,18 +1,11 @@
 import { Collapsible } from "@base-ui/react/collapsible";
-import { buttonVariants } from "@client/components/ui/button";
-import {
-  Bookmark02Icon,
-  CaretUpIcon,
-  File02Icon,
-  Search01Icon,
-  SobaLogo,
-} from "@client/components/ui/icons";
+import { Bookmark02Icon, CaretUpIcon, File02Icon, SobaLogo } from "@client/components/ui/icons";
 import { ScrollArea } from "@client/components/ui/scroll-area";
 import { Link } from "@tanstack/react-router";
 import type { ComponentProps, ReactNode } from "react";
 
 import { AccountMenu } from "./account-menu";
-import { desktopNavigation, destinations } from "./app-navigation";
+import { desktopNavigation } from "./app-navigation";
 import { SidebarLink } from "./sidebar-link";
 
 // Placeholders until recent recipes and collections are built.
@@ -29,13 +22,6 @@ export function Sidebar({ user, household }: ComponentProps<typeof AccountMenu>)
           to="/recipes"
         >
           <SobaLogo />
-        </Link>
-        <Link
-          aria-label={destinations.search.label}
-          className={buttonVariants({ variant: "ghost", size: "icon" })}
-          to={destinations.search.to}
-        >
-          <Search01Icon />
         </Link>
       </div>
       <ScrollArea className="flex-1" scrollFade>
