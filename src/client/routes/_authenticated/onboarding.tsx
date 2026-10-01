@@ -53,7 +53,7 @@ function Onboarding() {
   return (
     <>
       <title>{formatMetaTitle(canCreateHousehold ? "Create household" : "Join a household")}</title>
-      <main className="mx-auto flex max-w-xl flex-col gap-4 p-8">
+      <main className="mx-auto flex max-w-xl flex-col gap-4 p-8 pt-[calc(2rem+env(safe-area-inset-top))]">
         {canCreateHousehold ? (
           <>
             <h1 className="text-xl font-medium">Create your household</h1>

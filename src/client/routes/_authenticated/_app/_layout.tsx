@@ -48,14 +48,14 @@ function AppLayout() {
 
   return (
     <StoreRegistryProvider storeRegistry={storeRegistry}>
-      <div className="grid h-dvh w-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] overflow-hidden lg:grid-cols-[16rem_minmax(0,1fr)] lg:grid-rows-1">
+      <div className="grid h-dvh w-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] overflow-hidden lg:grid-cols-[16rem_minmax(0,1fr)] lg:grid-rows-1 lg:pt-[env(safe-area-inset-top)] lg:pb-[env(safe-area-inset-bottom)]">
         <Sidebar household={household} user={user} />
         <section className="flex min-h-0 min-w-0 overflow-hidden bg-olive-50 lg:my-1.5 lg:mr-1.5 lg:rounded-lg lg:border-[0.5px] lg:border-black/18 dark:bg-olive-925 lg:dark:border-white/10">
           <div className="flex min-w-0 flex-1 flex-col">
             <AppHeader actionsRef={setActionsSlot} />
             {/* The only scrolling element on app pages; the router restores its position. */}
             <main
-              className="isolate min-h-0 min-w-0 flex-1 overflow-y-auto"
+              className="isolate min-h-0 min-w-0 flex-1 overflow-y-auto pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]"
               data-scroll-restoration-id="app-content"
             >
               {/* The shell renders from the cached session; only page content waits for the store. */}

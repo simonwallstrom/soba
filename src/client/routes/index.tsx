@@ -44,7 +44,7 @@ function Start() {
         </div>
 
         {/* Explicit insets: WebKit (all iOS browsers) misplaces absolute flex children left to their static position. */}
-        <footer className="absolute inset-x-6 bottom-8 z-10 flex flex-col items-center gap-8 text-center">
+        <footer className="absolute inset-x-6 bottom-[calc(2rem+env(safe-area-inset-bottom))] z-10 flex flex-col items-center gap-8 text-center">
           <button
             className="inline-flex h-10 items-center justify-center gap-3 rounded-full bg-olive-900 px-10 font-medium text-olive-50 select-none hover:bg-olive-950 focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-99 dark:bg-olive-200 dark:text-olive-950 dark:hover:bg-olive-100"
             disabled={signingIn}

@@ -4,7 +4,7 @@ export const Route = createFileRoute("/_public")({ component: PublicLayout });
 
 function PublicLayout() {
   return (
-    <div className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 p-8">
+    <div className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 p-8 pt-[calc(2rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))]">
       <header>
         <Link to="/" className="font-medium">
           Soba

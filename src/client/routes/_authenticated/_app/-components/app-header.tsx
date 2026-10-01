@@ -19,7 +19,7 @@ export function AppHeader({ actionsRef }: { actionsRef: Ref<HTMLDivElement> }) {
   const back = parents.findLast((breadcrumb) => breadcrumb.link);
 
   return (
-    <header className="z-10 flex h-12 shrink-0 items-center gap-2 border-b-[0.5px] border-black/18 px-5 font-medium lg:px-6 dark:border-white/10">
+    <header className="z-10 flex h-12 shrink-0 items-center gap-2 border-b-[0.5px] border-black/18 pr-[max(1.25rem,env(safe-area-inset-right))] pl-[max(1.25rem,env(safe-area-inset-left))] font-medium max-lg:h-[calc(3rem+env(safe-area-inset-top))] max-lg:pt-[env(safe-area-inset-top)] lg:px-6 dark:border-white/10">
       <div className="flex min-w-0 flex-1 items-center gap-1.5">
         {back?.link && (
           <Link

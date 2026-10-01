@@ -19,6 +19,19 @@
   * {
     @apply border-black/10 outline-olive-900 dark:border-white/6 dark:outline-olive-200;
   }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Touch screens are held closer and read smaller, so text steps up a size: 16px and 14px. */
+  @media (pointer: coarse) {
+    :root {
+      --text-base: 1rem;
+      --text-base--line-height: 1.375rem; /* 22px */
+      --text-sm: 0.875rem;
+    }
+  }
 }
 
 @keyframes fade-in {

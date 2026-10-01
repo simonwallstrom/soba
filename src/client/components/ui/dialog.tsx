@@ -45,7 +45,7 @@ export function DialogContent({
       >
         <DialogPrimitive.Popup
           className={cn(
-            "relative flex max-h-[calc(100dvh-3rem)] min-h-0 w-full flex-col gap-6 rounded-t-2xl border-[0.5px] border-black/40 bg-white p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-olive-900 transition-[translate,scale,opacity] duration-200 ease-in-out will-change-transform outline-none sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:rounded-2xl sm:pb-6",
+            "relative flex max-h-[calc(100dvh-3rem-env(safe-area-inset-top))] min-h-0 w-full flex-col gap-6 rounded-t-2xl border-[0.5px] border-black/40 bg-white p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-olive-900 transition-[translate,scale,opacity] duration-200 ease-in-out will-change-transform outline-none sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:rounded-2xl sm:pb-6",
             "before:pointer-events-none before:absolute before:inset-0 before:rounded-t-[calc(var(--radius-2xl)-0.5px)] before:shadow-md before:content-[''] sm:before:rounded-[calc(var(--radius-2xl)-0.5px)]",
             "data-ending-style:opacity-0 data-starting-style:opacity-0 max-sm:data-ending-style:translate-y-4 max-sm:data-starting-style:translate-y-4 sm:data-ending-style:scale-98 sm:data-starting-style:scale-98",
             "dark:border-white/12 dark:bg-olive-900 dark:text-olive-100 dark:before:inset-[-0.5px] dark:before:rounded-t-2xl dark:before:inset-shadow-[0_0.5px_0_var(--color-white)]/14 dark:before:shadow-black/40 sm:dark:before:rounded-2xl",
