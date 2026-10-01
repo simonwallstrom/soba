@@ -17,6 +17,12 @@
 - Invalidate the session after auth or household changes. Keep cross-tab sign-out and store teardown intact. Client session state is a UI cache; authorize protected API requests and sync recipients on the server.
 - Retain the household LiveStore for the app layout lifetime. Open local data first and sync in the background. Use `getOrLoadPromise()` when readiness is required; `preload()` is best-effort and hides failures.
 
+## Synced data
+
+- LiveStore events are the stored data; tables are rebuilt from them. Change tables and materializers freely: LiveStore rematerializes when the state schema changes.
+- Published events are permanent, because every synced event is replayed with the current code. Only add optional fields that the materializer defaults for older events, or make required fields optional. To add a required field, rename, remove, or retype one, add a new version (`v2.RecipeCreated`) and keep the old definition and its materializer.
+- Bumping `SYNC_HISTORY_VERSION` in `@shared/household` throws every household's history away. Never use it to get around an event change once real data exists.
+
 ## Code organization
 
 - Routes own navigation, loaders, guards, and page composition. Do not import a route's dash-prefixed files from another route; move genuinely reused code first.
