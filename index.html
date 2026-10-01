@@ -14,7 +14,8 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#fbfbf9" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#13130f" media="(prefers-color-scheme: dark)" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- An opaque bar: on iOS 27, black-translucent leaves the page 62px short of the bottom. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Soba" />
   </head>
   <body class="relative flex h-full overflow-hidden text-base">
