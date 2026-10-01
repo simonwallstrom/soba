@@ -180,7 +180,7 @@ function NewRecipe() {
                   event.preventDefault();
                   descriptionRef.current?.focus();
                 }}
-                placeholder="Recipe title"
+                placeholder="Recipe title..."
                 ref={titleRef}
                 rows={1}
                 value={draft.title}
