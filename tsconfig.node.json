@@ -10,5 +10,5 @@
     "types": ["bun"]
   },
   "references": [{ "path": "./tsconfig.client.json" }, { "path": "./tsconfig.server.json" }],
-  "include": ["vite.config.ts", "drizzle.config.ts", "src/**/*.test.ts"]
+  "include": ["vite.config.ts", "drizzle.config.ts", "scripts/**/*.ts", "src/**/*.test.ts"]
 }
