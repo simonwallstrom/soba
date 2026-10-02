@@ -1,4 +1,5 @@
 import { Collapsible } from "@base-ui/react/collapsible";
+import { Button } from "@client/components/ui/button";
 import {
   CaretUpIcon,
   File02Icon,
@@ -12,13 +13,12 @@ import { useFavorites } from "@client/features/recipes/favorites";
 import { recipes$, recipeTags$, tags$ } from "@client/features/recipes/queries";
 import { topTags } from "@client/features/recipes/recipe-tags";
 import { Link } from "@tanstack/react-router";
-import { cn } from "cn";
 import { Suspense, use } from "react";
 import type { ComponentProps, ReactNode } from "react";
 
 import { AccountMenu } from "./account-menu";
 import { desktopNavigation } from "./app-navigation";
-import { SidebarLink, sidebarItemStyles } from "./sidebar-link";
+import { SidebarLink } from "./sidebar-link";
 
 const tagShortcutCount = 6;
 
@@ -41,15 +41,20 @@ export function Sidebar({
         >
           <SobaLogo />
         </Link>
+        {/* Search is an action rather than a page, so it sits beside the logo instead of in the nav. */}
+        <Button
+          aria-label="Search"
+          onClick={onSearch}
+          size="icon"
+          title="Search (⌘K)"
+          variant="ghost"
+        >
+          <Search01Icon />
+        </Button>
       </div>
       <ScrollArea className="flex-1" scrollFade>
         <div className="grid gap-1 px-1">
           <nav aria-label="Main navigation" className="flex flex-col gap-0.5 p-2">
-            <button className={cn(sidebarItemStyles)} onClick={onSearch} type="button">
-              <Search01Icon />
-              <span>Search</span>
-              <kbd className="ml-auto font-sans text-sm text-olive-500">⌘K</kbd>
-            </button>
             {desktopNavigation.map(({ icon: Icon, label, to }) => (
               <SidebarLink key={to} showActiveState to={to}>
                 <Icon />
