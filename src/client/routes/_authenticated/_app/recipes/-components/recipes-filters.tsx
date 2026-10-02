@@ -280,12 +280,19 @@ function ValueStep({
   );
 }
 
-// With several filters active, Clear removes them all, along with the search.
-export function ActiveRecipeFilters({ onClear, ...props }: FilterProps & { onClear: () => void }) {
+// Search text from the palette shows first, then each field. With more than one, Clear
+// removes them all.
+export function ActiveRecipeFilters({
+  onClear,
+  onClearQuery,
+  query,
+  ...props
+}: FilterProps & { onClear: () => void; onClearQuery: () => void; query: string | undefined }) {
   const activeFields = recipeFilterFields.filter(
     (field) => (props.filters[field]?.length ?? 0) > 0,
   );
-  if (activeFields.length === 0) return null;
+  const activeCount = activeFields.length + (query ? 1 : 0);
+  if (activeCount === 0) return null;
 
   return (
     <section
@@ -293,10 +300,24 @@ export function ActiveRecipeFilters({ onClear, ...props }: FilterProps & { onCle
       className="sticky top-0 z-20 overflow-x-auto border-b-[0.5px] border-black/18 bg-olive-100 dark:border-white/10 dark:bg-olive-900"
     >
       <div className="flex min-w-max items-center gap-2 px-5 py-2 lg:px-6">
+        {query && (
+          <Badge className="h-7 gap-1 p-1 pl-2.5">
+            <span>Search: “{query}”</span>
+            <Button
+              aria-label="Clear search"
+              className="size-5 rounded-full"
+              onClick={onClearQuery}
+              size="icon-sm"
+              variant="ghost"
+            >
+              <Cancel01Icon />
+            </Button>
+          </Badge>
+        )}
         {activeFields.map((field) => (
           <FilterChip {...props} field={field} key={field} />
         ))}
-        {activeFields.length > 1 && (
+        {activeCount > 1 && (
           <Button className="ml-auto" onClick={onClear} size="sm" variant="ghost">
             Clear
           </Button>

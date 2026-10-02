@@ -42,12 +42,25 @@ function AppLayout() {
   const [asideSlot, setAsideSlot] = useState<HTMLDivElement | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // ⌘K (Ctrl+K elsewhere) opens search from anywhere in the app, and closes it again.
+  // ⌘K (Ctrl+K elsewhere) opens search from anywhere in the app, and closes it again. `/` opens
+  // it too, unless you are typing somewhere.
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key.toLowerCase() !== "k" || !(event.metaKey || event.ctrlKey)) return;
+      if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        setIsSearchOpen((open) => !open);
+        return;
+      }
+      const target = event.target;
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable || target.closest("input, textarea, select"))
+      ) {
+        return;
+      }
       event.preventDefault();
-      setIsSearchOpen((open) => !open);
+      setIsSearchOpen(true);
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);

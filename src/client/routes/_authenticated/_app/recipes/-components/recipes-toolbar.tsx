@@ -42,7 +42,6 @@ const detailOptions = [
 
 // Controls that shape the list come first, then creating a recipe, then the side panel.
 export function RecipesToolbar({
-  search,
   filter,
   isMealPlannerOpen,
   onMealPlannerOpenChange,
@@ -53,7 +52,6 @@ export function RecipesToolbar({
   view,
   visibleDetails,
 }: {
-  search: ReactNode;
   filter: ReactNode;
   isMealPlannerOpen: boolean;
   onMealPlannerOpenChange: (isOpen: boolean) => void;
@@ -66,7 +64,6 @@ export function RecipesToolbar({
 }) {
   return (
     <div className="-mr-2 flex items-center">
-      {search}
       {filter}
       <DropdownMenu>
         <DropdownMenuTrigger
