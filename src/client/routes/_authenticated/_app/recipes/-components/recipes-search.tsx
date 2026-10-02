@@ -42,7 +42,7 @@ export function RecipesSearch({
 
   return (
     <search
-      className={cn("flex items-center", isOpen && "mr-1 flex-1 gap-2")}
+      className={cn("flex items-center", isOpen && "flex-1 gap-2")}
       data-replaces-heading={isOpen || undefined}
     >
       {isOpen ? (
@@ -93,6 +93,9 @@ export function RecipesSearch({
           <Cancel01Icon />
         </Button>
       )}
+      {/* Ends the field before the list controls, spaced like the meal planner's divider (the
+          field's gap adds the rest on the left). Phones hide the controls while searching. */}
+      {isOpen && <div className="mr-3 ml-1 h-3.5 w-px bg-black/12 max-sm:hidden dark:bg-white/8" />}
     </search>
   );
 }
