@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 
 export type MediaView = "list" | "grid";
 
-// Rows or cards that each open something, like recipes or collections.
+// Rows or cards that each open something, like recipes.
 export function MediaItems({ children, view }: { children: ReactNode; view: MediaView }) {
   return view === "grid" ? (
     <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(17rem,1fr))]">

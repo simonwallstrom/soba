@@ -22,7 +22,6 @@ export const Route = createFileRoute("/_authenticated/_app")({
 // Route IDs match at runtime; `routesByPath` trims trailing slashes that its type keeps.
 const appPageIds = [
   "/_authenticated/_app/recipes/",
-  "/_authenticated/_app/collections/",
   "/_authenticated/_app/meal-planner/",
   "/_authenticated/_app/settings/",
   "/_authenticated/_app/household",

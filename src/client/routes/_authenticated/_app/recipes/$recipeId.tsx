@@ -2,10 +2,6 @@ import { AppHeaderActions } from "@client/components/particles/app-header-action
 import { Button } from "@client/components/ui/button";
 import { ServingFoodIcon } from "@client/components/ui/icons";
 import { ImagePlaceholder } from "@client/components/ui/image-thumbnail";
-import {
-  AddToCollectionDialog,
-  useAddToCollectionDialog,
-} from "@client/features/collections/add-to-collection-dialog";
 import { useMembersById } from "@client/features/household/members";
 import { householdStoreOptions, useHouseholdQuery } from "@client/features/household/store";
 import { recipe$, recipeTags$, tags$ } from "@client/features/recipes/queries";
@@ -43,12 +39,11 @@ function RecipeTitle(): string {
 }
 
 function RecipeDetail() {
-  const { household, user } = Route.useRouteContext();
+  const { household } = Route.useRouteContext();
   const recipe = useRecipe();
   const tags = useHouseholdQuery(household.id, tags$);
   const links = useHouseholdQuery(household.id, recipeTags$);
   const membersById = useMembersById();
-  const addToCollection = useAddToCollectionDialog();
 
   // The recipe was deleted while open, perhaps on another device.
   if (!recipe) return <RecipeNotFound />;
@@ -65,11 +60,7 @@ function RecipeDetail() {
           <Button disabled variant="ghost">
             Edit
           </Button>
-          <RecipeActionsMenu
-            onAddToCollection={() => addToCollection.openFor(recipe)}
-            recipeTitle={recipe.title}
-            size="icon"
-          />
+          <RecipeActionsMenu recipeTitle={recipe.title} size="icon" />
         </div>
       </AppHeaderActions>
       <article className="mx-auto flex max-w-5xl flex-col gap-8 p-5 lg:gap-12 lg:p-12">
@@ -109,11 +100,6 @@ function RecipeDetail() {
           servings={recipe.servings}
         />
       </article>
-      <AddToCollectionDialog
-        householdId={household.id}
-        userId={user.id}
-        {...addToCollection.dialogProps}
-      />
     </>
   );
 }

@@ -259,14 +259,14 @@ function DesignSystem() {
                   </DropdownMenuItem>
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
-                      <Icons.Bookmark02Icon />
-                      Add to collection
+                      <Icons.Calendar03Icon />
+                      Add to meal plan
                     </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent className="w-48">
-                      <DropdownMenuItem>Snabba middagar</DropdownMenuItem>
-                      <DropdownMenuItem>Middag för många</DropdownMenuItem>
+                      <DropdownMenuItem>Måndag</DropdownMenuItem>
+                      <DropdownMenuItem>Tisdag</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>New collection…</DropdownMenuItem>
+                      <DropdownMenuItem>Next week…</DropdownMenuItem>
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
                   <DropdownMenuItem disabled>
@@ -319,13 +319,13 @@ function DesignSystem() {
         <Section title="Empty">
           <Empty>
             <EmptyIcon>
-              <Icons.Layers01Icon />
+              <Icons.CookBookIcon />
             </EmptyIcon>
             <EmptyHeader>
-              <EmptyTitle>No collections yet</EmptyTitle>
-              <EmptyDescription>Group recipes for an occasion or a routine.</EmptyDescription>
+              <EmptyTitle>No recipes yet</EmptyTitle>
+              <EmptyDescription>Add the dishes your family cooks most.</EmptyDescription>
             </EmptyHeader>
-            <Button variant="primary">New collection</Button>
+            <Button variant="primary">New recipe</Button>
           </Empty>
         </Section>
         <Section title="Field">

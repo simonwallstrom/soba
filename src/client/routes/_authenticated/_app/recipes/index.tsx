@@ -8,10 +8,6 @@ import {
   EmptyTitle,
 } from "@client/components/ui/empty";
 import { CookBookIcon } from "@client/components/ui/icons";
-import {
-  AddToCollectionDialog,
-  useAddToCollectionDialog,
-} from "@client/features/collections/add-to-collection-dialog";
 import { useMembersById } from "@client/features/household/members";
 import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
 import {
@@ -42,7 +38,7 @@ export const Route = createFileRoute("/_authenticated/_app/recipes/")({
 });
 
 function Recipes() {
-  const { household, user } = Route.useRouteContext();
+  const { household } = Route.useRouteContext();
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
   const store = useHouseholdStore(household.id);
@@ -51,7 +47,6 @@ function Recipes() {
   const links = useHouseholdQuery(household.id, recipeTags$);
   const settings = useHouseholdQuery(household.id, recipeListSettings$);
   const membersById = useMembersById();
-  const addToCollection = useAddToCollectionDialog();
 
   const { sort } = settings;
   const tagsByRecipe = groupTagsByRecipe(tags, links);
@@ -143,22 +138,12 @@ function Recipes() {
             // Sorting by a date shows that date.
             date={sort === "name" ? undefined : sort}
             entries={entries}
-            renderActions={({ recipe }) => (
-              <RecipeActionsMenu
-                onAddToCollection={() => addToCollection.openFor(recipe)}
-                recipeTitle={recipe.title}
-              />
-            )}
+            renderActions={({ recipe }) => <RecipeActionsMenu recipeTitle={recipe.title} />}
             view={settings.view}
             visibleDetails={settings.visibleDetails}
           />
         )}
       </div>
-      <AddToCollectionDialog
-        householdId={household.id}
-        userId={user.id}
-        {...addToCollection.dialogProps}
-      />
       {settings.isMealPlannerOpen && (
         <MealPlannerSidebar
           entries={plannerEntries}
