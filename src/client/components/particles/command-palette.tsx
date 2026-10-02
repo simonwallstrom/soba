@@ -37,11 +37,12 @@ export function CommandPaletteContent({
   );
 }
 
-// On phones, the search, chip, and rows line up with the page's 20px margin.
+// On phones, the search, chip, and rows line up with the page's 20px margin. Elsewhere the
+// field is taller to sit well under the popup's rounded corners, with its text over the rows'.
 export function CommandPaletteInput({ className, ...props }: ComponentProps<typeof ComboboxInput>) {
   return (
     <ComboboxInput
-      className={cn("max-sm:[&_input]:px-5", className)}
+      className={cn("max-sm:[&_input]:px-5 sm:[&_input]:h-12 sm:[&_input]:px-3.5", className)}
       showTrigger={false}
       variant="popup"
       {...props}
