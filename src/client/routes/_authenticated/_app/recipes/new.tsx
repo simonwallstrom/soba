@@ -135,7 +135,7 @@ function NewRecipe() {
       >
         <header className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,28rem)] lg:items-center lg:gap-16">
           <div className="-mx-5 -mt-5 flex flex-col gap-2 lg:col-start-2 lg:row-start-1 lg:m-0">
-            <label className="group relative flex aspect-5/4 cursor-pointer items-center justify-center overflow-hidden bg-olive-200 text-olive-600 has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 lg:rounded-xl dark:bg-olive-800 dark:text-olive-300">
+            <label className="group relative flex aspect-5/4 cursor-pointer items-center justify-center overflow-hidden bg-olive-100 text-olive-500 ring-[0.5px] ring-black/10 transition-colors ring-inset hover:bg-olive-200/60 has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 lg:rounded-xl dark:bg-olive-900 dark:text-olive-400 dark:ring-white/10 dark:hover:bg-olive-800/60">
               <input
                 accept={photoTypes.join(",")}
                 className="sr-only"
