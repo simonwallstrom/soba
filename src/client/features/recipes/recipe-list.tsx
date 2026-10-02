@@ -1,4 +1,5 @@
 import { MediaGridItem, MediaItems, MediaListItem } from "@client/components/particles/media-item";
+import { ServingFoodIcon } from "@client/components/ui/icons";
 import type { HouseholdMember } from "@client/features/household/members";
 import type { Recipe, RecipeDetail, RecipeView, Tag } from "@shared/recipes";
 import { Fragment } from "react";
@@ -41,6 +42,7 @@ export function RecipeList({
           imageUrl={entry.recipe.imageUrl}
           key={entry.recipe.id}
           link={{ to: "/recipes/$recipeId", params: { recipeId: entry.recipe.id } }}
+          placeholderIcon={<ServingFoodIcon />}
           title={entry.recipe.title}
         />
       ))}

@@ -21,6 +21,8 @@ type MediaItemProps = {
   title: string;
   link: Omit<LinkComponentProps, "aria-label" | "children" | "className">;
   imageUrl: string | null;
+  // Centered in the image's place when there is no image.
+  placeholderIcon: ReactNode;
   details?: ReactNode;
   actions?: ReactNode;
 };
@@ -34,7 +36,7 @@ export function MediaListItem({ actions, details, title, ...props }: MediaItemPr
   return (
     <div className={cn(itemStyles, "flex items-center gap-3")}>
       <MediaLink title={title} {...props} />
-      <MediaImage className="size-13 shrink-0" height={104} width={104} {...props} />
+      <MediaImage className="size-13 shrink-0 [&_svg]:size-5" height={104} width={104} {...props} />
       <div className="pointer-events-none flex min-w-0 flex-1 flex-col gap-1">
         <div className="truncate font-medium">{title}</div>
         <div className="truncate text-sm text-olive-500 empty:hidden">{details}</div>
@@ -48,7 +50,12 @@ export function MediaGridItem({ actions, details, title, ...props }: MediaItemPr
   return (
     <article className={cn(itemStyles, "min-w-0")}>
       <MediaLink title={title} {...props} />
-      <MediaImage className="aspect-5/4 w-full" height={960} width={1200} {...props} />
+      <MediaImage
+        className="aspect-5/4 w-full [&_svg]:size-8"
+        height={960}
+        width={1200}
+        {...props}
+      />
       <div className="mt-1.5 flex min-w-0 flex-col">
         <div className="flex min-w-0 items-center gap-1">
           <h2 className="pointer-events-none line-clamp-2 min-w-0 flex-1 font-medium text-balance">
@@ -79,14 +86,25 @@ function MediaImage({
   className,
   height,
   imageUrl,
+  placeholderIcon,
   width,
-}: Pick<MediaItemProps, "imageUrl"> & { className: string; height: number; width: number }) {
+}: Pick<MediaItemProps, "imageUrl" | "placeholderIcon"> & {
+  className: string;
+  height: number;
+  width: number;
+}) {
   return imageUrl ? (
     <ImageThumbnail className={className} height={height} src={imageUrl} width={width} />
   ) : (
+    // Quieter than a photo, with the same hairline border.
     <div
       aria-hidden="true"
-      className={cn("pointer-events-none rounded-lg bg-olive-200 dark:bg-olive-800", className)}
-    />
+      className={cn(
+        "pointer-events-none flex items-center justify-center rounded-lg bg-olive-100 text-olive-400 ring-[0.5px] ring-black/10 ring-inset dark:bg-olive-900 dark:text-olive-600 dark:ring-white/10",
+        className,
+      )}
+    >
+      {placeholderIcon}
+    </div>
   );
 }

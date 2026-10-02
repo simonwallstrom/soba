@@ -145,6 +145,7 @@ function Collections() {
                     to: "/collections/$collectionId",
                     params: { collectionId: collection.id },
                   }}
+                  placeholderIcon={<Layers01Icon />}
                   title={collection.title}
                 />
               );
