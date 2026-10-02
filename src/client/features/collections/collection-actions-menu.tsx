@@ -16,13 +16,12 @@ import {
 } from "@client/components/ui/dropdown-menu";
 import { Cancel01Icon, FileEditIcon, MoreHorizontalIcon } from "@client/components/ui/icons";
 import { CollectionDialog } from "@client/features/collections/collection-dialog";
-import { changedCollectionValues } from "@client/features/collections/collection-values";
 import { useHouseholdStore } from "@client/features/household/store";
 import { collectionDeleted, collectionUpdated } from "@shared/recipes";
 import type { Collection } from "@shared/recipes";
 import { useState } from "react";
 
-// Editing and deleting a collection, as anyone in the household.
+// Renaming and deleting a collection, as anyone in the household.
 export function CollectionActionsMenu({
   collection,
   householdId,
@@ -37,7 +36,7 @@ export function CollectionActionsMenu({
   userId: string;
 }) {
   const store = useHouseholdStore(householdId);
-  const [openDialog, setOpenDialog] = useState<"edit" | "delete" | null>(null);
+  const [openDialog, setOpenDialog] = useState<"rename" | "delete" | null>(null);
 
   function closeDialog(open: boolean) {
     if (!open) setOpenDialog(null);
@@ -61,9 +60,9 @@ export function CollectionActionsMenu({
           <MoreHorizontalIcon />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
-          <DropdownMenuItem onClick={() => setOpenDialog("edit")}>
+          <DropdownMenuItem onClick={() => setOpenDialog("rename")}>
             <FileEditIcon />
-            Edit collection…
+            Rename collection…
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setOpenDialog("delete")} variant="destructive">
@@ -73,21 +72,20 @@ export function CollectionActionsMenu({
         </DropdownMenuContent>
       </DropdownMenu>
       <CollectionDialog
-        collection={collection}
         onOpenChange={closeDialog}
-        onSave={(values) => {
-          const changes = changedCollectionValues(collection, values);
-          if (!changes) return;
+        onSave={(title) => {
+          if (title === collection.title) return;
           store.commit(
             collectionUpdated({
               id: collection.id,
-              ...changes,
+              title,
               updatedBy: userId,
               updatedAt: new Date(),
             }),
           );
         }}
-        open={openDialog === "edit"}
+        open={openDialog === "rename"}
+        title={collection.title}
       />
       <Dialog onOpenChange={closeDialog} open={openDialog === "delete"}>
         <DialogContent showCloseButton={false}>

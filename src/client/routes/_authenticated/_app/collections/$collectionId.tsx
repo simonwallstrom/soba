@@ -8,7 +8,6 @@ import {
 } from "@client/features/collections/add-to-collection-dialog";
 import { CollectionActionsMenu } from "@client/features/collections/collection-actions-menu";
 import { groupRecipesByCollection } from "@client/features/collections/collection-recipes";
-import { formatRecipeCount } from "@client/features/collections/collection-values";
 import { collection$, collectionRecipes$ } from "@client/features/collections/queries";
 import { useMembersById } from "@client/features/household/members";
 import {
@@ -109,17 +108,6 @@ function CollectionDetail() {
           />
         </div>
       </AppHeaderActions>
-      <header className="flex flex-col gap-1 px-5 pt-5 lg:px-6 lg:pt-6">
-        <h1 className="text-2xl font-medium tracking-tight text-balance">{collection.title}</h1>
-        {collection.description && (
-          <p className="max-w-xl text-pretty text-olive-600 dark:text-olive-400">
-            {collection.description}
-          </p>
-        )}
-        {entries.length > 0 && (
-          <p className="text-sm text-olive-500">{formatRecipeCount(entries.length)}</p>
-        )}
-      </header>
       <div className="p-2 lg:p-3">
         {entries.length === 0 ? (
           <div className="flex min-h-48 flex-col items-center justify-center gap-2 text-center">

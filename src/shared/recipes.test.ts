@@ -44,37 +44,23 @@ function create() {
 }
 
 describe("collection events", () => {
-  test("create a collection without a description", () => {
+  test("create a collection", () => {
     create();
     expect(collection()).toMatchObject({
       title: "Quick dinners",
-      description: null,
       updatedBy: "u1",
       updatedAt: day(1),
       deletedAt: null,
     });
   });
 
-  test("an update changes only the fields it carries", () => {
+  test("an update without a title keeps the title", () => {
     create();
     store.commit(
-      collectionUpdated({
-        id: "c1",
-        description: "Weeknights",
-        updatedBy: "u2",
-        updatedAt: day(2),
-      }),
+      collectionUpdated({ id: "c1", title: "Weeknights", updatedBy: "u2", updatedAt: day(2) }),
     );
-    expect(collection()).toMatchObject({ title: "Quick dinners", description: "Weeknights" });
-
-    store.commit(
-      collectionUpdated({ id: "c1", description: null, updatedBy: "u2", updatedAt: day(3) }),
-    );
-    expect(collection()).toMatchObject({
-      title: "Quick dinners",
-      description: null,
-      updatedAt: day(3),
-    });
+    store.commit(collectionUpdated({ id: "c1", updatedBy: "u1", updatedAt: day(3) }));
+    expect(collection()).toMatchObject({ title: "Weeknights", updatedBy: "u1", updatedAt: day(3) });
   });
 
   test("adding a recipe twice keeps the first add", () => {

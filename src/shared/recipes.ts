@@ -58,7 +58,6 @@ export const collections = State.SQLite.table({
   columns: {
     id: State.SQLite.text({ primaryKey: true }),
     title: State.SQLite.text(),
-    description: State.SQLite.text({ nullable: true }),
     createdBy: State.SQLite.text(),
     updatedBy: State.SQLite.text(),
     createdAt: State.SQLite.datetime(),
@@ -150,19 +149,17 @@ export const collectionCreated = Events.synced({
   schema: Schema.Struct({
     id: Schema.String,
     title: Schema.String,
-    description: Schema.optional(Schema.String),
     createdBy: Schema.String,
     createdAt: Schema.Date,
   }),
 });
 
-// Changes only the fields it carries; a null description clears it.
+// Changes only the fields it carries, so later fields can be added as optional.
 export const collectionUpdated = Events.synced({
   name: "v1.CollectionUpdated",
   schema: Schema.Struct({
     id: Schema.String,
     title: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.NullOr(Schema.String)),
     updatedBy: Schema.String,
     updatedAt: Schema.Date,
   }),
@@ -231,21 +228,19 @@ const materializers = State.SQLite.materializers(events, {
     ...(recipe.tagIds ?? []).map((tagId) => recipeTags.insert({ recipeId: recipe.id, tagId })),
   ],
   "v1.TagCreated": ({ id, name, createdAt }) => tags.insert({ id, name, createdAt }),
-  "v1.CollectionCreated": ({ id, title, description, createdBy, createdAt }) =>
+  "v1.CollectionCreated": ({ id, title, createdBy, createdAt }) =>
     collections.insert({
       id,
       title,
-      description: description ?? null,
       createdBy,
       updatedBy: createdBy,
       createdAt,
       updatedAt: createdAt,
     }),
-  "v1.CollectionUpdated": ({ id, title, description, updatedBy, updatedAt }) =>
+  "v1.CollectionUpdated": ({ id, title, updatedBy, updatedAt }) =>
     collections
       .update({
         ...(title === undefined ? {} : { title }),
-        ...(description === undefined ? {} : { description }),
         updatedBy,
         updatedAt,
       })

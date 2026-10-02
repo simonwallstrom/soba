@@ -12,16 +12,19 @@ import {
 } from "@client/components/ui/dialog";
 import { Add01Icon } from "@client/components/ui/icons";
 import { CollectionDialog } from "@client/features/collections/collection-dialog";
-import { groupRecipesByCollection } from "@client/features/collections/collection-recipes";
 import {
-  createCollection,
   formatRecipeCount,
-} from "@client/features/collections/collection-values";
+  groupRecipesByCollection,
+} from "@client/features/collections/collection-recipes";
 import { collectionRecipes$, collections$ } from "@client/features/collections/queries";
 import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
 import { recipes$ } from "@client/features/recipes/queries";
 import { compareNames } from "@client/features/recipes/recipe-tags";
-import { recipeAddedToCollection, recipeRemovedFromCollection } from "@shared/recipes";
+import {
+  collectionCreated,
+  recipeAddedToCollection,
+  recipeRemovedFromCollection,
+} from "@shared/recipes";
 import type { Recipe } from "@shared/recipes";
 import { useState } from "react";
 
@@ -120,12 +123,12 @@ export function AddToCollectionDialog({
         {/* Nested inside the popup, so it stacks above this dialog. */}
         <CollectionDialog
           onOpenChange={setIsCreating}
-          onSave={(values) => {
+          onSave={(title) => {
             if (!recipe) return;
             const id = crypto.randomUUID();
             const createdAt = new Date();
             store.commit(
-              createCollection(values, { id, createdBy: userId, createdAt }),
+              collectionCreated({ id, title, createdBy: userId, createdAt }),
               recipeAddedToCollection({
                 collectionId: id,
                 recipeId: recipe.id,

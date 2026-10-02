@@ -24,3 +24,7 @@ export function groupRecipesByCollection(
 export function collectionCoverUrl(recipes: readonly Recipe[]) {
   return recipes.find((recipe) => recipe.imageUrl)?.imageUrl ?? null;
 }
+
+export function formatRecipeCount(count: number) {
+  return `${count} ${count === 1 ? "recipe" : "recipes"}`;
+}

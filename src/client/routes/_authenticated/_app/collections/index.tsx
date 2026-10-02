@@ -15,12 +15,9 @@ import { CollectionActionsMenu } from "@client/features/collections/collection-a
 import { CollectionDialog } from "@client/features/collections/collection-dialog";
 import {
   collectionCoverUrl,
+  formatRecipeCount,
   groupRecipesByCollection,
 } from "@client/features/collections/collection-recipes";
-import {
-  createCollection,
-  formatRecipeCount,
-} from "@client/features/collections/collection-values";
 import {
   collectionListSettings$,
   collectionRecipes$,
@@ -30,10 +27,10 @@ import { useHouseholdQuery, useHouseholdStore } from "@client/features/household
 import { recipes$ } from "@client/features/recipes/queries";
 import { compareNames } from "@client/features/recipes/recipe-tags";
 import { formatMetaTitle } from "@client/lib/meta";
-import { collectionListSettings } from "@shared/recipes";
+import { collectionCreated, collectionListSettings } from "@shared/recipes";
 import type { RecipeView } from "@shared/recipes";
 import { createFileRoute } from "@tanstack/react-router";
-import { Fragment, useState } from "react";
+import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/_app/collections/")({
   staticData: { breadcrumbs: [{ label: "Collections" }] },
@@ -127,21 +124,7 @@ function Collections() {
                     />
                   }
                   details={
-                    view === "grid" ? (
-                      <>
-                        {collection.description && (
-                          <span className="truncate">{collection.description}</span>
-                        )}
-                        <span className="text-olive-500">{count}</span>
-                      </>
-                    ) : (
-                      [count, collection.description].filter(Boolean).map((part, index) => (
-                        <Fragment key={index}>
-                          {index > 0 && <span aria-hidden="true"> · </span>}
-                          {part}
-                        </Fragment>
-                      ))
-                    )
+                    view === "grid" ? <span className="text-olive-500">{count}</span> : count
                   }
                   imageUrl={collectionCoverUrl(collectionRecipes)}
                   key={collection.id}
@@ -158,9 +141,9 @@ function Collections() {
       </div>
       <CollectionDialog
         onOpenChange={setIsCreating}
-        onSave={(values) => {
+        onSave={(title) => {
           const id = crypto.randomUUID();
-          store.commit(createCollection(values, { id, createdBy: user.id, createdAt: new Date() }));
+          store.commit(collectionCreated({ id, title, createdBy: user.id, createdAt: new Date() }));
           void navigate({ to: "/collections/$collectionId", params: { collectionId: id } });
         }}
         open={isCreating}
