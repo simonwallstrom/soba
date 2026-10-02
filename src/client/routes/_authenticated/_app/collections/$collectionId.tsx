@@ -2,6 +2,10 @@ import { AppHeaderActions } from "@client/components/particles/app-header-action
 import { buttonVariants } from "@client/components/ui/button";
 import { DropdownMenuItem } from "@client/components/ui/dropdown-menu";
 import { MinusSignIcon } from "@client/components/ui/icons";
+import {
+  AddToCollectionDialog,
+  useAddToCollectionDialog,
+} from "@client/features/collections/add-to-collection-dialog";
 import { CollectionActionsMenu } from "@client/features/collections/collection-actions-menu";
 import { groupRecipesByCollection } from "@client/features/collections/collection-recipes";
 import { formatRecipeCount } from "@client/features/collections/collection-values";
@@ -65,6 +69,7 @@ function CollectionDetail() {
   // Recipes look the same here as in the recipe list.
   const settings = useHouseholdQuery(household.id, recipeListSettings$);
   const membersById = useMembersById();
+  const addToCollection = useAddToCollectionDialog();
 
   // The collection was deleted while open, perhaps on another device.
   if (!collection) return <CollectionNotFound />;
@@ -132,7 +137,10 @@ function CollectionDetail() {
             date={undefined}
             entries={entries}
             renderActions={({ recipe }) => (
-              <RecipeActionsMenu recipeTitle={recipe.title}>
+              <RecipeActionsMenu
+                onAddToCollection={() => addToCollection.openFor(recipe)}
+                recipeTitle={recipe.title}
+              >
                 <DropdownMenuItem onClick={() => removeRecipe(recipe.id)}>
                   <MinusSignIcon />
                   Remove from collection
@@ -144,6 +152,11 @@ function CollectionDetail() {
           />
         )}
       </div>
+      <AddToCollectionDialog
+        householdId={household.id}
+        userId={user.id}
+        {...addToCollection.dialogProps}
+      />
     </>
   );
 }

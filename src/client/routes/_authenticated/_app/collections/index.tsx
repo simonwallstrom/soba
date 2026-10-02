@@ -17,7 +17,10 @@ import {
   collectionCoverUrl,
   groupRecipesByCollection,
 } from "@client/features/collections/collection-recipes";
-import { formatRecipeCount } from "@client/features/collections/collection-values";
+import {
+  createCollection,
+  formatRecipeCount,
+} from "@client/features/collections/collection-values";
 import {
   collectionListSettings$,
   collectionRecipes$,
@@ -27,7 +30,7 @@ import { useHouseholdQuery, useHouseholdStore } from "@client/features/household
 import { recipes$ } from "@client/features/recipes/queries";
 import { compareNames } from "@client/features/recipes/recipe-tags";
 import { formatMetaTitle } from "@client/lib/meta";
-import { collectionCreated, collectionListSettings } from "@shared/recipes";
+import { collectionListSettings } from "@shared/recipes";
 import type { RecipeView } from "@shared/recipes";
 import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useState } from "react";
@@ -157,15 +160,7 @@ function Collections() {
         onOpenChange={setIsCreating}
         onSave={(values) => {
           const id = crypto.randomUUID();
-          store.commit(
-            collectionCreated({
-              id,
-              title: values.title,
-              ...(values.description === null ? {} : { description: values.description }),
-              createdBy: user.id,
-              createdAt: new Date(),
-            }),
-          );
+          store.commit(createCollection(values, { id, createdBy: user.id, createdAt: new Date() }));
           void navigate({ to: "/collections/$collectionId", params: { collectionId: id } });
         }}
         open={isCreating}

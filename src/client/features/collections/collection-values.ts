@@ -1,3 +1,4 @@
+import { collectionCreated } from "@shared/recipes";
 import type { Collection } from "@shared/recipes";
 
 // What the collection form edits. A blank description is stored as none.
@@ -6,6 +7,19 @@ export type CollectionValues = { title: string; description: string | null };
 export function normalizeCollectionValues(values: CollectionValues): CollectionValues {
   const description = values.description?.trim() ?? "";
   return { title: values.title.trim(), description: description === "" ? null : description };
+}
+
+export function createCollection(
+  values: CollectionValues,
+  { id, createdBy, createdAt }: { id: string; createdBy: string; createdAt: Date },
+) {
+  return collectionCreated({
+    id,
+    title: values.title,
+    ...(values.description === null ? {} : { description: values.description }),
+    createdBy,
+    createdAt,
+  });
 }
 
 // The fields an edit changes, or null when it changes nothing.

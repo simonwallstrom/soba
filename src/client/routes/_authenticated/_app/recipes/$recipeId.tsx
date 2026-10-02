@@ -1,9 +1,13 @@
 import { AppHeaderActions } from "@client/components/particles/app-header-actions";
 import { Button } from "@client/components/ui/button";
-import { MoreHorizontalIcon } from "@client/components/ui/icons";
+import {
+  AddToCollectionDialog,
+  useAddToCollectionDialog,
+} from "@client/features/collections/add-to-collection-dialog";
 import { useMembersById } from "@client/features/household/members";
 import { householdStoreOptions, useHouseholdQuery } from "@client/features/household/store";
 import { recipe$, recipeTags$, tags$ } from "@client/features/recipes/queries";
+import { RecipeActionsMenu } from "@client/features/recipes/recipe-actions-menu";
 import { groupTagsByRecipe } from "@client/features/recipes/recipe-tags";
 import { storeRegistry } from "@client/lib/livestore/adapter";
 import { formatMetaTitle } from "@client/lib/meta";
@@ -37,11 +41,12 @@ function RecipeTitle(): string {
 }
 
 function RecipeDetail() {
-  const { household } = Route.useRouteContext();
+  const { household, user } = Route.useRouteContext();
   const recipe = useRecipe();
   const tags = useHouseholdQuery(household.id, tags$);
   const links = useHouseholdQuery(household.id, recipeTags$);
   const membersById = useMembersById();
+  const addToCollection = useAddToCollectionDialog();
 
   // The recipe was deleted while open, perhaps on another device.
   if (!recipe) return <RecipeNotFound />;
@@ -53,14 +58,16 @@ function RecipeDetail() {
     <>
       <title>{formatMetaTitle(recipe.title)}</title>
       <AppHeaderActions>
-        {/* A prototype: editing and more actions arrive later. */}
+        {/* A prototype: editing arrives later. */}
         <div className="-mr-2 flex items-center gap-1">
           <Button disabled variant="ghost">
             Edit
           </Button>
-          <Button aria-label="More recipe actions" size="icon" variant="ghost">
-            <MoreHorizontalIcon />
-          </Button>
+          <RecipeActionsMenu
+            onAddToCollection={() => addToCollection.openFor(recipe)}
+            recipeTitle={recipe.title}
+            size="icon"
+          />
         </div>
       </AppHeaderActions>
       <article className="mx-auto flex max-w-5xl flex-col gap-8 p-5 lg:gap-12 lg:p-12">
@@ -101,6 +108,11 @@ function RecipeDetail() {
           servings={recipe.servings}
         />
       </article>
+      <AddToCollectionDialog
+        householdId={household.id}
+        userId={user.id}
+        {...addToCollection.dialogProps}
+      />
     </>
   );
 }
