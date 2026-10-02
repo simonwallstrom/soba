@@ -89,10 +89,11 @@ function RecipeResults({ householdId, onOpen }: { householdId: string; onOpen: (
     >
       <CommandPaletteInput placeholder="Search recipes…" />
       <ComboboxEmpty>No recipes found.</ComboboxEmpty>
+      {/* Rows pad their thumbnails evenly on every side. */}
       <CommandPaletteList>
         {(item: SearchItem) =>
           isShowAllResults(item) ? (
-            <ComboboxItem key={item.id} value={item}>
+            <ComboboxItem className="py-2.5" key={item.id} value={item}>
               <span className="flex min-w-0 items-center gap-3">
                 <span className="flex h-8 w-9 shrink-0 items-center justify-center text-olive-500">
                   <Search01Icon />
@@ -101,7 +102,7 @@ function RecipeResults({ householdId, onOpen }: { householdId: string; onOpen: (
               </span>
             </ComboboxItem>
           ) : (
-            <ComboboxItem key={item.id} value={item}>
+            <ComboboxItem className="py-2.5" key={item.id} value={item}>
               <span className="flex min-w-0 items-center gap-3">
                 {item.imageUrl ? (
                   <ImageThumbnail
