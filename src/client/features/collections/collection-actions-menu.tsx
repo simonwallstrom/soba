@@ -19,7 +19,7 @@ import { CollectionDialog } from "@client/features/collections/collection-dialog
 import { useHouseholdStore } from "@client/features/household/store";
 import { collectionDeleted, collectionUpdated } from "@shared/recipes";
 import type { Collection } from "@shared/recipes";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 // Renaming and deleting a collection, as anyone in the household.
 export function CollectionActionsMenu({
@@ -37,6 +37,7 @@ export function CollectionActionsMenu({
 }) {
   const store = useHouseholdStore(householdId);
   const [openDialog, setOpenDialog] = useState<"rename" | "delete" | null>(null);
+  const cancelDeleteRef = useRef<HTMLButtonElement>(null);
 
   function closeDialog(open: boolean) {
     if (!open) setOpenDialog(null);
@@ -88,7 +89,8 @@ export function CollectionActionsMenu({
         title={collection.title}
       />
       <Dialog onOpenChange={closeDialog} open={openDialog === "delete"}>
-        <DialogContent showCloseButton={false}>
+        {/* Cancel takes focus, so pressing Enter by habit never deletes. */}
+        <DialogContent initialFocus={cancelDeleteRef} showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>Delete “{collection.title}”?</DialogTitle>
             <DialogDescription>
@@ -96,11 +98,12 @@ export function CollectionActionsMenu({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            {/* Keeping is the safe choice, so it takes focus and Enter. */}
-            <Button onClick={() => setOpenDialog(null)} variant="primary">
-              Keep collection
+            <Button onClick={remove} variant="destructive">
+              Delete collection
             </Button>
-            <Button onClick={remove}>Delete</Button>
+            <Button onClick={() => setOpenDialog(null)} ref={cancelDeleteRef}>
+              Cancel
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

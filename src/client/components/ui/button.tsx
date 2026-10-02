@@ -33,6 +33,12 @@ export const buttonVariants = cva(
           "hover:bg-olive-900 dark:hover:bg-olive-100",
           "[:active,[data-pressed]]:bg-olive-950 dark:[:active,[data-pressed]]:bg-white",
         ],
+        // Confirms an action that cannot be undone, like deleting.
+        destructive: [
+          "bg-red-600 text-white dark:bg-red-500",
+          "hover:bg-red-700 dark:hover:bg-red-600",
+          "[:active,[data-pressed]]:bg-red-800 dark:[:active,[data-pressed]]:bg-red-700",
+        ],
         ghost: [
           "hover:bg-black/5 dark:hover:bg-white/6",
           "[:active,[data-pressed]]:bg-black/10 dark:[:active,[data-pressed]]:bg-white/10",

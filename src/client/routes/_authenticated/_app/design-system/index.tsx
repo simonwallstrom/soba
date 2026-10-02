@@ -185,6 +185,7 @@ function DesignSystem() {
               <Button>Default</Button>
               <Button variant="primary">Primary</Button>
               <Button variant="ghost">Ghost</Button>
+              <Button variant="destructive">Destructive</Button>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button disabled>Default</Button>
