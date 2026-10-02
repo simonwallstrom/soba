@@ -13,7 +13,7 @@ import {
   ArrowLeftIcon,
   Cancel01Icon,
   FilterIcon,
-  Tag01Icon,
+  HashtagIcon,
   UserCircle02Icon,
 } from "@client/components/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@client/components/ui/popover";
@@ -32,11 +32,11 @@ type FieldOption = {
   label: string;
   plural: string;
   unknown: string;
-  Icon: typeof Tag01Icon;
+  Icon: typeof HashtagIcon;
 };
 
 const fields: Record<RecipeFilterField, FieldOption> = {
-  tags: { value: "tags", label: "Tag", plural: "tags", unknown: "Unknown tag", Icon: Tag01Icon },
+  tags: { value: "tags", label: "Tag", plural: "tags", unknown: "Unknown tag", Icon: HashtagIcon },
   authors: {
     value: "authors",
     label: "Added by",

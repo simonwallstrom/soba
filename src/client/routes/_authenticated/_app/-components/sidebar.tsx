@@ -4,7 +4,7 @@ import {
   File02Icon,
   Search01Icon,
   SobaLogo,
-  Tag01Icon,
+  HashtagIcon,
 } from "@client/components/ui/icons";
 import { ScrollArea } from "@client/components/ui/scroll-area";
 import { householdStoreReady, useHouseholdQuery } from "@client/features/household/store";
@@ -110,7 +110,7 @@ function TagShortcuts({ householdId }: { householdId: string }) {
     <ShortcutSection label="Tag shortcuts" title="Tags">
       {top.map(({ tag, count }) => (
         <SidebarLink key={tag.id} search={{ tags: [tag.id] }} showActiveState to="/recipes">
-          <Tag01Icon />
+          <HashtagIcon />
           <span className="truncate">{tag.name}</span>
           <span className="ml-auto text-sm text-olive-500 tabular-nums">{count}</span>
         </SidebarLink>

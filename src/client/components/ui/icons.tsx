@@ -209,11 +209,13 @@ export function UserCircle02Icon(props: IconProps) {
   );
 }
 
-export function Tag01Icon(props: IconProps) {
+export function HashtagIcon(props: IconProps) {
   return (
     <Icon {...props}>
-      <path d="M3 5C3 3.89543 3.89543 3 5 3H11.1716C11.702 3 12.2107 3.21071 12.5858 3.58579L20.5858 11.5858C21.3668 12.3668 21.3668 13.6332 20.5858 14.4142L14.4142 20.5858C13.6332 21.3668 12.3668 21.3668 11.5858 20.5858L3.58579 12.5858C3.21071 12.2107 3 11.702 3 11.1716V5Z" />
-      <circle cx="7.5" cy="7.5" r="1.5" />
+      <path d="M14 21L18 3" />
+      <path d="M6 21L10 3" />
+      <path d="M5 8H21" />
+      <path d="M3 16H19" />
     </Icon>
   );
 }
