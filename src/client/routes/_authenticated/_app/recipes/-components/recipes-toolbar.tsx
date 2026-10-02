@@ -22,6 +22,7 @@ import {
 import { recipeDetails } from "@shared/recipes";
 import type { RecipeDetail, RecipeSort, RecipeView } from "@shared/recipes";
 import { Link } from "@tanstack/react-router";
+import { cn } from "cn";
 import type { ReactNode } from "react";
 
 const viewOptions = [
@@ -117,11 +118,16 @@ export function RecipesToolbar({
       </DropdownMenu>
       {/* A prototype: only manual entry opens, and it does not save yet. */}
       <DropdownMenu>
+        {/* The page's main action gets a label; phones shrink it back to an icon. Filled, it
+            lines up with the page margin when it ends the row. */}
         <DropdownMenuTrigger
-          aria-label="Create recipe"
-          className={buttonVariants({ size: "icon", variant: "ghost" })}
+          className={cn(
+            buttonVariants(),
+            "ml-2 gap-1.5 pl-2.5 max-lg:mr-2 max-sm:size-8 max-sm:rounded-full max-sm:p-0",
+          )}
         >
           <Add01Icon />
+          <span className="max-sm:sr-only">New recipe</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-52">
           <DropdownMenuItem render={<Link to="/recipes/new" />}>
