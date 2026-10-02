@@ -1,7 +1,10 @@
 import { AppAsideSlot } from "@client/components/particles/app-aside";
 import { AppHeaderActionsSlot } from "@client/components/particles/app-header-actions";
 import { householdStoreOptions, householdStoreReady } from "@client/features/household/store";
-import { RecipeSearch } from "@client/features/recipes/recipe-search";
+import {
+  RecipeSearchRequestProvider,
+  useRequestRecipeSearch,
+} from "@client/features/recipes/search-request";
 import { storeRegistry } from "@client/lib/livestore/adapter";
 import { StoreRegistryProvider, useStore } from "@livestore/react";
 import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-router";
@@ -40,32 +43,6 @@ function AppLayout() {
   const router = useRouter();
   const [actionsSlot, setActionsSlot] = useState<HTMLDivElement | null>(null);
   const [asideSlot, setAsideSlot] = useState<HTMLDivElement | null>(null);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  // ⌘K (Ctrl+K elsewhere) opens search from anywhere in the app, and closes it again. `/` opens
-  // it too, unless you are typing somewhere.
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault();
-        setIsSearchOpen((open) => !open);
-        return;
-      }
-      const target = event.target;
-      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
-      if (
-        target instanceof HTMLElement &&
-        (target.isContentEditable || target.closest("input, textarea, select"))
-      ) {
-        return;
-      }
-      event.preventDefault();
-      setIsSearchOpen(true);
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
   // Load every app page's code up front so the first visit to each is instant.
   useEffect(() => {
     for (const id of appPageIds) void router.loadRouteChunk(router.routesById[id]);
@@ -73,44 +50,70 @@ function AppLayout() {
 
   return (
     <StoreRegistryProvider storeRegistry={storeRegistry}>
-      <div className="grid h-dvh w-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] overflow-hidden lg:grid-cols-[16rem_minmax(0,1fr)] lg:grid-rows-1 lg:pt-[env(safe-area-inset-top)] lg:pb-[env(safe-area-inset-bottom)]">
-        <Sidebar household={household} onSearch={() => setIsSearchOpen(true)} user={user} />
-        <section className="flex min-h-0 min-w-0 overflow-hidden bg-olive-50 lg:my-1.5 lg:mr-1.5 lg:rounded-lg lg:border-[0.5px] lg:border-black/18 dark:bg-olive-925 lg:dark:border-white/10">
-          <div className="flex min-w-0 flex-1 flex-col">
-            <AppHeader actionsRef={setActionsSlot} />
-            {/* The only scrolling element on app pages; the router restores its position. */}
-            <main
-              className="isolate min-h-0 min-w-0 flex-1 overflow-y-auto pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]"
-              data-scroll-restoration-id="app-content"
-            >
-              {/* The shell renders from the cached session; only page content waits for the store. */}
-              <Suspense
-                fallback={
-                  <p aria-busy="true" className="shimmer p-5 text-olive-500 lg:p-6">
-                    Loading…
-                  </p>
-                }
+      <RecipeSearchRequestProvider>
+        <SearchShortcuts />
+        <div className="grid h-dvh w-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] overflow-hidden lg:grid-cols-[16rem_minmax(0,1fr)] lg:grid-rows-1 lg:pt-[env(safe-area-inset-top)] lg:pb-[env(safe-area-inset-bottom)]">
+          <Sidebar household={household} user={user} />
+          <section className="flex min-h-0 min-w-0 overflow-hidden bg-olive-50 lg:my-1.5 lg:mr-1.5 lg:rounded-lg lg:border-[0.5px] lg:border-black/18 dark:bg-olive-925 lg:dark:border-white/10">
+            <div className="flex min-w-0 flex-1 flex-col">
+              <AppHeader actionsRef={setActionsSlot} />
+              {/* The only scrolling element on app pages; the router restores its position. */}
+              <main
+                className="isolate min-h-0 min-w-0 flex-1 overflow-y-auto pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]"
+                data-scroll-restoration-id="app-content"
               >
-                <HouseholdStore householdId={household.id}>
-                  <AppHeaderActionsSlot value={actionsSlot}>
-                    <AppAsideSlot value={asideSlot}>
-                      <Outlet />
-                    </AppAsideSlot>
-                  </AppHeaderActionsSlot>
-                </HouseholdStore>
-              </Suspense>
-            </main>
-          </div>
-          {/* A page's side panel lays out as if it were a direct child of the section. */}
-          <div className="contents" ref={setAsideSlot} />
-        </section>
-        <MobileNav onSearch={() => setIsSearchOpen(true)} />
-        <RecipeSearch
-          householdId={household.id}
-          onOpenChange={setIsSearchOpen}
-          open={isSearchOpen}
-        />
-      </div>
+                {/* The shell renders from the cached session; only page content waits for the store. */}
+                <Suspense
+                  fallback={
+                    <p aria-busy="true" className="shimmer p-5 text-olive-500 lg:p-6">
+                      Loading…
+                    </p>
+                  }
+                >
+                  <HouseholdStore householdId={household.id}>
+                    <AppHeaderActionsSlot value={actionsSlot}>
+                      <AppAsideSlot value={asideSlot}>
+                        <Outlet />
+                      </AppAsideSlot>
+                    </AppHeaderActionsSlot>
+                  </HouseholdStore>
+                </Suspense>
+              </main>
+            </div>
+            {/* A page's side panel lays out as if it were a direct child of the section. */}
+            <div className="contents" ref={setAsideSlot} />
+          </section>
+          <MobileNav />
+        </div>
+      </RecipeSearchRequestProvider>
     </StoreRegistryProvider>
   );
+}
+
+// ⌘K (Ctrl+K elsewhere) and `/` jump to the recipe search from anywhere in the app. `/` waits
+// while you are typing somewhere.
+function SearchShortcuts() {
+  const requestSearch = useRequestRecipeSearch();
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      const isCommandK = event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey);
+      const isSlash = event.key === "/" && !event.metaKey && !event.ctrlKey && !event.altKey;
+      if (!isCommandK && !isSlash) return;
+      const target = event.target;
+      if (
+        isSlash &&
+        target instanceof HTMLElement &&
+        (target.isContentEditable || target.closest("input, textarea, select"))
+      ) {
+        return;
+      }
+      event.preventDefault();
+      requestSearch();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [requestSearch]);
+
+  return null;
 }

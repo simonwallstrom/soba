@@ -1,12 +1,5 @@
 import { Collapsible } from "@base-ui/react/collapsible";
-import { Button } from "@client/components/ui/button";
-import {
-  CaretUpIcon,
-  File02Icon,
-  Search01Icon,
-  SobaLogo,
-  HashtagIcon,
-} from "@client/components/ui/icons";
+import { CaretUpIcon, File02Icon, SobaLogo, HashtagIcon } from "@client/components/ui/icons";
 import { ScrollArea } from "@client/components/ui/scroll-area";
 import { householdStoreReady, useHouseholdQuery } from "@client/features/household/store";
 import { useFavorites } from "@client/features/recipes/favorites";
@@ -24,10 +17,8 @@ const tagShortcutCount = 6;
 
 export function Sidebar({
   household,
-  onSearch,
   user,
 }: {
-  onSearch: () => void;
   user: ComponentProps<typeof AccountMenu>["user"] & { id: string };
   household: ComponentProps<typeof AccountMenu>["household"] & { id: string };
 }) {
@@ -41,16 +32,6 @@ export function Sidebar({
         >
           <SobaLogo />
         </Link>
-        {/* Search is an action rather than a page, so it sits beside the logo instead of in the nav. */}
-        <Button
-          aria-label="Search"
-          onClick={onSearch}
-          size="icon"
-          title="Search (⌘K)"
-          variant="ghost"
-        >
-          <Search01Icon />
-        </Button>
       </div>
       <ScrollArea className="flex-1" scrollFade>
         <div className="grid gap-1 px-1">

@@ -1,4 +1,5 @@
 import { Search01Icon } from "@client/components/ui/icons";
+import { useRequestRecipeSearch } from "@client/features/recipes/search-request";
 import { Link } from "@tanstack/react-router";
 
 import { mobileNavigation } from "./app-navigation";
@@ -9,7 +10,9 @@ const itemStyles =
 // Search sits second, after recipes.
 const [firstDestination, ...otherDestinations] = mobileNavigation;
 
-export function MobileNav({ onSearch }: { onSearch: () => void }) {
+export function MobileNav() {
+  const requestSearch = useRequestRecipeSearch();
+
   return (
     <nav
       aria-label="Main navigation"
@@ -17,7 +20,7 @@ export function MobileNav({ onSearch }: { onSearch: () => void }) {
     >
       <div className="flex justify-around px-1 py-2">
         <DestinationLink {...firstDestination} />
-        <button aria-label="Search" className={itemStyles} onClick={onSearch} type="button">
+        <button aria-label="Search" className={itemStyles} onClick={requestSearch} type="button">
           <Search01Icon className="size-5" />
         </button>
         {otherDestinations.map((destination) => (

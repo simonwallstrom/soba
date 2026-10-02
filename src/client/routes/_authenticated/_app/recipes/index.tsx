@@ -27,6 +27,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { MealPlannerSidebar } from "./-components/meal-planner-sidebar";
 import { ActiveRecipeFilters, RecipesFilter } from "./-components/recipes-filters";
+import { RecipesSearch } from "./-components/recipes-search";
 import { RecipesToolbar } from "./-components/recipes-toolbar";
 import { filterRecipes, parseRecipeListSearch } from "./-recipe-list";
 import type { RecipeFilterField } from "./-recipe-list";
@@ -95,6 +96,7 @@ function Recipes() {
     <>
       <title>{formatMetaTitle("Recipes")}</title>
       <AppHeaderActions>
+        <RecipesSearch onChange={(q) => changeSearch({ q })} value={search.q ?? ""} />
         <RecipesToolbar
           filter={<RecipesFilter {...filterProps} />}
           isMealPlannerOpen={settings.isMealPlannerOpen}
@@ -107,12 +109,7 @@ function Recipes() {
           visibleDetails={settings.visibleDetails}
         />
       </AppHeaderActions>
-      <ActiveRecipeFilters
-        {...filterProps}
-        onClear={clearFilters}
-        onClearQuery={() => changeSearch({ q: "" })}
-        query={search.q}
-      />
+      <ActiveRecipeFilters {...filterProps} onClear={clearFilters} />
       {/* Items pad their content, so an empty box takes that padding to line up with the header. */}
       <div className={recipes.length === 0 ? "p-5 lg:p-6" : "p-2 lg:p-3"}>
         {recipes.length === 0 ? (
