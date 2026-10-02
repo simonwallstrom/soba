@@ -43,7 +43,9 @@ import {
   CreatableComboboxExample,
   SingleComboboxExample,
 } from "./-components/combobox-examples";
+import { CommandPaletteExample } from "./-components/command-palette-examples";
 import { DialogExamples } from "./-components/dialog-examples";
+import { DrawerExamples } from "./-components/drawer-examples";
 import {
   FieldExamples,
   InputExamples,
@@ -231,8 +233,16 @@ function DesignSystem() {
           </div>
         </Section>
 
+        <Section title="Command palette">
+          <CommandPaletteExample />
+        </Section>
+
         <Section title="Dialog">
           <DialogExamples />
+        </Section>
+
+        <Section title="Drawer">
+          <DrawerExamples />
         </Section>
 
         <Section title="Dropdown menu">

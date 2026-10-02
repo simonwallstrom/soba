@@ -81,6 +81,37 @@ export function DialogExamples() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <Dialog>
+        <DialogTrigger className={buttonVariants()}>Nested dialog</DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add tags</DialogTitle>
+            <DialogDescription>Pasta carbonara</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose className={buttonVariants({ variant: "primary" })}>Done</DialogClose>
+            {/* Nested inside the popup, so it stacks above this dialog. */}
+            <Dialog>
+              <DialogTrigger className={buttonVariants()}>New tag…</DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>New tag</DialogTitle>
+                </DialogHeader>
+                <Field>
+                  <FieldLabel htmlFor="nested-dialog-title">Title</FieldLabel>
+                  <Input id="nested-dialog-title" placeholder="Weeknight" />
+                </Field>
+                <DialogFooter>
+                  <DialogClose className={buttonVariants({ variant: "primary" })}>
+                    Create
+                  </DialogClose>
+                  <DialogClose className={buttonVariants()}>Cancel</DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

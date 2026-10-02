@@ -8,6 +8,7 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@client/components/ui/combobox";
+import { Drawer, DrawerContent, DrawerTrigger } from "@client/components/ui/drawer";
 import {
   ArrowLeftIcon,
   Cancel01Icon,
@@ -17,10 +18,11 @@ import {
 } from "@client/components/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@client/components/ui/popover";
 import type { HouseholdMember } from "@client/features/household/members";
+import { useIsMobile } from "@client/lib/media";
 import type { Tag } from "@shared/recipes";
 import { cn } from "cn";
 import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent, RefObject } from "react";
+import type { ComponentProps, KeyboardEvent, ReactNode, RefObject } from "react";
 
 import { hasRecipeFilters, recipeFilterFields } from "../-recipe-list";
 import type { RecipeFilterField, RecipeFilters } from "../-recipe-list";
@@ -59,15 +61,67 @@ type InputRef = RefObject<HTMLInputElement | null>;
 // Each step focuses its search when it appears, including after switching steps, and
 // highlights the first item so Enter works before typing. Combobox has no prop for that yet.
 // The flag keeps Strict Mode's second effect run from moving the highlight down again.
+// Phones skip this, since the keyboard would cover the list before anyone asked to type.
 function useFocusOnMount(inputRef: InputRef) {
+  const isMobile = useIsMobile();
   const hasHighlighted = useRef(false);
   useEffect(() => {
+    if (isMobile) return;
     const input = inputRef.current;
     input?.focus();
     if (hasHighlighted.current) return;
     hasHighlighted.current = true;
     input?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
-  }, [inputRef]);
+  }, [inputRef, isMobile]);
+}
+
+// Anchored to its trigger, or a drawer on phones, where the lists need room.
+function FilterPopup({
+  align,
+  children,
+  inputRef,
+  label,
+  onOpenChange,
+  open,
+  trigger,
+}: {
+  align: "start" | "end";
+  children: ReactNode;
+  inputRef: InputRef;
+  // Names the drawer, which has no visible title.
+  label: string;
+  onOpenChange?: (open: boolean) => void;
+  open?: boolean;
+  trigger: ComponentProps<"button">;
+}) {
+  const isMobile = useIsMobile();
+  // The drawer focuses itself rather than the search, so the keyboard stays down.
+  const drawerRef = useRef<HTMLDivElement>(null);
+
+  if (isMobile) {
+    return (
+      <Drawer onOpenChange={onOpenChange} open={open}>
+        <DrawerTrigger {...trigger} />
+        <DrawerContent
+          aria-label={label}
+          // The list scrolls to the bottom edge, so only the bleed and safe area pad it.
+          className="gap-0 px-0 pt-5 pb-[calc(3rem+env(safe-area-inset-bottom))]"
+          initialFocus={drawerRef}
+          ref={drawerRef}
+        >
+          {children}
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+  return (
+    <Popover onOpenChange={onOpenChange} open={open}>
+      <PopoverTrigger {...trigger} />
+      <PopoverContent align={align} className="w-64 p-0" initialFocus={inputRef}>
+        {children}
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 function getValueLabels(field: RecipeFilterField, { tags, members }: FilterProps) {
@@ -83,33 +137,37 @@ export function RecipesFilter(props: FilterProps) {
   const isActive = hasRecipeFilters(props.filters);
 
   return (
-    <Popover
+    <FilterPopup
+      align="end"
+      inputRef={inputRef}
+      label="Filter recipes"
       onOpenChange={(open) => {
         setIsOpen(open);
         if (open) setStep(null);
       }}
       open={isOpen}
+      trigger={{
+        "aria-label": isActive ? "Filter recipes, filters applied" : "Filter recipes",
+        className: buttonVariants({ className: "relative", size: "icon", variant: "ghost" }),
+        children: (
+          <>
+            <FilterIcon />
+            {isActive && (
+              <span
+                aria-hidden="true"
+                className="absolute top-0.5 right-0.5 size-2 rounded-full border border-olive-50 bg-olive-800 dark:border-olive-925 dark:bg-olive-200"
+              />
+            )}
+          </>
+        ),
+      }}
     >
-      <PopoverTrigger
-        aria-label={isActive ? "Filter recipes, filters applied" : "Filter recipes"}
-        className={buttonVariants({ className: "relative", size: "icon", variant: "ghost" })}
-      >
-        <FilterIcon />
-        {isActive && (
-          <span
-            aria-hidden="true"
-            className="absolute top-0.5 right-0.5 size-2 rounded-full border border-olive-50 bg-olive-800 dark:border-olive-925 dark:bg-olive-200"
-          />
-        )}
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-64 p-0" initialFocus={inputRef}>
-        {step === null ? (
-          <FieldStep inputRef={inputRef} onSelect={setStep} />
-        ) : (
-          <ValueStep {...props} field={step} inputRef={inputRef} onBack={() => setStep(null)} />
-        )}
-      </PopoverContent>
-    </Popover>
+      {step === null ? (
+        <FieldStep inputRef={inputRef} onSelect={setStep} />
+      ) : (
+        <ValueStep {...props} field={step} inputRef={inputRef} onBack={() => setStep(null)} />
+      )}
+    </FilterPopup>
   );
 }
 
@@ -133,9 +191,16 @@ function FieldStep({
       open
       value={null}
     >
-      <ComboboxInput placeholder="Filter by…" ref={inputRef} showTrigger={false} variant="popup" />
+      {/* On phones, the search and icons line up with the page's 20px margin. */}
+      <ComboboxInput
+        className="max-sm:[&_input]:px-5"
+        placeholder="Filter by…"
+        ref={inputRef}
+        showTrigger={false}
+        variant="popup"
+      />
       <ComboboxEmpty>No filters found.</ComboboxEmpty>
-      <ComboboxList>
+      <ComboboxList className="max-sm:p-2.5">
         {(option: FieldOption) => (
           <ComboboxItem key={option.value} value={option}>
             <span className="flex items-center gap-2">
@@ -180,11 +245,12 @@ function ValueStep({
       value={props.filters[field] ?? []}
     >
       <div className="flex items-center border-b-[0.5px] border-black/15 dark:border-white/15">
-        {/* Centred on the checkbox column below, with the search text over the item labels. */}
+        {/* Centred on the checkbox column below, with the search text over the item labels.
+            Phones pad the list to the page's 20px margin, so the button moves with it. */}
         {onBack && (
           <Button
             aria-label="Back to filters"
-            className="ml-2.25 size-7 shrink-0 rounded-md [&_svg]:size-3.5"
+            className="ml-2.25 size-7 shrink-0 rounded-md max-sm:ml-3.75 [&_svg]:size-3.5"
             onClick={onBack}
             size="icon-sm"
             variant="ghost"
@@ -203,7 +269,7 @@ function ValueStep({
         />
       </div>
       <ComboboxEmpty>No {plural} found.</ComboboxEmpty>
-      <ComboboxList className="max-h-80">
+      <ComboboxList className="max-h-80 max-sm:max-h-[60dvh] max-sm:p-2.5">
         {(id: string) => (
           <ComboboxCheckboxItem key={id} value={id}>
             {labels.get(id)}
@@ -251,17 +317,19 @@ function FilterChip({ field, ...props }: FilterProps & { field: RecipeFilterFiel
 
   return (
     <Badge className="h-7 gap-1 p-1 pl-2.5">
-      <Popover>
-        <PopoverTrigger
-          aria-label={`Edit filter, ${summary}`}
-          className="rounded-full outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
-        >
-          {summary}
-        </PopoverTrigger>
-        <PopoverContent align="start" className="w-64 p-0" initialFocus={inputRef}>
-          <ValueStep {...props} field={field} inputRef={inputRef} />
-        </PopoverContent>
-      </Popover>
+      <FilterPopup
+        align="start"
+        inputRef={inputRef}
+        label={`Filter by ${label.toLowerCase()}`}
+        trigger={{
+          "aria-label": `Edit filter, ${summary}`,
+          className:
+            "rounded-full outline-none focus-visible:outline-2 focus-visible:outline-offset-2",
+          children: summary,
+        }}
+      >
+        <ValueStep {...props} field={field} inputRef={inputRef} />
+      </FilterPopup>
       <Button
         aria-label={`Clear ${label.toLowerCase()} filter`}
         className="size-5 rounded-full"

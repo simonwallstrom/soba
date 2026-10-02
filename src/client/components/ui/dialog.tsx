@@ -1,8 +1,12 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import type { Drawer as DrawerPrimitive } from "@base-ui/react/drawer";
 import { Button } from "@client/components/ui/button";
+import { Drawer, DrawerContent } from "@client/components/ui/drawer";
 import { Cancel01Icon } from "@client/components/ui/icons";
 import { ScrollArea } from "@client/components/ui/scroll-area";
+import { useIsMobile } from "@client/lib/media";
 import { cn } from "cn";
+import { createContext, useContext } from "react";
 import type { ComponentProps } from "react";
 
 const closeButton = (
@@ -14,8 +18,18 @@ const closeButton = (
   />
 );
 
-export function Dialog(props: DialogPrimitive.Root.Props) {
-  return <DialogPrimitive.Root {...props} />;
+// Whether the dialog renders as a swipeable drawer, decided once by the root.
+const DrawerModeContext = createContext(false);
+
+// A drawer on small screens and a centered dialog from `sm` up. Drawer is built on Dialog,
+// so the trigger, close, title, and description parts work in both.
+export function Dialog(props: Pick<DrawerPrimitive.Root.Props, keyof DialogPrimitive.Root.Props>) {
+  const isMobile = useIsMobile();
+  return (
+    <DrawerModeContext value={isMobile}>
+      {isMobile ? <Drawer {...props} /> : <DialogPrimitive.Root {...props} />}
+    </DrawerModeContext>
+  );
 }
 
 export function DialogTrigger(props: DialogPrimitive.Trigger.Props) {
@@ -26,13 +40,28 @@ export function DialogClose(props: DialogPrimitive.Close.Props) {
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
 }
 
-// A bottom sheet on small screens and a centered dialog from `sm` up.
 export function DialogContent({
+  align = "center",
   children,
   className,
   showCloseButton = true,
   ...props
-}: DialogPrimitive.Popup.Props & { showCloseButton?: boolean }) {
+}: Omit<DialogPrimitive.Popup.Props, "className" | "render" | "style"> & {
+  // Search-first dialogs sit near the top, so the popup grows downward as results change.
+  // Drawers ignore it.
+  align?: "center" | "top";
+  // Static only, since the dialog and drawer popups have different states.
+  className?: string;
+  // Drawers never show one; they close with a swipe.
+  showCloseButton?: boolean;
+}) {
+  if (useContext(DrawerModeContext)) {
+    return (
+      <DrawerContent className={className} {...props}>
+        {children}
+      </DrawerContent>
+    );
+  }
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Backdrop
@@ -40,15 +69,18 @@ export function DialogContent({
         data-slot="dialog-backdrop"
       />
       <DialogPrimitive.Viewport
-        className="fixed inset-0 z-50 grid items-end sm:place-items-center sm:p-4"
+        className={cn(
+          "fixed inset-0 z-50 grid justify-items-center p-4",
+          align === "top" ? "items-start pt-[12dvh]" : "items-center",
+        )}
         data-slot="dialog-viewport"
       >
         <DialogPrimitive.Popup
           className={cn(
-            "relative flex max-h-[calc(100dvh-3rem-env(safe-area-inset-top))] min-h-0 w-full flex-col gap-6 rounded-t-2xl border-[0.5px] border-black/40 bg-white p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-olive-900 transition-[translate,scale,opacity] duration-200 ease-in-out will-change-transform outline-none sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:rounded-2xl sm:pb-6",
-            "before:pointer-events-none before:absolute before:inset-0 before:rounded-t-[calc(var(--radius-2xl)-0.5px)] before:shadow-md before:content-[''] sm:before:rounded-[calc(var(--radius-2xl)-0.5px)]",
-            "data-ending-style:opacity-0 data-starting-style:opacity-0 max-sm:data-ending-style:translate-y-4 max-sm:data-starting-style:translate-y-4 sm:data-ending-style:scale-98 sm:data-starting-style:scale-98",
-            "dark:border-white/12 dark:bg-olive-900 dark:text-olive-100 dark:before:inset-[-0.5px] dark:before:rounded-t-2xl dark:before:inset-shadow-[0_0.5px_0_var(--color-white)]/14 dark:before:shadow-black/40 sm:dark:before:rounded-2xl",
+            "relative flex max-h-[calc(100dvh-2rem)] min-h-0 w-full max-w-lg flex-col gap-6 rounded-2xl border-[0.5px] border-black/40 bg-white p-6 text-olive-900 transition-[scale,opacity] duration-200 ease-in-out will-change-transform outline-none",
+            "before:pointer-events-none before:absolute before:inset-0 before:rounded-[calc(var(--radius-2xl)-0.5px)] before:shadow-md before:content-['']",
+            "data-ending-style:scale-98 data-ending-style:opacity-0 data-starting-style:scale-98 data-starting-style:opacity-0",
+            "dark:border-white/12 dark:bg-olive-900 dark:text-olive-100 dark:before:inset-[-0.5px] dark:before:rounded-2xl dark:before:inset-shadow-[0_0.5px_0_var(--color-white)]/14 dark:before:shadow-black/40",
             className,
           )}
           data-slot="dialog-content"
