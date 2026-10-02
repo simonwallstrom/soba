@@ -1,4 +1,5 @@
 import { AppHeaderActions } from "@client/components/particles/app-header-actions";
+import { Button } from "@client/components/ui/button";
 import { useMembersById } from "@client/features/household/members";
 import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
 import {
@@ -7,18 +8,20 @@ import {
   recipeTags$,
   tags$,
 } from "@client/features/recipes/queries";
+import { RecipeActionsMenu } from "@client/features/recipes/recipe-actions-menu";
+import { RecipeList } from "@client/features/recipes/recipe-list";
+import type { RecipeListEntry } from "@client/features/recipes/recipe-list";
 import { compareNames, groupTagsByRecipe } from "@client/features/recipes/recipe-tags";
 import { formatMetaTitle } from "@client/lib/meta";
 import { recipeListSettings } from "@shared/recipes";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { MealPlannerSidebar } from "./-components/meal-planner-sidebar";
-import { RecipeList } from "./-components/recipe-list";
 import { ActiveRecipeFilters, RecipesFilter } from "./-components/recipes-filters";
 import { RecipesSearch } from "./-components/recipes-search";
 import { RecipesToolbar } from "./-components/recipes-toolbar";
 import { filterRecipes, hasRecipeFilters, parseRecipeListSearch } from "./-recipe-list";
-import type { RecipeFilterField, RecipeListEntry } from "./-recipe-list";
+import type { RecipeFilterField } from "./-recipe-list";
 
 export const Route = createFileRoute("/_authenticated/_app/recipes/")({
   validateSearch: parseRecipeListSearch,
@@ -44,6 +47,7 @@ function Recipes() {
     tags: tagsByRecipe.get(recipe.id) ?? [],
     author: membersById?.get(recipe.createdBy),
   });
+  const hasFilters = search.q !== undefined || hasRecipeFilters(search);
   const entries = filterRecipes(recipes, tagsByRecipe, search, sort).map(toEntry);
   const plannerEntries = filterRecipes(recipes, tagsByRecipe, {}, "name").map(toEntry);
 
@@ -98,14 +102,25 @@ function Recipes() {
       </AppHeaderActions>
       <ActiveRecipeFilters {...filterProps} onClear={clearFilters} />
       <div className="p-2 lg:p-3">
-        <RecipeList
-          entries={entries}
-          hasFilters={search.q !== undefined || hasRecipeFilters(search)}
-          onClearFilters={clearFilters}
-          sort={sort}
-          view={settings.view}
-          visibleDetails={settings.visibleDetails}
-        />
+        {entries.length === 0 ? (
+          <div className="flex min-h-48 flex-col items-center justify-center gap-2 text-center">
+            <p className="font-medium">{hasFilters ? "No matching recipes" : "No recipes yet"}</p>
+            {hasFilters && (
+              <Button onClick={clearFilters} size="sm" variant="ghost">
+                Clear filters
+              </Button>
+            )}
+          </div>
+        ) : (
+          <RecipeList
+            // Sorting by a date shows that date.
+            date={sort === "name" ? undefined : sort}
+            entries={entries}
+            renderActions={({ recipe }) => <RecipeActionsMenu recipeTitle={recipe.title} />}
+            view={settings.view}
+            visibleDetails={settings.visibleDetails}
+          />
+        )}
       </div>
       {settings.isMealPlannerOpen && (
         <MealPlannerSidebar

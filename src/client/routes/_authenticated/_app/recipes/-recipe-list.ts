@@ -1,13 +1,5 @@
-import type { HouseholdMember } from "@client/features/household/members";
 import { compareNames } from "@client/features/recipes/recipe-tags";
 import type { Recipe, RecipeSort, Tag } from "@shared/recipes";
-
-// A recipe with what its list item shows. The author is missing until members load.
-export type RecipeListEntry = {
-  recipe: Recipe;
-  tags: readonly Tag[];
-  author: HouseholdMember | undefined;
-};
 
 // Each filter field holds the IDs it matches.
 export const recipeFilterFields = ["tags", "authors"] as const;

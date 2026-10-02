@@ -3,9 +3,8 @@ import { Button } from "@client/components/ui/button";
 import { Cancel01Icon, ChevronLeftIcon, ChevronRightIcon } from "@client/components/ui/icons";
 import { ImageThumbnail } from "@client/components/ui/image-thumbnail";
 import { ScrollArea } from "@client/components/ui/scroll-area";
+import type { RecipeListEntry } from "@client/features/recipes/recipe-list";
 import { Link } from "@tanstack/react-router";
-
-import type { RecipeListEntry } from "../-recipe-list";
 
 // A prototype week: the first five days get recipes picked from the household's list.
 const plannedPicks = [1, 18, 12, 4, 8];
