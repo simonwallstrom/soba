@@ -1,18 +1,25 @@
 import { Collapsible } from "@base-ui/react/collapsible";
 import { Bookmark02Icon, CaretUpIcon, File02Icon, SobaLogo } from "@client/components/ui/icons";
 import { ScrollArea } from "@client/components/ui/scroll-area";
+import { collections$ } from "@client/features/collections/queries";
+import { householdStoreReady, useHouseholdQuery } from "@client/features/household/store";
 import { Link } from "@tanstack/react-router";
+import { Suspense, use } from "react";
 import type { ComponentProps, ReactNode } from "react";
 
 import { AccountMenu } from "./account-menu";
 import { desktopNavigation } from "./app-navigation";
 import { SidebarLink } from "./sidebar-link";
 
-// Placeholders until recent recipes and collections are built.
+// Placeholders until recent recipes are built.
 const recentRecipes = ["Pasta carbonara", "Raggmunk med fläsk", "Pannkakor"];
-const collectionShortcuts = ["Nyårsafton 2026", "Snabba middagar", "Middag för många"];
 
-export function Sidebar({ user, household }: ComponentProps<typeof AccountMenu>) {
+const collectionShortcutCount = 5;
+
+export function Sidebar({
+  user,
+  household,
+}: ComponentProps<typeof AccountMenu> & { household: { id: string } }) {
   return (
     <aside className="hidden min-h-0 flex-col py-1.5 lg:flex">
       <div className="flex h-12 shrink-0 items-center justify-between gap-1.5 pr-3.5 pl-6">
@@ -42,20 +49,43 @@ export function Sidebar({ user, household }: ComponentProps<typeof AccountMenu>)
               </SidebarLink>
             ))}
           </ShortcutSection>
-          <ShortcutSection label="Collection shortcuts" title="Collections">
-            {collectionShortcuts.map((collection) => (
-              <SidebarLink key={collection} to="/collections">
-                <Bookmark02Icon />
-                <span className="truncate">{collection}</span>
-              </SidebarLink>
-            ))}
-          </ShortcutSection>
+          {/* The sidebar renders before the household store opens; shortcuts appear once it has. */}
+          <Suspense fallback={null}>
+            <CollectionShortcuts householdId={household.id} />
+          </Suspense>
         </div>
       </ScrollArea>
       <div className="grid shrink-0 px-3 py-2">
         <AccountMenu household={household} user={user} />
       </div>
     </aside>
+  );
+}
+
+// The most recently changed collections.
+function CollectionShortcuts({ householdId }: { householdId: string }) {
+  use(householdStoreReady(householdId));
+  const collections = useHouseholdQuery(householdId, collections$);
+  if (collections.length === 0) return null;
+
+  const recent = collections
+    .toSorted((left, right) => right.updatedAt.getTime() - left.updatedAt.getTime())
+    .slice(0, collectionShortcutCount);
+
+  return (
+    <ShortcutSection label="Collection shortcuts" title="Collections">
+      {recent.map((collection) => (
+        <SidebarLink
+          key={collection.id}
+          params={{ collectionId: collection.id }}
+          showActiveState
+          to="/collections/$collectionId"
+        >
+          <Bookmark02Icon />
+          <span className="truncate">{collection.title}</span>
+        </SidebarLink>
+      ))}
+    </ShortcutSection>
   );
 }
 
