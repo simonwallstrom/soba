@@ -21,8 +21,6 @@ type MediaItemProps = {
   title: string;
   link: Omit<LinkComponentProps, "aria-label" | "children" | "className">;
   imageUrl: string | null;
-  // Drawn on top of the image, like a count badge.
-  imageOverlay?: ReactNode;
   details?: ReactNode;
   actions?: ReactNode;
 };
@@ -80,22 +78,15 @@ function MediaLink({ link, title }: Pick<MediaItemProps, "link" | "title">) {
 function MediaImage({
   className,
   height,
-  imageOverlay,
   imageUrl,
   width,
-}: Pick<MediaItemProps, "imageOverlay" | "imageUrl"> & {
-  className: string;
-  height: number;
-  width: number;
-}) {
-  return (
-    <div className={cn("pointer-events-none relative", className)}>
-      {imageUrl ? (
-        <ImageThumbnail className="size-full" height={height} src={imageUrl} width={width} />
-      ) : (
-        <div aria-hidden="true" className="size-full rounded-lg bg-olive-200 dark:bg-olive-800" />
-      )}
-      {imageOverlay}
-    </div>
+}: Pick<MediaItemProps, "imageUrl"> & { className: string; height: number; width: number }) {
+  return imageUrl ? (
+    <ImageThumbnail className={className} height={height} src={imageUrl} width={width} />
+  ) : (
+    <div
+      aria-hidden="true"
+      className={cn("pointer-events-none rounded-lg bg-olive-200 dark:bg-olive-800", className)}
+    />
   );
 }

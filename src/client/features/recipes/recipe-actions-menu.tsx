@@ -14,12 +14,16 @@ import {
   FileEditIcon,
   MoreHorizontalIcon,
 } from "@client/components/ui/icons";
+import type { ReactNode } from "react";
 
-// A prototype: the actions arrive with recipe editing, meal plans, and collections.
+// A prototype: editing, meal plans, and deleting arrive later. `children` adds menu items
+// for where the recipe is shown, like removing it from a collection.
 export function RecipeActionsMenu({
+  children,
   className,
   recipeTitle,
 }: {
+  children?: ReactNode;
   className?: string;
   recipeTitle: string;
 }) {
@@ -46,6 +50,12 @@ export function RecipeActionsMenu({
             Add to collection…
           </DropdownMenuItem>
         </DropdownMenuGroup>
+        {children && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>{children}</DropdownMenuGroup>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive">
           <Cancel01Icon />
