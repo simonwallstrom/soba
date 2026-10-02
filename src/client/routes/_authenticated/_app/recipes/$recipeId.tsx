@@ -1,9 +1,10 @@
 import { AppHeaderActions } from "@client/components/particles/app-header-actions";
 import { Button } from "@client/components/ui/button";
-import { ServingFoodIcon } from "@client/components/ui/icons";
+import { ServingFoodIcon, StarIcon } from "@client/components/ui/icons";
 import { ImagePlaceholder } from "@client/components/ui/image-thumbnail";
 import { useMembersById } from "@client/features/household/members";
 import { householdStoreOptions, useHouseholdQuery } from "@client/features/household/store";
+import { useFavorites } from "@client/features/recipes/favorites";
 import { recipe$, recipeTags$, tags$ } from "@client/features/recipes/queries";
 import { RecipeActionsMenu } from "@client/features/recipes/recipe-actions-menu";
 import { groupTagsByRecipe } from "@client/features/recipes/recipe-tags";
@@ -39,17 +40,19 @@ function RecipeTitle(): string {
 }
 
 function RecipeDetail() {
-  const { household } = Route.useRouteContext();
+  const { household, user } = Route.useRouteContext();
   const recipe = useRecipe();
   const tags = useHouseholdQuery(household.id, tags$);
   const links = useHouseholdQuery(household.id, recipeTags$);
   const membersById = useMembersById();
+  const { favoriteIds, toggleFavorite } = useFavorites(household.id, user.id);
 
   // The recipe was deleted while open, perhaps on another device.
   if (!recipe) return <RecipeNotFound />;
 
   const recipeTags = groupTagsByRecipe(tags, links).get(recipe.id) ?? [];
   const author = membersById?.get(recipe.createdBy);
+  const isFavorite = favoriteIds.has(recipe.id);
 
   return (
     <>
@@ -60,7 +63,21 @@ function RecipeDetail() {
           <Button disabled variant="ghost">
             Edit
           </Button>
-          <RecipeActionsMenu recipeTitle={recipe.title} size="icon" />
+          <Button
+            aria-label="Favorite"
+            aria-pressed={isFavorite}
+            onClick={() => toggleFavorite(recipe.id)}
+            size="icon"
+            variant="ghost"
+          >
+            <StarIcon fill={isFavorite ? "currentColor" : "none"} />
+          </Button>
+          <RecipeActionsMenu
+            isFavorite={isFavorite}
+            onToggleFavorite={() => toggleFavorite(recipe.id)}
+            recipeTitle={recipe.title}
+            size="icon"
+          />
         </div>
       </AppHeaderActions>
       <article className="mx-auto flex max-w-5xl flex-col gap-8 p-5 lg:gap-12 lg:p-12">

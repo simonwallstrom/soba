@@ -1,5 +1,5 @@
 import { queryDb } from "@livestore/livestore";
-import { recipeListSettings, recipes, recipeTags, tags } from "@shared/recipes";
+import { favorites, recipeListSettings, recipes, recipeTags, tags } from "@shared/recipes";
 
 export const recipes$ = queryDb(recipes.where({ deletedAt: null }), { label: "recipes" });
 
@@ -11,6 +11,14 @@ export function recipe$(recipeId: string) {
   return queryDb(recipes.where({ id: recipeId, deletedAt: null }).first(), {
     label: "recipe",
     deps: [recipeId],
+  });
+}
+
+// Newest first.
+export function favorites$(userId: string) {
+  return queryDb(favorites.where({ userId }).orderBy("favoritedAt", "desc"), {
+    label: "favorites",
+    deps: [userId],
   });
 }
 

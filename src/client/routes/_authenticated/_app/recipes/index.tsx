@@ -10,6 +10,7 @@ import {
 import { CookBookIcon } from "@client/components/ui/icons";
 import { useMembersById } from "@client/features/household/members";
 import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
+import { useFavorites } from "@client/features/recipes/favorites";
 import {
   recipeListSettings$,
   recipes$,
@@ -38,10 +39,11 @@ export const Route = createFileRoute("/_authenticated/_app/recipes/")({
 });
 
 function Recipes() {
-  const { household } = Route.useRouteContext();
+  const { household, user } = Route.useRouteContext();
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
   const store = useHouseholdStore(household.id);
+  const { favoriteIds, toggleFavorite } = useFavorites(household.id, user.id);
   const recipes = useHouseholdQuery(household.id, recipes$);
   const tags = useHouseholdQuery(household.id, tags$);
   const links = useHouseholdQuery(household.id, recipeTags$);
@@ -138,7 +140,13 @@ function Recipes() {
             // Sorting by a date shows that date.
             date={sort === "name" ? undefined : sort}
             entries={entries}
-            renderActions={({ recipe }) => <RecipeActionsMenu recipeTitle={recipe.title} />}
+            renderActions={({ recipe }) => (
+              <RecipeActionsMenu
+                isFavorite={favoriteIds.has(recipe.id)}
+                onToggleFavorite={() => toggleFavorite(recipe.id)}
+                recipeTitle={recipe.title}
+              />
+            )}
             view={settings.view}
             visibleDetails={settings.visibleDetails}
           />

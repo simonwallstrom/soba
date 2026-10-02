@@ -12,15 +12,20 @@ import {
   Cancel01Icon,
   FileEditIcon,
   MoreHorizontalIcon,
+  StarIcon,
 } from "@client/components/ui/icons";
 
 // Editing, meal plans, and deleting arrive later.
 export function RecipeActionsMenu({
   className,
+  isFavorite,
+  onToggleFavorite,
   recipeTitle,
   size = "icon-sm",
 }: {
   className?: string;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
   recipeTitle: string;
   size?: "icon" | "icon-sm";
 }) {
@@ -41,6 +46,10 @@ export function RecipeActionsMenu({
           <DropdownMenuItem>
             <Calendar03Icon />
             Add to meal plan…
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onToggleFavorite}>
+            <StarIcon />
+            {isFavorite ? "Remove from favorites" : "Add to favorites"}
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

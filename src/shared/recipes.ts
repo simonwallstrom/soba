@@ -51,6 +51,18 @@ export const recipeTags = State.SQLite.table({
   indexes: [{ name: "recipe_tags_recipe_tag", columns: ["recipeId", "tagId"], isUnique: true }],
 });
 
+// Each member's own favorites. The whole household syncs them, but only their owner sees them.
+export const favorites = State.SQLite.table({
+  name: "favorites",
+  columns: {
+    userId: State.SQLite.text(),
+    recipeId: State.SQLite.text(),
+    favoritedAt: State.SQLite.datetime(),
+  },
+  indexes: [{ name: "favorites_user_recipe", columns: ["userId", "recipeId"], isUnique: true }],
+});
+export type Favorite = typeof favorites.Type;
+
 export const recipeViews = ["list", "grid"] as const;
 export type RecipeView = (typeof recipeViews)[number];
 
@@ -102,8 +114,32 @@ export const tagCreated = Events.synced({
   schema: Schema.Struct({ id: Schema.String, name: Schema.String, createdAt: Schema.Date }),
 });
 
-const events = { recipeCreated, tagCreated, recipeListSettingsSet: recipeListSettings.set };
-const tables = { recipes, tags, recipeTags, recipeListSettings };
+export const recipeFavorited = Events.synced({
+  name: "v1.RecipeFavorited",
+  schema: Schema.Struct({
+    recipeId: Schema.String,
+    userId: Schema.String,
+    favoritedAt: Schema.Date,
+  }),
+});
+
+export const recipeUnfavorited = Events.synced({
+  name: "v1.RecipeUnfavorited",
+  schema: Schema.Struct({
+    recipeId: Schema.String,
+    userId: Schema.String,
+    unfavoritedAt: Schema.Date,
+  }),
+});
+
+const events = {
+  recipeCreated,
+  tagCreated,
+  recipeFavorited,
+  recipeUnfavorited,
+  recipeListSettingsSet: recipeListSettings.set,
+};
+const tables = { recipes, tags, recipeTags, favorites, recipeListSettings };
 const materializers = State.SQLite.materializers(events, {
   "v1.RecipeCreated": (recipe) => [
     recipes.insert({
@@ -122,6 +158,12 @@ const materializers = State.SQLite.materializers(events, {
     ...(recipe.tagIds ?? []).map((tagId) => recipeTags.insert({ recipeId: recipe.id, tagId })),
   ],
   "v1.TagCreated": ({ id, name, createdAt }) => tags.insert({ id, name, createdAt }),
+  // Two devices may favorite the same recipe; the first stays.
+  "v1.RecipeFavorited": ({ recipeId, userId, favoritedAt }) =>
+    favorites
+      .insert({ userId, recipeId, favoritedAt })
+      .onConflict(["userId", "recipeId"], "ignore"),
+  "v1.RecipeUnfavorited": ({ recipeId, userId }) => favorites.delete().where({ userId, recipeId }),
 });
 
 export const recipeSchema = makeSchema({

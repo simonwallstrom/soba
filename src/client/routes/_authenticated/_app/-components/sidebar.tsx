@@ -1,7 +1,8 @@
 import { Collapsible } from "@base-ui/react/collapsible";
-import { CaretUpIcon, SobaLogo, Tag01Icon } from "@client/components/ui/icons";
+import { CaretUpIcon, File02Icon, SobaLogo, Tag01Icon } from "@client/components/ui/icons";
 import { ScrollArea } from "@client/components/ui/scroll-area";
 import { householdStoreReady, useHouseholdQuery } from "@client/features/household/store";
+import { useFavorites } from "@client/features/recipes/favorites";
 import { recipes$, recipeTags$, tags$ } from "@client/features/recipes/queries";
 import { topTags } from "@client/features/recipes/recipe-tags";
 import { Link } from "@tanstack/react-router";
@@ -17,7 +18,10 @@ const tagShortcutCount = 6;
 export function Sidebar({
   user,
   household,
-}: ComponentProps<typeof AccountMenu> & { household: { id: string } }) {
+}: {
+  user: ComponentProps<typeof AccountMenu>["user"] & { id: string };
+  household: ComponentProps<typeof AccountMenu>["household"] & { id: string };
+}) {
   return (
     <aside className="hidden min-h-0 flex-col py-1.5 lg:flex">
       <div className="flex h-12 shrink-0 items-center justify-between gap-1.5 pr-3.5 pl-6">
@@ -41,6 +45,7 @@ export function Sidebar({
           </nav>
           {/* The sidebar renders before the household store opens; shortcuts appear once it has. */}
           <Suspense fallback={null}>
+            <FavoriteShortcuts householdId={household.id} userId={user.id} />
             <TagShortcuts householdId={household.id} />
           </Suspense>
         </div>
@@ -49,6 +54,32 @@ export function Sidebar({
         <AccountMenu household={household} user={user} />
       </div>
     </aside>
+  );
+}
+
+// Your favorite recipes, newest first. Favorites of deleted recipes are left out.
+function FavoriteShortcuts({ householdId, userId }: { householdId: string; userId: string }) {
+  use(householdStoreReady(householdId));
+  const recipes = useHouseholdQuery(householdId, recipes$);
+  const { recipeIds } = useFavorites(householdId, userId);
+  const recipesById = new Map(recipes.map((recipe) => [recipe.id, recipe]));
+  const favorites = recipeIds.flatMap((id) => recipesById.get(id) ?? []);
+  if (favorites.length === 0) return null;
+
+  return (
+    <ShortcutSection label="Favorite recipes" title="Favorites">
+      {favorites.map((recipe) => (
+        <SidebarLink
+          key={recipe.id}
+          params={{ recipeId: recipe.id }}
+          showActiveState
+          to="/recipes/$recipeId"
+        >
+          <File02Icon />
+          <span className="truncate">{recipe.title}</span>
+        </SidebarLink>
+      ))}
+    </ShortcutSection>
   );
 }
 
