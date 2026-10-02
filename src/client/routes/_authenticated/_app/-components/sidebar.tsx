@@ -1,24 +1,33 @@
 import { Collapsible } from "@base-ui/react/collapsible";
-import { CaretUpIcon, File02Icon, SobaLogo, Tag01Icon } from "@client/components/ui/icons";
+import {
+  CaretUpIcon,
+  File02Icon,
+  Search01Icon,
+  SobaLogo,
+  Tag01Icon,
+} from "@client/components/ui/icons";
 import { ScrollArea } from "@client/components/ui/scroll-area";
 import { householdStoreReady, useHouseholdQuery } from "@client/features/household/store";
 import { useFavorites } from "@client/features/recipes/favorites";
 import { recipes$, recipeTags$, tags$ } from "@client/features/recipes/queries";
 import { topTags } from "@client/features/recipes/recipe-tags";
 import { Link } from "@tanstack/react-router";
+import { cn } from "cn";
 import { Suspense, use } from "react";
 import type { ComponentProps, ReactNode } from "react";
 
 import { AccountMenu } from "./account-menu";
 import { desktopNavigation } from "./app-navigation";
-import { SidebarLink } from "./sidebar-link";
+import { SidebarLink, sidebarItemStyles } from "./sidebar-link";
 
 const tagShortcutCount = 6;
 
 export function Sidebar({
-  user,
   household,
+  onSearch,
+  user,
 }: {
+  onSearch: () => void;
   user: ComponentProps<typeof AccountMenu>["user"] & { id: string };
   household: ComponentProps<typeof AccountMenu>["household"] & { id: string };
 }) {
@@ -36,6 +45,11 @@ export function Sidebar({
       <ScrollArea className="flex-1" scrollFade>
         <div className="grid gap-1 px-1">
           <nav aria-label="Main navigation" className="flex flex-col gap-0.5 p-2">
+            <button className={cn(sidebarItemStyles)} onClick={onSearch} type="button">
+              <Search01Icon />
+              <span>Search</span>
+              <kbd className="ml-auto font-sans text-sm text-olive-500">⌘K</kbd>
+            </button>
             {desktopNavigation.map(({ icon: Icon, label, to }) => (
               <SidebarLink key={to} showActiveState to={to}>
                 <Icon />

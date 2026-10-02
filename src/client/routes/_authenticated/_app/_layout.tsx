@@ -1,6 +1,7 @@
 import { AppAsideSlot } from "@client/components/particles/app-aside";
 import { AppHeaderActionsSlot } from "@client/components/particles/app-header-actions";
 import { householdStoreOptions, householdStoreReady } from "@client/features/household/store";
+import { RecipeSearch } from "@client/features/recipes/recipe-search";
 import { storeRegistry } from "@client/lib/livestore/adapter";
 import { StoreRegistryProvider, useStore } from "@livestore/react";
 import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-router";
@@ -39,6 +40,18 @@ function AppLayout() {
   const router = useRouter();
   const [actionsSlot, setActionsSlot] = useState<HTMLDivElement | null>(null);
   const [asideSlot, setAsideSlot] = useState<HTMLDivElement | null>(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // ⌘K (Ctrl+K elsewhere) opens search from anywhere in the app, and closes it again.
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key.toLowerCase() !== "k" || !(event.metaKey || event.ctrlKey)) return;
+      event.preventDefault();
+      setIsSearchOpen((open) => !open);
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Load every app page's code up front so the first visit to each is instant.
   useEffect(() => {
@@ -48,7 +61,7 @@ function AppLayout() {
   return (
     <StoreRegistryProvider storeRegistry={storeRegistry}>
       <div className="grid h-dvh w-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] overflow-hidden lg:grid-cols-[16rem_minmax(0,1fr)] lg:grid-rows-1 lg:pt-[env(safe-area-inset-top)] lg:pb-[env(safe-area-inset-bottom)]">
-        <Sidebar household={household} user={user} />
+        <Sidebar household={household} onSearch={() => setIsSearchOpen(true)} user={user} />
         <section className="flex min-h-0 min-w-0 overflow-hidden bg-olive-50 lg:my-1.5 lg:mr-1.5 lg:rounded-lg lg:border-[0.5px] lg:border-black/18 dark:bg-olive-925 lg:dark:border-white/10">
           <div className="flex min-w-0 flex-1 flex-col">
             <AppHeader actionsRef={setActionsSlot} />
@@ -78,7 +91,12 @@ function AppLayout() {
           {/* A page's side panel lays out as if it were a direct child of the section. */}
           <div className="contents" ref={setAsideSlot} />
         </section>
-        <MobileNav />
+        <MobileNav onSearch={() => setIsSearchOpen(true)} />
+        <RecipeSearch
+          householdId={household.id}
+          onOpenChange={setIsSearchOpen}
+          open={isSearchOpen}
+        />
       </div>
     </StoreRegistryProvider>
   );
