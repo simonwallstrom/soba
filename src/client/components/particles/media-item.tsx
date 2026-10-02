@@ -1,4 +1,4 @@
-import { ImageThumbnail } from "@client/components/ui/image-thumbnail";
+import { ImagePlaceholder, ImageThumbnail } from "@client/components/ui/image-thumbnail";
 import { Link } from "@tanstack/react-router";
 import type { LinkComponentProps } from "@tanstack/react-router";
 import { cn } from "cn";
@@ -96,15 +96,6 @@ function MediaImage({
   return imageUrl ? (
     <ImageThumbnail className={className} height={height} src={imageUrl} width={width} />
   ) : (
-    // Quieter than a photo, with the same hairline border.
-    <div
-      aria-hidden="true"
-      className={cn(
-        "pointer-events-none flex items-center justify-center rounded-lg bg-olive-100 text-olive-400 ring-[0.5px] ring-black/10 ring-inset dark:bg-olive-900 dark:text-olive-600 dark:ring-white/10",
-        className,
-      )}
-    >
-      {placeholderIcon}
-    </div>
+    <ImagePlaceholder className={className}>{placeholderIcon}</ImagePlaceholder>
   );
 }

@@ -70,7 +70,7 @@ function CollectionForm({
         <DialogDescription>
           {isRenaming
             ? "Everyone in your household sees the new name."
-            : "Gather recipes for an occasion, a routine, or someone in the family."}
+            : "Group recipes for an occasion or a routine."}
         </DialogDescription>
       </DialogHeader>
       <Field>

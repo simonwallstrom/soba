@@ -1,5 +1,7 @@
 import { AppHeaderActions } from "@client/components/particles/app-header-actions";
 import { Button } from "@client/components/ui/button";
+import { ServingFoodIcon } from "@client/components/ui/icons";
+import { ImagePlaceholder } from "@client/components/ui/image-thumbnail";
 import {
   AddToCollectionDialog,
   useAddToCollectionDialog,
@@ -83,10 +85,9 @@ function RecipeDetail() {
               width="1200"
             />
           ) : (
-            <div
-              aria-hidden="true"
-              className="hidden aspect-5/4 w-full rounded-xl bg-olive-200 lg:col-start-2 lg:row-start-1 lg:block dark:bg-olive-800"
-            />
+            <ImagePlaceholder className="aspect-5/4 w-full rounded-xl max-lg:hidden lg:col-start-2 lg:row-start-1 [&_svg]:size-12">
+              <ServingFoodIcon />
+            </ImagePlaceholder>
           )}
           <div className="flex flex-col gap-3 lg:col-start-1 lg:row-start-1">
             <RecipeByline author={author} createdAt={recipe.createdAt} />

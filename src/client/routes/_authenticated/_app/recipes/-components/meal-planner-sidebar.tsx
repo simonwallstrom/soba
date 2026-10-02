@@ -1,7 +1,12 @@
 import { AppAside } from "@client/components/particles/app-aside";
 import { Button } from "@client/components/ui/button";
-import { Cancel01Icon, ChevronLeftIcon, ChevronRightIcon } from "@client/components/ui/icons";
-import { ImageThumbnail } from "@client/components/ui/image-thumbnail";
+import {
+  Cancel01Icon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ServingFoodIcon,
+} from "@client/components/ui/icons";
+import { ImagePlaceholder, ImageThumbnail } from "@client/components/ui/image-thumbnail";
 import { ScrollArea } from "@client/components/ui/scroll-area";
 import type { RecipeListEntry } from "@client/features/recipes/recipe-list";
 import { Link } from "@tanstack/react-router";
@@ -104,10 +109,9 @@ function PlannedMeal({ entry: { recipe, tags } }: { entry: RecipeListEntry }) {
           width={96}
         />
       ) : (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none h-11 w-12 shrink-0 rounded-lg bg-olive-200 dark:bg-olive-800"
-        />
+        <ImagePlaceholder className="h-11 w-12 shrink-0 [&_svg]:size-5">
+          <ServingFoodIcon />
+        </ImagePlaceholder>
       )}
       <div className="pointer-events-none flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="truncate font-medium">{recipe.title}</div>

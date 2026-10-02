@@ -313,9 +313,7 @@ function DesignSystem() {
             </EmptyIcon>
             <EmptyHeader>
               <EmptyTitle>No collections yet</EmptyTitle>
-              <EmptyDescription>
-                Gather recipes for an occasion, a routine, or someone in the family.
-              </EmptyDescription>
+              <EmptyDescription>Group recipes for an occasion or a routine.</EmptyDescription>
             </EmptyHeader>
             <Button variant="primary">New collection</Button>
           </Empty>
