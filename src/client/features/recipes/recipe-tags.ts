@@ -25,3 +25,25 @@ export function groupTagsByRecipe(
   }
   return tagsByRecipe;
 }
+
+// The tags on the most live recipes, most first and then by name. Unused tags are left out.
+export function topTags(
+  tags: readonly Tag[],
+  links: readonly { recipeId: string; tagId: string }[],
+  recipeIds: ReadonlySet<string>,
+  limit: number,
+) {
+  const counts = new Map<string, number>();
+  for (const { recipeId, tagId } of links) {
+    if (recipeIds.has(recipeId)) counts.set(tagId, (counts.get(tagId) ?? 0) + 1);
+  }
+  return tags
+    .flatMap((tag) => {
+      const count = counts.get(tag.id);
+      return count ? [{ tag, count }] : [];
+    })
+    .toSorted(
+      (left, right) => right.count - left.count || compareNames(left.tag.name, right.tag.name),
+    )
+    .slice(0, limit);
+}

@@ -1,15 +1,18 @@
 import { Collapsible } from "@base-ui/react/collapsible";
-import { CaretUpIcon, File02Icon, SobaLogo } from "@client/components/ui/icons";
+import { CaretUpIcon, SobaLogo, Tag01Icon } from "@client/components/ui/icons";
 import { ScrollArea } from "@client/components/ui/scroll-area";
+import { householdStoreReady, useHouseholdQuery } from "@client/features/household/store";
+import { recipes$, recipeTags$, tags$ } from "@client/features/recipes/queries";
+import { topTags } from "@client/features/recipes/recipe-tags";
 import { Link } from "@tanstack/react-router";
+import { Suspense, use } from "react";
 import type { ComponentProps, ReactNode } from "react";
 
 import { AccountMenu } from "./account-menu";
 import { desktopNavigation } from "./app-navigation";
 import { SidebarLink } from "./sidebar-link";
 
-// Placeholders until recent recipes are built.
-const recentRecipes = ["Pasta carbonara", "Raggmunk med fläsk", "Pannkakor"];
+const tagShortcutCount = 6;
 
 export function Sidebar({
   user,
@@ -36,20 +39,38 @@ export function Sidebar({
               </SidebarLink>
             ))}
           </nav>
-          <ShortcutSection label="Recent recipes" title="Recent">
-            {recentRecipes.map((recipe) => (
-              <SidebarLink key={recipe} to="/recipes">
-                <File02Icon />
-                <span className="truncate">{recipe}</span>
-              </SidebarLink>
-            ))}
-          </ShortcutSection>
+          {/* The sidebar renders before the household store opens; shortcuts appear once it has. */}
+          <Suspense fallback={null}>
+            <TagShortcuts householdId={household.id} />
+          </Suspense>
         </div>
       </ScrollArea>
       <div className="grid shrink-0 px-3 py-2">
         <AccountMenu household={household} user={user} />
       </div>
     </aside>
+  );
+}
+
+// The tags on the most recipes, each opening the recipe list filtered by it.
+function TagShortcuts({ householdId }: { householdId: string }) {
+  use(householdStoreReady(householdId));
+  const recipes = useHouseholdQuery(householdId, recipes$);
+  const tags = useHouseholdQuery(householdId, tags$);
+  const links = useHouseholdQuery(householdId, recipeTags$);
+  const top = topTags(tags, links, new Set(recipes.map(({ id }) => id)), tagShortcutCount);
+  if (top.length === 0) return null;
+
+  return (
+    <ShortcutSection label="Tag shortcuts" title="Tags">
+      {top.map(({ tag, count }) => (
+        <SidebarLink key={tag.id} search={{ tags: [tag.id] }} showActiveState to="/recipes">
+          <Tag01Icon />
+          <span className="truncate">{tag.name}</span>
+          <span className="ml-auto text-sm text-olive-500 tabular-nums">{count}</span>
+        </SidebarLink>
+      ))}
+    </ShortcutSection>
   );
 }
 
