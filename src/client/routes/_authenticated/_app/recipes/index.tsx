@@ -96,8 +96,8 @@ function Recipes() {
     <>
       <title>{formatMetaTitle("Recipes")}</title>
       <AppHeaderActions>
-        <RecipesSearch onChange={(q) => changeSearch({ q })} value={search.q ?? ""} />
         <RecipesToolbar
+          search={<RecipesSearch onChange={(q) => changeSearch({ q })} value={search.q ?? ""} />}
           filter={<RecipesFilter {...filterProps} />}
           isMealPlannerOpen={settings.isMealPlannerOpen}
           onMealPlannerOpenChange={(isMealPlannerOpen) => updateSettings({ isMealPlannerOpen })}

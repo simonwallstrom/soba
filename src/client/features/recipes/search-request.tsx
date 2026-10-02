@@ -1,6 +1,6 @@
 import { useNavigate, useRouter } from "@tanstack/react-router";
-import { createContext, use, useEffect, useRef } from "react";
-import type { ReactNode, RefObject } from "react";
+import { createContext, use, useRef } from "react";
+import type { ReactNode } from "react";
 
 type SearchRequest = {
   register: (input: HTMLInputElement | null) => () => void;
@@ -62,11 +62,9 @@ export function useRequestRecipeSearch() {
   return context.request;
 }
 
-// Makes `input` the field that search requests focus, including the one that opened this page.
-export function useRecipeSearchField(input: RefObject<HTMLInputElement | null>) {
+// A ref for the field that search requests focus, including the request that opened this page.
+export function useRecipeSearchField() {
   const context = use(SearchRequestContext);
   if (!context) throw new Error("useRecipeSearchField needs a RecipeSearchRequestProvider");
-  const { register } = context;
-
-  useEffect(() => register(input.current), [register, input]);
+  return context.register;
 }
