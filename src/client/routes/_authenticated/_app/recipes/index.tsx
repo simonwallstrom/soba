@@ -1,5 +1,13 @@
 import { AppHeaderActions } from "@client/components/particles/app-header-actions";
-import { Button } from "@client/components/ui/button";
+import { Button, buttonVariants } from "@client/components/ui/button";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyIcon,
+  EmptyTitle,
+} from "@client/components/ui/empty";
+import { CookBookIcon } from "@client/components/ui/icons";
 import {
   AddToCollectionDialog,
   useAddToCollectionDialog,
@@ -18,13 +26,13 @@ import type { RecipeListEntry } from "@client/features/recipes/recipe-list";
 import { compareNames, groupTagsByRecipe } from "@client/features/recipes/recipe-tags";
 import { formatMetaTitle } from "@client/lib/meta";
 import { recipeListSettings } from "@shared/recipes";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { MealPlannerSidebar } from "./-components/meal-planner-sidebar";
 import { ActiveRecipeFilters, RecipesFilter } from "./-components/recipes-filters";
 import { RecipesSearch } from "./-components/recipes-search";
 import { RecipesToolbar } from "./-components/recipes-toolbar";
-import { filterRecipes, hasRecipeFilters, parseRecipeListSearch } from "./-recipe-list";
+import { filterRecipes, parseRecipeListSearch } from "./-recipe-list";
 import type { RecipeFilterField } from "./-recipe-list";
 
 export const Route = createFileRoute("/_authenticated/_app/recipes/")({
@@ -52,7 +60,6 @@ function Recipes() {
     tags: tagsByRecipe.get(recipe.id) ?? [],
     author: membersById?.get(recipe.createdBy),
   });
-  const hasFilters = search.q !== undefined || hasRecipeFilters(search);
   const entries = filterRecipes(recipes, tagsByRecipe, search, sort).map(toEntry);
   const plannerEntries = filterRecipes(recipes, tagsByRecipe, {}, "name").map(toEntry);
 
@@ -106,15 +113,30 @@ function Recipes() {
         />
       </AppHeaderActions>
       <ActiveRecipeFilters {...filterProps} onClear={clearFilters} />
-      <div className="p-2 lg:p-3">
-        {entries.length === 0 ? (
+      {/* Items pad their content, so an empty box takes that padding to line up with the header. */}
+      <div className={recipes.length === 0 ? "p-5 lg:p-6" : "p-2 lg:p-3"}>
+        {recipes.length === 0 ? (
+          <Empty>
+            <EmptyIcon>
+              <CookBookIcon />
+            </EmptyIcon>
+            <EmptyHeader>
+              <EmptyTitle>No recipes yet</EmptyTitle>
+              <EmptyDescription>
+                Add the recipes your family cooks, to find them and plan meals with.
+              </EmptyDescription>
+            </EmptyHeader>
+            <Link className={buttonVariants({ variant: "primary" })} to="/recipes/new">
+              New recipe
+            </Link>
+          </Empty>
+        ) : entries.length === 0 ? (
+          // Filtering is quick to undo, so no matches gets a lighter message than an empty household.
           <div className="flex min-h-48 flex-col items-center justify-center gap-2 text-center">
-            <p className="font-medium">{hasFilters ? "No matching recipes" : "No recipes yet"}</p>
-            {hasFilters && (
-              <Button onClick={clearFilters} size="sm" variant="ghost">
-                Clear filters
-              </Button>
-            )}
+            <p className="font-medium">No matching recipes</p>
+            <Button onClick={clearFilters} size="sm" variant="ghost">
+              Clear filters
+            </Button>
           </div>
         ) : (
           <RecipeList

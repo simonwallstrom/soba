@@ -23,6 +23,13 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@client/components/ui/dropdown-menu";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyIcon,
+  EmptyTitle,
+} from "@client/components/ui/empty";
 import * as Icons from "@client/components/ui/icons";
 import { Input } from "@client/components/ui/input";
 import { Label } from "@client/components/ui/label";
@@ -299,6 +306,20 @@ function DesignSystem() {
           </div>
         </Section>
 
+        <Section title="Empty">
+          <Empty>
+            <EmptyIcon>
+              <Icons.Layers01Icon />
+            </EmptyIcon>
+            <EmptyHeader>
+              <EmptyTitle>No collections yet</EmptyTitle>
+              <EmptyDescription>
+                Gather recipes for an occasion, a routine, or someone in the family.
+              </EmptyDescription>
+            </EmptyHeader>
+            <Button variant="primary">New collection</Button>
+          </Empty>
+        </Section>
         <Section title="Field">
           <FieldExamples />
         </Section>

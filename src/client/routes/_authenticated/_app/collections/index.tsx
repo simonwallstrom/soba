@@ -10,7 +10,14 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@client/components/ui/dropdown-menu";
-import { Add01Icon, Sorting03Icon } from "@client/components/ui/icons";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyIcon,
+  EmptyTitle,
+} from "@client/components/ui/empty";
+import { Add01Icon, Layers01Icon, Sorting03Icon } from "@client/components/ui/icons";
 import { CollectionActionsMenu } from "@client/features/collections/collection-actions-menu";
 import { CollectionDialog } from "@client/features/collections/collection-dialog";
 import {
@@ -98,17 +105,23 @@ function Collections() {
           </Button>
         </div>
       </AppHeaderActions>
-      <div className="p-2 lg:p-3">
+      {/* Items pad their content, so an empty box takes that padding to line up with the header. */}
+      <div className={sortedCollections.length === 0 ? "p-5 lg:p-6" : "p-2 lg:p-3"}>
         {sortedCollections.length === 0 ? (
-          <div className="flex min-h-48 flex-col items-center justify-center gap-2 text-center">
-            <p className="font-medium">No collections yet</p>
-            <p className="max-w-sm text-olive-500">
-              Gather recipes for an occasion, a routine, or someone in the family.
-            </p>
-            <Button className="mt-2" onClick={() => setIsCreating(true)} size="sm">
+          <Empty>
+            <EmptyIcon>
+              <Layers01Icon />
+            </EmptyIcon>
+            <EmptyHeader>
+              <EmptyTitle>No collections yet</EmptyTitle>
+              <EmptyDescription>
+                Gather recipes for an occasion, a routine, or someone in the family.
+              </EmptyDescription>
+            </EmptyHeader>
+            <Button onClick={() => setIsCreating(true)} variant="primary">
               New collection
             </Button>
-          </div>
+          </Empty>
         ) : (
           <MediaItems view={view}>
             {sortedCollections.map((collection) => {

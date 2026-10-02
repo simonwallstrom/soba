@@ -1,7 +1,14 @@
 import { AppHeaderActions } from "@client/components/particles/app-header-actions";
 import { buttonVariants } from "@client/components/ui/button";
 import { DropdownMenuItem } from "@client/components/ui/dropdown-menu";
-import { MinusSignIcon } from "@client/components/ui/icons";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyIcon,
+  EmptyTitle,
+} from "@client/components/ui/empty";
+import { Bookmark02Icon, MinusSignIcon } from "@client/components/ui/icons";
 import {
   AddToCollectionDialog,
   useAddToCollectionDialog,
@@ -108,17 +115,23 @@ function CollectionDetail() {
           />
         </div>
       </AppHeaderActions>
-      <div className="p-2 lg:p-3">
+      {/* Items pad their content, so an empty box takes that padding to line up with the header. */}
+      <div className={entries.length === 0 ? "p-5 lg:p-6" : "p-2 lg:p-3"}>
         {entries.length === 0 ? (
-          <div className="flex min-h-48 flex-col items-center justify-center gap-2 text-center">
-            <p className="font-medium">No recipes yet</p>
-            <p className="max-w-sm text-olive-500">
-              Add recipes with “Add to collection…” in a recipe’s menu.
-            </p>
-            <Link className={buttonVariants({ className: "mt-2", size: "sm" })} to="/recipes">
+          <Empty>
+            <EmptyIcon>
+              <Bookmark02Icon />
+            </EmptyIcon>
+            <EmptyHeader>
+              <EmptyTitle>No recipes yet</EmptyTitle>
+              <EmptyDescription>
+                Use “Add to collection…” in a recipe’s menu to gather recipes here.
+              </EmptyDescription>
+            </EmptyHeader>
+            <Link className={buttonVariants()} to="/recipes">
               Go to recipes
             </Link>
-          </div>
+          </Empty>
         ) : (
           <RecipeList
             // Ordered by when recipes were added, so no recipe date is shown.
