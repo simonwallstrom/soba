@@ -270,7 +270,7 @@ function ValueStep({
   );
 }
 
-// A line of chips for the filters in use, under the search. It wraps on wider screens and
+// A line of chips for the filters in use, under the search, a shade quieter than it in dark mode. It wraps on wider screens and
 // scrolls sideways on phones, staying one line tall. With several active, Clear removes them
 // all, along with the search.
 export function ActiveRecipeFilters({ onClear, ...props }: FilterProps & { onClear: () => void }) {
@@ -280,7 +280,7 @@ export function ActiveRecipeFilters({ onClear, ...props }: FilterProps & { onCle
   if (activeFields.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto border-t-[0.5px] border-black/18 px-5 py-2 sm:flex-wrap lg:px-6 dark:border-white/10">
+    <div className="flex items-center gap-2 overflow-x-auto border-t-[0.5px] border-black/18 px-5 py-2 sm:flex-wrap lg:px-6 dark:border-white/10 dark:bg-olive-912">
       {activeFields.map((field) => (
         <FilterChip {...props} field={field} key={field} />
       ))}

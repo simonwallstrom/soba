@@ -122,7 +122,7 @@ export function RecipesToolbar({
   return (
     <section
       aria-label="Recipe list controls"
-      className="sticky top-0 z-20 border-b-[0.5px] border-black/18 bg-olive-100 dark:border-white/10 dark:bg-olive-912"
+      className="sticky top-0 z-20 border-b-[0.5px] border-black/18 bg-olive-100 dark:border-white/10 dark:bg-olive-900"
     >
       <div className="flex h-12 items-center pr-3 pl-5 lg:pr-4 lg:pl-6">
         {search}
