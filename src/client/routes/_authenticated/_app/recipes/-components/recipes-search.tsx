@@ -31,8 +31,9 @@ export function RecipesSearch({
   }
 
   return (
-    <search className={cn("relative flex items-center", className)}>
-      <Search01Icon className="pointer-events-none absolute left-0 text-olive-500" />
+    <search className={cn("group/search relative flex items-center", className)}>
+      {/* Takes the text colour while the field has focus. */}
+      <Search01Icon className="pointer-events-none absolute left-0 text-olive-500 group-focus-within/search:text-inherit" />
       <input
         aria-keyshortcuts="/ Meta+K Control+K"
         aria-label="Search recipes"
