@@ -96,8 +96,9 @@ export function RecipesHeaderActions({
   );
 }
 
-// A lighter bar above the list for what shapes it: search, filters (with the active ones beside
-// them, or on their own line on phones), and display settings at the end.
+// A lighter bar above the list for what shapes it. Search fills the row, and the controls sit at
+// the end, with the active filters just before the button that edits them (on their own line on
+// phones).
 export function RecipesToolbar({
   activeFilters,
   filter,
@@ -126,12 +127,12 @@ export function RecipesToolbar({
     >
       <div className="flex flex-wrap items-center gap-2 px-5 py-2 lg:px-6">
         {search}
-        {filter}
         {activeFilters}
+        {filter}
         <DropdownMenu>
           <DropdownMenuTrigger
             className={buttonVariants({
-              className: "ml-auto gap-1.5",
+              className: "gap-1.5",
               size: "sm",
               variant: "ghost",
             })}
