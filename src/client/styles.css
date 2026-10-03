@@ -2,6 +2,8 @@
 
 @theme {
   --color-olive-925: oklch(18.6% 0.008 107.2);
+  /* Halfway to olive-900, opaque, for sticky surfaces a step above the page. */
+  --color-olive-912: color-mix(in oklab, var(--color-olive-900), var(--color-olive-925));
 
   --text-base: 0.9375rem; /* 15px */
   --text-base--line-height: 1.25rem; /* 20px */
