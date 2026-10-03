@@ -52,12 +52,11 @@ export function DialogContent({
   align?: "center" | "top";
   // Static only, since the dialog and drawer popups have different states.
   className?: string;
-  // Drawers never show one; they close with a swipe.
   showCloseButton?: boolean;
 }) {
   if (useContext(DrawerModeContext)) {
     return (
-      <DrawerContent className={className} {...props}>
+      <DrawerContent className={className} showCloseButton={showCloseButton} {...props}>
         {children}
       </DrawerContent>
     );

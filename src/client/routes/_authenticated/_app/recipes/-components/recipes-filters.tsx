@@ -104,8 +104,9 @@ function FilterPopup({
         <DrawerTrigger {...trigger} />
         <DrawerContent
           aria-label={label}
-          // The list scrolls to the bottom edge, so only the bleed and safe area pad it.
-          className="gap-0 px-0 pt-5 pb-[calc(3rem+env(safe-area-inset-bottom))]"
+          // The search row starts at the top, with the close button at its end. The list scrolls
+          // to the bottom edge, so only the bleed and safe area pad it.
+          className="gap-0 px-0 pt-0 pb-[calc(3rem+env(safe-area-inset-bottom))]"
           initialFocus={drawerRef}
           ref={drawerRef}
         >
@@ -181,9 +182,10 @@ function FieldStep({
       open
       value={null}
     >
-      {/* On phones, the search and icons line up with the page's 20px margin. */}
+      {/* On phones, the search and icons line up with the page's 20px margin, and the row
+          is as tall as the app's bars, leaving room for the drawer's close button. */}
       <ComboboxInput
-        className="max-sm:[&_input]:px-5"
+        className="max-sm:[&_input]:h-12 max-sm:[&_input]:px-5 max-sm:[&_input]:pr-14"
         placeholder="Filter by…"
         ref={inputRef}
         showTrigger={false}
@@ -250,7 +252,10 @@ function ValueStep({
         )}
         <ComboboxInput
           aria-label={`Filter by ${label.toLowerCase()}`}
-          className={cn("border-b-0", onBack && "[&_input]:pl-0.75")}
+          className={cn(
+            "border-b-0 max-sm:[&_input]:h-12 max-sm:[&_input]:pr-14",
+            onBack && "[&_input]:pl-0.75",
+          )}
           onKeyDown={handleKeyDown}
           placeholder={`Search ${plural}…`}
           ref={inputRef}

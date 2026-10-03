@@ -41,7 +41,7 @@ export function DrawerExamples() {
           <DialogHeader>
             <DialogTitle>Weeknight dinners</DialogTitle>
             <DialogDescription>
-              Swipe down, tap outside, or press Escape to close.
+              Close it with the button, a swipe down, a tap outside, or Escape.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
