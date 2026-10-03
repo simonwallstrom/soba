@@ -146,13 +146,10 @@ export function RecipesFilter(props: FilterProps) {
       }}
       open={isOpen}
       trigger={{
-        className: buttonVariants({ className: "gap-1.5", size: "sm", variant: "ghost" }),
-        children: (
-          <>
-            <FilterIcon />
-            <span className="max-sm:sr-only">Filter</span>
-          </>
-        ),
+        "aria-label": "Filter recipes",
+        className: buttonVariants({ size: "icon-sm", variant: "ghost" }),
+        title: "Filter",
+        children: <FilterIcon />,
       }}
     >
       {step === null ? (
@@ -273,8 +270,9 @@ function ValueStep({
   );
 }
 
-// Chips for the filters in use, beside the filter button, or on their own line on phones. With
-// several active, Clear removes them all, along with the search.
+// A line of chips for the filters in use, under the search. It wraps on wider screens and
+// scrolls sideways on phones, staying one line tall. With several active, Clear removes them
+// all, along with the search.
 export function ActiveRecipeFilters({ onClear, ...props }: FilterProps & { onClear: () => void }) {
   const activeFields = recipeFilterFields.filter(
     (field) => (props.filters[field]?.length ?? 0) > 0,
@@ -282,12 +280,12 @@ export function ActiveRecipeFilters({ onClear, ...props }: FilterProps & { onCle
   if (activeFields.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 max-sm:order-last max-sm:w-full">
+    <div className="flex items-center gap-2 overflow-x-auto border-t-[0.5px] border-black/18 px-5 py-2 sm:flex-wrap lg:px-6 dark:border-white/10">
       {activeFields.map((field) => (
         <FilterChip {...props} field={field} key={field} />
       ))}
       {activeFields.length > 1 && (
-        <Button onClick={onClear} size="sm" variant="ghost">
+        <Button className="-mr-2 ml-auto shrink-0" onClick={onClear} size="sm" variant="ghost">
           Clear
         </Button>
       )}

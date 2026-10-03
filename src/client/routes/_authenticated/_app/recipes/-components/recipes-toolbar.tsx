@@ -96,9 +96,8 @@ export function RecipesHeaderActions({
   );
 }
 
-// A lighter bar above the list for what shapes it. Search fills the row, and the controls sit at
-// the end, with the active filters just before the button that edits them (on their own line on
-// phones).
+// A lighter bar above the list for what shapes it: search, then filter and display controls past
+// a divider, like the header's. Active filters get a line of their own below.
 export function RecipesToolbar({
   activeFilters,
   filter,
@@ -125,21 +124,17 @@ export function RecipesToolbar({
       aria-label="Recipe list controls"
       className="sticky top-0 z-20 border-b-[0.5px] border-black/18 bg-olive-100 dark:border-white/10 dark:bg-olive-900"
     >
-      <div className="flex flex-wrap items-center gap-2 px-5 py-2 lg:px-6">
+      <div className="flex items-center py-2 pr-3.5 pl-5 lg:pr-4.5 lg:pl-6">
         {search}
-        {activeFilters}
+        <div className="mx-3 h-3.5 w-px bg-black/12 dark:bg-white/8" />
         {filter}
         <DropdownMenu>
           <DropdownMenuTrigger
-            className={buttonVariants({
-              className: "gap-1.5",
-              size: "sm",
-              variant: "ghost",
-            })}
+            aria-label="Display settings"
+            className={buttonVariants({ size: "icon-sm", variant: "ghost" })}
+            title="Display"
           >
             <Sorting03Icon />
-            {/* Phones keep the name for screen readers only. */}
-            <span className="max-sm:sr-only">Display</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-64">
             <DropdownMenuGroup>
@@ -185,6 +180,7 @@ export function RecipesToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      {activeFilters}
     </section>
   );
 }
