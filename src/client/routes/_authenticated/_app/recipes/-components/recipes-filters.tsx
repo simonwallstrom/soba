@@ -242,7 +242,7 @@ function ValueStep({
         {onBack && (
           <Button
             aria-label="Back to filters"
-            className="ml-2.25 size-7 shrink-0 rounded-md max-sm:ml-3.75 [&_svg]:size-3.5"
+            className="ml-2.25 size-7 shrink-0 max-sm:ml-3.75 [&_svg]:size-3.5"
             onClick={onBack}
             size="icon-sm"
             variant="ghost"
