@@ -57,7 +57,7 @@ export function RecipesHeaderActions({
         <DropdownMenuTrigger
           className={cn(
             buttonVariants({ variant: "ghost" }),
-            "gap-1.5 pl-1.5 pr-2.5 max-sm:size-8 rounded-full max-sm:p-0",
+            "max-sm:size-8 rounded-full max-sm:p-0",
           )}
         >
           <Add01Icon />
@@ -124,14 +124,14 @@ export function RecipesToolbar({
       aria-label="Recipe list controls"
       className="sticky top-0 z-20 border-b-[0.5px] border-black/18 bg-olive-100 dark:border-white/10 dark:bg-olive-900"
     >
-      <div className="flex items-center py-2 pr-3.5 pl-5 lg:pr-4.5 lg:pl-6">
+      <div className="flex h-12 items-center pr-3 pl-5 lg:pr-4 lg:pl-6">
         {search}
         <div className="mx-3 h-3.5 w-px bg-black/12 dark:bg-white/8" />
         {filter}
         <DropdownMenu>
           <DropdownMenuTrigger
             aria-label="Display settings"
-            className={buttonVariants({ size: "icon-sm", variant: "ghost" })}
+            className={buttonVariants({ size: "icon", variant: "ghost" })}
             title="Display"
           >
             <Sorting03Icon />

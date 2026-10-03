@@ -5,7 +5,8 @@ import { useRecipeSearchField } from "@client/features/recipes/search-request";
 import { cn } from "cn";
 import type { KeyboardEvent } from "react";
 
-// A borderless field that leads the list bar. The app's search shortcuts focus it.
+// A borderless field that leads the list bar, as tall as its parent so all of it takes a click.
+// The app's search shortcuts focus it.
 export function RecipesSearch({
   className,
   onChange,
@@ -37,7 +38,7 @@ export function RecipesSearch({
         aria-label="Search recipes"
         className={cn(
           textEntryStyles,
-          "h-7 w-full min-w-0 bg-transparent pr-7 pl-6 outline-none [&::-webkit-search-cancel-button]:appearance-none",
+          "h-full w-full min-w-0 bg-transparent pr-7 pl-6 outline-none [&::-webkit-search-cancel-button]:appearance-none",
         )}
         enterKeyHint="search"
         onChange={(event) => onChange(event.currentTarget.value)}

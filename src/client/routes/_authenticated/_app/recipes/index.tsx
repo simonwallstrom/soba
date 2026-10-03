@@ -111,7 +111,7 @@ function Recipes() {
           onVisibleDetailsChange={(visibleDetails) => updateSettings({ visibleDetails })}
           search={
             <RecipesSearch
-              className="min-w-0 flex-1 basis-32"
+              className="min-w-0 flex-1 self-stretch"
               onChange={(q) => changeSearch({ q })}
               value={search.q ?? ""}
             />

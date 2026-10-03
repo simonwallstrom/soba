@@ -147,7 +147,7 @@ export function RecipesFilter(props: FilterProps) {
       open={isOpen}
       trigger={{
         "aria-label": "Filter recipes",
-        className: buttonVariants({ size: "icon-sm", variant: "ghost" }),
+        className: buttonVariants({ size: "icon", variant: "ghost" }),
         title: "Filter",
         children: <FilterIcon />,
       }}
