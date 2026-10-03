@@ -173,7 +173,11 @@ export function ComboboxList({ className, ...props }: ComboboxPrimitive.List.Pro
 export function ComboboxItem({ children, className, ...props }: ComboboxPrimitive.Item.Props) {
   return (
     <ComboboxPrimitive.Item
-      className={cn(itemStyles, "relative flex w-full items-center pr-8 pl-2.5", className)}
+      className={cn(
+        itemStyles,
+        "relative flex w-full items-center pr-8 pl-2.5 [&_svg]:opacity-80 data-highlighted:[&_svg]:opacity-100",
+        className,
+      )}
       data-slot="combobox-item"
       {...props}
     >

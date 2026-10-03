@@ -85,7 +85,7 @@ export function DropdownMenuItem({
     <MenuPrimitive.Item
       className={cn(
         itemStyles,
-        "flex items-center gap-1.5 px-2.5 data-inset:pl-9 [&_svg]:opacity-80",
+        "flex items-center gap-1.5 px-2.5 data-inset:pl-9 [&_svg]:opacity-80 data-highlighted:[&_svg]:opacity-100",
         "data-[variant=destructive]:text-red-600 dark:data-[variant=destructive]:text-red-400",
         "data-highlighted:data-[variant=destructive]:bg-red-50 data-highlighted:active:data-[variant=destructive]:bg-red-100 dark:data-highlighted:data-[variant=destructive]:bg-red-950/40 dark:data-highlighted:active:data-[variant=destructive]:bg-red-950/60",
         className,
@@ -180,7 +180,7 @@ export function DropdownMenuSubTrigger({
     <MenuPrimitive.SubmenuTrigger
       className={cn(
         itemStyles,
-        "flex items-center gap-1.5 pr-2 pl-2.5 data-inset:pl-9 [&_svg]:opacity-80",
+        "flex items-center gap-1.5 pr-2 pl-2.5 data-inset:pl-9 [&_svg]:opacity-80 data-highlighted:[&_svg]:opacity-100",
         "data-popup-open:bg-black/5 dark:data-popup-open:bg-white/6",
         className,
       )}

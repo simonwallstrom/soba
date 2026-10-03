@@ -196,7 +196,7 @@ function FieldStep({
         {(option: FieldOption) => (
           <ComboboxItem key={option.value} value={option}>
             <span className="flex items-center gap-2">
-              <option.Icon className="text-olive-500" />
+              <option.Icon />
               {option.label}
             </span>
           </ComboboxItem>
