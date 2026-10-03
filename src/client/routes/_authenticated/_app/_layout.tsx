@@ -1,5 +1,6 @@
 import { AppAsideSlot } from "@client/components/particles/app-aside";
 import { AppHeaderActionsSlot } from "@client/components/particles/app-header-actions";
+import { AppToolbarSlot } from "@client/components/particles/app-toolbar";
 import { householdStoreOptions, householdStoreReady } from "@client/features/household/store";
 import {
   RecipeSearchRequestProvider,
@@ -43,6 +44,7 @@ function AppLayout() {
   const router = useRouter();
   const [actionsSlot, setActionsSlot] = useState<HTMLDivElement | null>(null);
   const [asideSlot, setAsideSlot] = useState<HTMLDivElement | null>(null);
+  const [toolbarSlot, setToolbarSlot] = useState<HTMLDivElement | null>(null);
   // Load every app page's code up front so the first visit to each is instant.
   useEffect(() => {
     for (const id of appPageIds) void router.loadRouteChunk(router.routesById[id]);
@@ -57,6 +59,11 @@ function AppLayout() {
           <section className="flex min-h-0 min-w-0 overflow-hidden bg-olive-50 lg:my-1.5 lg:mr-1.5 lg:rounded-lg lg:border-[0.5px] lg:border-black/18 dark:bg-olive-925 lg:dark:border-white/10">
             <div className="flex min-w-0 flex-1 flex-col">
               <AppHeader actionsRef={setActionsSlot} />
+              {/* A page's toolbar, outside the scrolling content so it never moves with it. */}
+              <div
+                className="shrink-0 pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] empty:hidden"
+                ref={setToolbarSlot}
+              />
               {/* The only scrolling element on app pages; the router restores its position. */}
               <main
                 className="isolate min-h-0 min-w-0 flex-1 overflow-y-auto pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]"
@@ -72,9 +79,11 @@ function AppLayout() {
                 >
                   <HouseholdStore householdId={household.id}>
                     <AppHeaderActionsSlot value={actionsSlot}>
-                      <AppAsideSlot value={asideSlot}>
-                        <Outlet />
-                      </AppAsideSlot>
+                      <AppToolbarSlot value={toolbarSlot}>
+                        <AppAsideSlot value={asideSlot}>
+                          <Outlet />
+                        </AppAsideSlot>
+                      </AppToolbarSlot>
                     </AppHeaderActionsSlot>
                   </HouseholdStore>
                 </Suspense>

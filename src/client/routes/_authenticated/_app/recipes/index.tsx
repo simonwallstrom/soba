@@ -1,4 +1,5 @@
 import { AppHeaderActions } from "@client/components/particles/app-header-actions";
+import { AppToolbar } from "@client/components/particles/app-toolbar";
 import { Button, buttonVariants } from "@client/components/ui/button";
 import {
   Empty,
@@ -102,25 +103,27 @@ function Recipes() {
         />
       </AppHeaderActions>
       {/* With no recipes yet, there is nothing to search or sort. */}
-      {recipes.length > 0 && (
-        <RecipesToolbar
-          activeFilters={<ActiveRecipeFilters {...filterProps} onClear={clearFilters} />}
-          filter={<RecipesFilter {...filterProps} />}
-          onSortChange={(nextSort) => updateSettings({ sort: nextSort })}
-          onViewChange={(view) => updateSettings({ view })}
-          onVisibleDetailsChange={(visibleDetails) => updateSettings({ visibleDetails })}
-          search={
-            <RecipesSearch
-              className="min-w-0 flex-1 self-stretch"
-              onChange={(q) => changeSearch({ q })}
-              value={search.q ?? ""}
-            />
-          }
-          sort={sort}
-          view={settings.view}
-          visibleDetails={settings.visibleDetails}
-        />
-      )}
+      <AppToolbar>
+        {recipes.length > 0 && (
+          <RecipesToolbar
+            activeFilters={<ActiveRecipeFilters {...filterProps} onClear={clearFilters} />}
+            filter={<RecipesFilter {...filterProps} />}
+            onSortChange={(nextSort) => updateSettings({ sort: nextSort })}
+            onViewChange={(view) => updateSettings({ view })}
+            onVisibleDetailsChange={(visibleDetails) => updateSettings({ visibleDetails })}
+            search={
+              <RecipesSearch
+                className="min-w-0 flex-1 self-stretch"
+                onChange={(q) => changeSearch({ q })}
+                value={search.q ?? ""}
+              />
+            }
+            sort={sort}
+            view={settings.view}
+            visibleDetails={settings.visibleDetails}
+          />
+        )}
+      </AppToolbar>
       {/* Items pad their content, so an empty box takes that padding to line up with the header. */}
       <div className={recipes.length === 0 ? "p-5 lg:p-6" : "p-2 lg:p-3"}>
         {recipes.length === 0 ? (
