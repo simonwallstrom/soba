@@ -270,9 +270,9 @@ function ValueStep({
   );
 }
 
-// A line of chips for the filters in use, under the search. A fainter line than the bar's edge
-// keeps it part of the same bar. It wraps on wider screens and scrolls sideways on phones,
-// staying one line tall. With several active, Clear removes them all, along with the search.
+// A line of chips for the filters in use, under the search. A fainter, inset line keeps it part
+// of the same bar. It wraps on wider screens and scrolls sideways on phones, staying one line
+// tall. With several active, Clear removes them all, along with the search.
 export function ActiveRecipeFilters({ onClear, ...props }: FilterProps & { onClear: () => void }) {
   const activeFields = recipeFilterFields.filter(
     (field) => (props.filters[field]?.length ?? 0) > 0,
@@ -280,15 +280,18 @@ export function ActiveRecipeFilters({ onClear, ...props }: FilterProps & { onCle
   if (activeFields.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto border-t-[0.5px] border-black/8 px-5 py-2 sm:flex-wrap lg:px-6 dark:border-white/6">
-      {activeFields.map((field) => (
-        <FilterChip {...props} field={field} key={field} />
-      ))}
-      {activeFields.length > 1 && (
-        <Button className="-mr-2 ml-auto shrink-0" onClick={onClear} size="sm" variant="ghost">
-          Clear
-        </Button>
-      )}
+    // The line is inset to the content's edges, while the chips scroll right to the screen's.
+    <div className="relative before:absolute before:inset-x-5 before:top-0 before:border-t-[0.5px] before:border-black/8 lg:before:inset-x-6 dark:before:border-white/6">
+      <div className="flex items-center gap-2 overflow-x-auto px-5 py-2 sm:flex-wrap lg:px-6">
+        {activeFields.map((field) => (
+          <FilterChip {...props} field={field} key={field} />
+        ))}
+        {activeFields.length > 1 && (
+          <Button className="-mr-2 ml-auto shrink-0" onClick={onClear} size="sm" variant="ghost">
+            Clear
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
