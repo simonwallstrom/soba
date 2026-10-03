@@ -3,33 +3,22 @@ import { Cancel01Icon, Search01Icon } from "@client/components/ui/icons";
 import { textEntryStyles } from "@client/components/ui/styles";
 import { useRecipeSearchField } from "@client/features/recipes/search-request";
 import { cn } from "cn";
-import { useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
-// An icon that opens a search field in the heading's place. It stays open while it holds text,
-// so the reason for a shorter list stays visible.
-//
-// The field stays rendered while closed, only out of sight, so the icon and the app's search
-// shortcuts can focus it straight away. Phones raise the keyboard only for that.
+// A borderless field that leads the list bar. The app's search shortcuts focus it.
 export function RecipesSearch({
+  className,
   onChange,
   value,
 }: {
+  className?: string;
   onChange: (value: string) => void;
   value: string;
 }) {
-  const [isFocused, setIsFocused] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const registerField = useRecipeSearchField();
-  const isOpen = isFocused || value !== "";
-
-  function close() {
-    onChange("");
-    inputRef.current?.blur();
-  }
 
   // Enter leaves the results in view (and hides a touch keyboard). Escape clears the text
-  // first, then closes.
+  // first, then leaves the field.
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Enter") {
       event.currentTarget.blur();
@@ -41,61 +30,34 @@ export function RecipesSearch({
   }
 
   return (
-    <search
-      className={cn("flex items-center", isOpen && "flex-1 gap-2")}
-      data-replaces-heading={isOpen || undefined}
-    >
-      {isOpen ? (
-        <Search01Icon className="shrink-0 text-olive-500" />
-      ) : (
-        <Button
-          aria-label="Search recipes"
-          aria-keyshortcuts="/ Meta+K Control+K"
-          onClick={() => inputRef.current?.focus()}
-          size="icon"
-          title="Search (/)"
-          variant="ghost"
-        >
-          <Search01Icon />
-        </Button>
-      )}
+    <search className={cn("relative flex items-center", className)}>
+      <Search01Icon className="pointer-events-none absolute left-0 text-olive-500" />
       <input
+        aria-keyshortcuts="/ Meta+K Control+K"
         aria-label="Search recipes"
         className={cn(
           textEntryStyles,
-          isOpen
-            ? "h-8 min-w-0 flex-1 bg-transparent outline-none [&::-webkit-search-cancel-button]:appearance-none"
-            : "sr-only",
+          "h-7 w-full min-w-0 bg-transparent pr-7 pl-6 outline-none [&::-webkit-search-cancel-button]:appearance-none",
         )}
         enterKeyHint="search"
-        onBlur={() => setIsFocused(false)}
         onChange={(event) => onChange(event.currentTarget.value)}
-        onFocus={() => setIsFocused(true)}
         onKeyDown={handleKeyDown}
         placeholder="Search recipes…"
-        ref={(input) => {
-          inputRef.current = input;
-          return registerField(input);
-        }}
-        tabIndex={isOpen ? undefined : -1}
+        ref={registerField}
         type="search"
         value={value}
       />
-      {isOpen && (
+      {value !== "" && (
         <Button
-          aria-label="Close search"
-          // Keeps focus in the field, so closing does not first blur it into a half-closed state.
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={close}
-          size="icon"
+          aria-label="Clear search"
+          className="absolute right-0 size-6"
+          onClick={() => onChange("")}
+          size="icon-sm"
           variant="ghost"
         >
           <Cancel01Icon />
         </Button>
       )}
-      {/* Ends the field before the list controls, spaced like the meal planner's divider (the
-          field's gap adds the rest on the left). Phones hide the controls while searching. */}
-      {isOpen && <div className="mr-3 ml-1 h-3.5 w-px bg-black/12 max-sm:hidden dark:bg-white/8" />}
     </search>
   );
 }

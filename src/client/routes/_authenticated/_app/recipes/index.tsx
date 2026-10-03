@@ -28,7 +28,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { MealPlannerSidebar } from "./-components/meal-planner-sidebar";
 import { ActiveRecipeFilters, RecipesFilter } from "./-components/recipes-filters";
 import { RecipesSearch } from "./-components/recipes-search";
-import { RecipesToolbar } from "./-components/recipes-toolbar";
+import { RecipesHeaderActions, RecipesToolbar } from "./-components/recipes-toolbar";
 import { filterRecipes, parseRecipeListSearch } from "./-recipe-list";
 import type { RecipeFilterField } from "./-recipe-list";
 
@@ -96,20 +96,31 @@ function Recipes() {
     <>
       <title>{formatMetaTitle("Recipes")}</title>
       <AppHeaderActions>
-        <RecipesToolbar
-          search={<RecipesSearch onChange={(q) => changeSearch({ q })} value={search.q ?? ""} />}
-          filter={<RecipesFilter {...filterProps} />}
+        <RecipesHeaderActions
           isMealPlannerOpen={settings.isMealPlannerOpen}
           onMealPlannerOpenChange={(isMealPlannerOpen) => updateSettings({ isMealPlannerOpen })}
+        />
+      </AppHeaderActions>
+      {/* With no recipes yet, there is nothing to search or sort. */}
+      {recipes.length > 0 && (
+        <RecipesToolbar
+          activeFilters={<ActiveRecipeFilters {...filterProps} onClear={clearFilters} />}
+          filter={<RecipesFilter {...filterProps} />}
           onSortChange={(nextSort) => updateSettings({ sort: nextSort })}
           onViewChange={(view) => updateSettings({ view })}
           onVisibleDetailsChange={(visibleDetails) => updateSettings({ visibleDetails })}
+          search={
+            <RecipesSearch
+              className="min-w-0 flex-1 basis-32 sm:max-w-64"
+              onChange={(q) => changeSearch({ q })}
+              value={search.q ?? ""}
+            />
+          }
           sort={sort}
           view={settings.view}
           visibleDetails={settings.visibleDetails}
         />
-      </AppHeaderActions>
-      <ActiveRecipeFilters {...filterProps} onClear={clearFilters} />
+      )}
       {/* Items pad their content, so an empty box takes that padding to line up with the header. */}
       <div className={recipes.length === 0 ? "p-5 lg:p-6" : "p-2 lg:p-3"}>
         {recipes.length === 0 ? (

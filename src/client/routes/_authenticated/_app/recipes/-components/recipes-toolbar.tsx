@@ -41,42 +41,104 @@ const detailOptions = [
   { label: "Tags", value: "tags" },
 ] as const satisfies readonly { label: string; value: RecipeDetail }[];
 
-// Search and the controls that shape the list come first, then creating a recipe, then the
-// side panel. Open, search takes the heading's place; phones then hide the rest to make room.
-export function RecipesToolbar({
-  search,
-  filter,
+// Creating a recipe, then the side panel.
+export function RecipesHeaderActions({
   isMealPlannerOpen,
   onMealPlannerOpenChange,
+}: {
+  isMealPlannerOpen: boolean;
+  onMealPlannerOpenChange: (isOpen: boolean) => void;
+}) {
+  return (
+    <div className="-mr-2 flex items-center">
+      {/* A prototype: only manual entry opens, and it does not save yet. */}
+      <DropdownMenu>
+        {/* The page's main action gets a label; phones shrink it back to an icon. */}
+        <DropdownMenuTrigger
+          className={cn(
+            buttonVariants({ variant: "ghost" }),
+            "gap-1.5 pl-1.5 pr-2.5 max-sm:size-8 rounded-full max-sm:p-0",
+          )}
+        >
+          <Add01Icon />
+          <span className="max-sm:sr-only">New recipe</span>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-52">
+          <DropdownMenuItem render={<Link to="/recipes/new" />}>
+            <FileEditIcon />
+            Manual entry
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled>
+            <LinkSquare02Icon />
+            Import from URL
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled>
+            <ImageUploadIcon />
+            Import from photo
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <div className="hidden items-center lg:flex">
+        <div className="mx-3 h-3.5 w-px bg-black/12 dark:bg-white/8" />
+        <Button
+          aria-controls="meal-planner-sidebar"
+          aria-expanded={isMealPlannerOpen}
+          aria-label={isMealPlannerOpen ? "Close meal planner" : "Open meal planner"}
+          data-pressed={isMealPlannerOpen || undefined}
+          onClick={() => onMealPlannerOpenChange(!isMealPlannerOpen)}
+          size="icon"
+          variant="ghost"
+        >
+          <Calendar03Icon />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// A lighter bar above the list for what shapes it: search, filters (with the active ones beside
+// them, or on their own line on phones), and display settings at the end.
+export function RecipesToolbar({
+  activeFilters,
+  filter,
   onSortChange,
   onViewChange,
   onVisibleDetailsChange,
+  search,
   sort,
   view,
   visibleDetails,
 }: {
-  search: ReactNode;
+  activeFilters: ReactNode;
   filter: ReactNode;
-  isMealPlannerOpen: boolean;
-  onMealPlannerOpenChange: (isOpen: boolean) => void;
   onSortChange: (sort: RecipeSort) => void;
   onViewChange: (view: RecipeView) => void;
   onVisibleDetailsChange: (details: RecipeDetail[]) => void;
+  search: ReactNode;
   sort: RecipeSort;
   view: RecipeView;
   visibleDetails: readonly RecipeDetail[];
 }) {
   return (
-    <div className="group/toolbar -mr-2 flex flex-1 items-center justify-end">
-      {search}
-      <div className="flex items-center max-sm:group-has-data-replaces-heading/toolbar:hidden">
+    <section
+      aria-label="Recipe list controls"
+      className="sticky top-0 z-20 border-b-[0.5px] border-black/18 bg-olive-100 dark:border-white/10 dark:bg-olive-900"
+    >
+      <div className="flex flex-wrap items-center gap-2 px-5 py-2 lg:px-6">
+        {search}
         {filter}
+        {activeFilters}
         <DropdownMenu>
           <DropdownMenuTrigger
-            aria-label="Display settings"
-            className={buttonVariants({ size: "icon", variant: "ghost" })}
+            className={buttonVariants({
+              className: "ml-auto gap-1.5",
+              size: "sm",
+              variant: "ghost",
+            })}
           >
             <Sorting03Icon />
+            {/* Phones keep the name for screen readers only. */}
+            <span className="max-sm:sr-only">Display</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-64">
             <DropdownMenuGroup>
@@ -121,48 +183,7 @@ export function RecipesToolbar({
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
-        {/* A prototype: only manual entry opens, and it does not save yet. */}
-        <DropdownMenu>
-          {/* The page's main action gets a label; phones shrink it back to an icon. */}
-          <DropdownMenuTrigger
-            className={cn(
-              buttonVariants({ variant: "ghost" }),
-              "gap-1.5 pl-1.5 pr-2.5 max-sm:size-8 rounded-full max-sm:p-0",
-            )}
-          >
-            <Add01Icon />
-            <span className="max-sm:sr-only">New recipe</span>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-52">
-            <DropdownMenuItem render={<Link to="/recipes/new" />}>
-              <FileEditIcon />
-              Manual entry
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled>
-              <LinkSquare02Icon />
-              Import from URL
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled>
-              <ImageUploadIcon />
-              Import from photo
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <div className="hidden items-center lg:flex">
-          <div className="mx-3 h-3.5 w-px bg-black/12 dark:bg-white/8" />
-          <Button
-            aria-controls="meal-planner-sidebar"
-            aria-expanded={isMealPlannerOpen}
-            aria-label={isMealPlannerOpen ? "Close meal planner" : "Open meal planner"}
-            data-pressed={isMealPlannerOpen || undefined}
-            onClick={() => onMealPlannerOpenChange(!isMealPlannerOpen)}
-            size="icon"
-            variant="ghost"
-          >
-            <Calendar03Icon />
-          </Button>
-        </div>
       </div>
-    </div>
+    </section>
   );
 }

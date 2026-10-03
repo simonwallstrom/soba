@@ -24,7 +24,7 @@ import { cn } from "cn";
 import { useEffect, useRef, useState } from "react";
 import type { ComponentProps, KeyboardEvent, ReactNode, RefObject } from "react";
 
-import { hasRecipeFilters, recipeFilterFields } from "../-recipe-list";
+import { recipeFilterFields } from "../-recipe-list";
 import type { RecipeFilterField, RecipeFilters } from "../-recipe-list";
 
 type FieldOption = {
@@ -134,7 +134,6 @@ export function RecipesFilter(props: FilterProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<RecipeFilterField | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const isActive = hasRecipeFilters(props.filters);
 
   return (
     <FilterPopup
@@ -147,17 +146,11 @@ export function RecipesFilter(props: FilterProps) {
       }}
       open={isOpen}
       trigger={{
-        "aria-label": isActive ? "Filter recipes, filters applied" : "Filter recipes",
-        className: buttonVariants({ className: "relative", size: "icon", variant: "ghost" }),
+        className: buttonVariants({ className: "gap-1.5", size: "sm", variant: "ghost" }),
         children: (
           <>
             <FilterIcon />
-            {isActive && (
-              <span
-                aria-hidden="true"
-                className="absolute top-0.5 right-0.5 size-2 rounded-full border border-olive-50 bg-olive-800 dark:border-olive-925 dark:bg-olive-200"
-              />
-            )}
+            <span className="max-sm:sr-only">Filter</span>
           </>
         ),
       }}
@@ -280,7 +273,8 @@ function ValueStep({
   );
 }
 
-// With several filters active, Clear removes them all, along with the search.
+// Chips for the filters in use, beside the filter button, or on their own line on phones. With
+// several active, Clear removes them all, along with the search.
 export function ActiveRecipeFilters({ onClear, ...props }: FilterProps & { onClear: () => void }) {
   const activeFields = recipeFilterFields.filter(
     (field) => (props.filters[field]?.length ?? 0) > 0,
@@ -288,21 +282,16 @@ export function ActiveRecipeFilters({ onClear, ...props }: FilterProps & { onCle
   if (activeFields.length === 0) return null;
 
   return (
-    <section
-      aria-label="Active recipe filters"
-      className="sticky top-0 z-20 overflow-x-auto border-b-[0.5px] border-black/18 bg-olive-100 dark:border-white/10 dark:bg-olive-900"
-    >
-      <div className="flex min-w-max items-center gap-2 px-5 py-2 lg:px-6">
-        {activeFields.map((field) => (
-          <FilterChip {...props} field={field} key={field} />
-        ))}
-        {activeFields.length > 1 && (
-          <Button className="ml-auto" onClick={onClear} size="sm" variant="ghost">
-            Clear
-          </Button>
-        )}
-      </div>
-    </section>
+    <div className="flex flex-wrap items-center gap-2 max-sm:order-last max-sm:w-full">
+      {activeFields.map((field) => (
+        <FilterChip {...props} field={field} key={field} />
+      ))}
+      {activeFields.length > 1 && (
+        <Button onClick={onClear} size="sm" variant="ghost">
+          Clear
+        </Button>
+      )}
+    </div>
   );
 }
 

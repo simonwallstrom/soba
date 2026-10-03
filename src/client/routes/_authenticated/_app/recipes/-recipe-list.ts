@@ -26,10 +26,6 @@ export function parseRecipeListSearch(search: Record<string, unknown>): RecipeLi
   return result;
 }
 
-export function hasRecipeFilters(filters: RecipeFilters) {
-  return recipeFilterFields.some((field) => (filters[field]?.length ?? 0) > 0);
-}
-
 function normalize(text: string) {
   return text.trim().toLocaleLowerCase("sv");
 }
