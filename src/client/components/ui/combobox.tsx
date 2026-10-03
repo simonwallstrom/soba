@@ -189,8 +189,8 @@ export function ComboboxItem({ children, className, ...props }: ComboboxPrimitiv
   );
 }
 
-// Marks the selected indicator with `data-checked` so it picks up the checkbox's checked style.
-function renderCheckboxIndicator(
+// Marks the selected indicator with `data-checked` so it picks up the checked choice style.
+function renderChoiceIndicator(
   props: ComponentProps<"span">,
   state: ComboboxPrimitive.ItemIndicator.State,
 ) {
@@ -212,9 +212,29 @@ export function ComboboxCheckboxItem({
       <ComboboxPrimitive.ItemIndicator
         className={cn(choiceStyles, "rounded-sm not-data-checked:[&_svg]:opacity-0")}
         keepMounted
-        render={renderCheckboxIndicator}
+        render={renderChoiceIndicator}
       >
         <CheckIcon className="size-3.5" />
+      </ComboboxPrimitive.ItemIndicator>
+      <span className="min-w-0 truncate">{children}</span>
+    </ComboboxPrimitive.Item>
+  );
+}
+
+// For a single choice shown as a list of options, like a radio group.
+export function ComboboxRadioItem({ children, className, ...props }: ComboboxPrimitive.Item.Props) {
+  return (
+    <ComboboxPrimitive.Item
+      className={cn(choiceItemStyles, "w-full", className)}
+      data-slot="combobox-radio-item"
+      {...props}
+    >
+      <ComboboxPrimitive.ItemIndicator
+        className={cn(choiceStyles, "rounded-full not-data-checked:[&>span]:opacity-0")}
+        keepMounted
+        render={renderChoiceIndicator}
+      >
+        <span className="size-1.5 rounded-full bg-current" />
       </ComboboxPrimitive.ItemIndicator>
       <span className="min-w-0 truncate">{children}</span>
     </ComboboxPrimitive.Item>

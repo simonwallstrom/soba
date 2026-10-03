@@ -43,33 +43,44 @@ describe("filterRecipes", () => {
     expect(titles).toEqual(["Kanelbullar", "Pasta carbonara", "Äggomelett"]);
   });
 
-  test("matches any selected tag", () => {
+  test("matches every selected tag", () => {
+    const ids = filterRecipes(
+      [omelette, pasta, buns],
+      tagsByRecipe,
+      { tags: ["quick", "italian"] },
+      "name",
+    ).map((item) => item.id);
+    expect(ids).toEqual(["pasta"]);
+  });
+
+  test("leaves out a recipe missing any selected tag", () => {
     const ids = filterRecipes(
       [omelette, pasta, buns],
       tagsByRecipe,
       { tags: ["quick", "baking"] },
       "name",
     ).map((item) => item.id);
-    expect(ids).toEqual(["buns", "pasta"]);
+    expect(ids).toEqual([]);
   });
 
   test("matches every field with a selection", () => {
     const simons = recipe("simons", "Pasta pomodoro", { createdBy: "simon" });
-    const filters = { tags: ["italian", "baking"], authors: ["anna"] };
-    const ids = filterRecipes([pasta, buns, simons], tagsByRecipe, filters, "name").map(
-      (item) => item.id,
-    );
-    expect(ids).toEqual(["buns", "pasta"]);
+    const filters = { tags: ["italian"], authors: ["anna"] };
+    const ids = filterRecipes(
+      [pasta, buns, simons],
+      new Map([...tagsByRecipe, ["simons", [tag("italian")]]]),
+      filters,
+      "name",
+    ).map((item) => item.id);
+    expect(ids).toEqual(["pasta"]);
   });
 
-  test("matches any selected author", () => {
+  test("matches the selected author", () => {
     const simons = recipe("simons", "Pasta pomodoro", { createdBy: "simon" });
-    const leos = recipe("leos", "Pannkakor", { createdBy: "leo" });
-    const filters = { authors: ["simon", "leo"] };
-    const ids = filterRecipes([pasta, simons, leos], tagsByRecipe, filters, "name").map(
+    const ids = filterRecipes([pasta, simons], tagsByRecipe, { authors: ["simon"] }, "name").map(
       (item) => item.id,
     );
-    expect(ids).toEqual(["leos", "simons"]);
+    expect(ids).toEqual(["simons"]);
   });
 
   test("searches titles and descriptions, ignoring case and surrounding spaces", () => {
@@ -124,5 +135,9 @@ describe("parseRecipeListSearch", () => {
       tags: ["a"],
       authors: ["anna"],
     });
+  });
+
+  test("keeps the first of several authors", () => {
+    expect(parseRecipeListSearch({ authors: ["simon", "anna"] })).toEqual({ authors: ["simon"] });
   });
 });

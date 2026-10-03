@@ -7,6 +7,7 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
+  ComboboxRadioItem,
 } from "@client/components/ui/combobox";
 import { Drawer, DrawerContent, DrawerTrigger } from "@client/components/ui/drawer";
 import {
@@ -33,16 +34,26 @@ type FieldOption = {
   plural: string;
   unknown: string;
   Icon: typeof HashtagIcon;
+  // Several tags narrow the list together; a recipe has one author, so that is one choice.
+  multiple: boolean;
 };
 
 const fields: Record<RecipeFilterField, FieldOption> = {
-  tags: { value: "tags", label: "Tag", plural: "tags", unknown: "Unknown tag", Icon: HashtagIcon },
+  tags: {
+    value: "tags",
+    label: "Tag",
+    plural: "tags",
+    unknown: "Unknown tag",
+    Icon: HashtagIcon,
+    multiple: true,
+  },
   authors: {
     value: "authors",
     label: "Added by",
     plural: "members",
     unknown: "Unknown member",
     Icon: UserCircle02Icon,
+    multiple: false,
   },
 };
 
@@ -156,7 +167,13 @@ export function RecipesFilter(props: FilterProps) {
       {step === null ? (
         <FieldStep inputRef={inputRef} onSelect={setStep} />
       ) : (
-        <ValueStep {...props} field={step} inputRef={inputRef} onBack={() => setStep(null)} />
+        <ValueStep
+          {...props}
+          field={step}
+          inputRef={inputRef}
+          onBack={() => setStep(null)}
+          onDone={() => setIsOpen(false)}
+        />
       )}
     </FilterPopup>
   );
@@ -206,17 +223,27 @@ function FieldStep({
   );
 }
 
+// Tags pick several with checkboxes. A single choice, like the author, picks with a tap and
+// closes the popup.
 function ValueStep({
   field,
   inputRef,
   onBack,
+  onDone,
   ...props
-}: FilterProps & { field: RecipeFilterField; inputRef: InputRef; onBack?: () => void }) {
+}: FilterProps & {
+  field: RecipeFilterField;
+  inputRef: InputRef;
+  onBack?: () => void;
+  onDone: () => void;
+}) {
   useFocusOnMount(inputRef);
-  const { label, plural } = fields[field];
+  const { label, multiple, plural } = fields[field];
   const labels = getValueLabels(field, props);
   // Selected values move to the top when the step opens, but stay put while you pick.
   const [pinned] = useState(() => new Set(props.filters[field]));
+  // A single choice would otherwise fill the search with the selected name, hiding the rest.
+  const [query, setQuery] = useState("");
   const order = [...labels.keys()];
   const items = [...order.filter((id) => pinned.has(id)), ...order.filter((id) => !pinned.has(id))];
 
@@ -225,50 +252,85 @@ function ValueStep({
     if (onBack && event.key === "Backspace" && event.currentTarget.value === "") onBack();
   }
 
+  const search = (
+    <div className="flex items-center border-b-[0.5px] border-black/15 dark:border-white/15">
+      {/* Centred on the checkbox column below, with the search text over the item labels.
+          Phones pad the list to the page's 20px margin, so the button moves with it. */}
+      {onBack && (
+        <Button
+          aria-label="Back to filters"
+          className="ml-2.25 size-7 shrink-0 max-sm:ml-3.75 [&_svg]:size-3.5"
+          onClick={onBack}
+          size="icon-sm"
+          variant="ghost"
+        >
+          <ArrowLeftIcon />
+        </Button>
+      )}
+      <ComboboxInput
+        aria-label={`Filter by ${label.toLowerCase()}`}
+        className={cn(
+          "border-b-0 max-sm:[&_input]:h-12 max-sm:[&_input]:pr-14",
+          onBack && "[&_input]:pl-0.75",
+        )}
+        onKeyDown={handleKeyDown}
+        placeholder={`Search ${plural}…`}
+        ref={inputRef}
+        showTrigger={false}
+        variant="popup"
+      />
+    </div>
+  );
+  const empty = <ComboboxEmpty>No {plural} found.</ComboboxEmpty>;
+  const listClassName = "max-h-80 max-sm:max-h-[60dvh] max-sm:p-2.5";
+
+  if (multiple) {
+    return (
+      <Combobox
+        autoHighlight
+        inline
+        itemToStringLabel={(id: string) => labels.get(id) ?? ""}
+        items={items}
+        multiple
+        onValueChange={(ids: string[]) => props.onChange(field, ids)}
+        open
+        value={props.filters[field] ?? []}
+      >
+        {search}
+        {empty}
+        <ComboboxList className={listClassName}>
+          {(id: string) => (
+            <ComboboxCheckboxItem key={id} value={id}>
+              {labels.get(id)}
+            </ComboboxCheckboxItem>
+          )}
+        </ComboboxList>
+      </Combobox>
+    );
+  }
   return (
     <Combobox
       autoHighlight
       inline
+      inputValue={query}
       itemToStringLabel={(id: string) => labels.get(id) ?? ""}
       items={items}
-      multiple
-      onValueChange={(ids: string[]) => props.onChange(field, ids)}
+      onInputValueChange={setQuery}
+      // Picking the current choice again keeps it; the chip's cross clears it.
+      onValueChange={(id: string | null) => {
+        if (id !== null) props.onChange(field, [id]);
+        onDone();
+      }}
       open
-      value={props.filters[field] ?? []}
+      value={props.filters[field]?.[0] ?? null}
     >
-      <div className="flex items-center border-b-[0.5px] border-black/15 dark:border-white/15">
-        {/* Centred on the checkbox column below, with the search text over the item labels.
-            Phones pad the list to the page's 20px margin, so the button moves with it. */}
-        {onBack && (
-          <Button
-            aria-label="Back to filters"
-            className="ml-2.25 size-7 shrink-0 max-sm:ml-3.75 [&_svg]:size-3.5"
-            onClick={onBack}
-            size="icon-sm"
-            variant="ghost"
-          >
-            <ArrowLeftIcon />
-          </Button>
-        )}
-        <ComboboxInput
-          aria-label={`Filter by ${label.toLowerCase()}`}
-          className={cn(
-            "border-b-0 max-sm:[&_input]:h-12 max-sm:[&_input]:pr-14",
-            onBack && "[&_input]:pl-0.75",
-          )}
-          onKeyDown={handleKeyDown}
-          placeholder={`Search ${plural}…`}
-          ref={inputRef}
-          showTrigger={false}
-          variant="popup"
-        />
-      </div>
-      <ComboboxEmpty>No {plural} found.</ComboboxEmpty>
-      <ComboboxList className="max-h-80 max-sm:max-h-[60dvh] max-sm:p-2.5">
+      {search}
+      {empty}
+      <ComboboxList className={listClassName}>
         {(id: string) => (
-          <ComboboxCheckboxItem key={id} value={id}>
+          <ComboboxRadioItem key={id} value={id}>
             {labels.get(id)}
-          </ComboboxCheckboxItem>
+          </ComboboxRadioItem>
         )}
       </ComboboxList>
     </Combobox>
@@ -309,6 +371,7 @@ function FilterChip({ field, ...props }: FilterProps & { field: RecipeFilterFiel
   const firstName = (first !== undefined && getValueLabels(field, props).get(first)) || unknown;
   const summary = `${label}: ${firstName}${rest.length > 0 ? ` +${rest.length}` : ""}`;
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <Badge className="h-7 gap-1 p-1 pl-2.5">
@@ -316,6 +379,8 @@ function FilterChip({ field, ...props }: FilterProps & { field: RecipeFilterFiel
         align="start"
         inputRef={inputRef}
         label={`Filter by ${label.toLowerCase()}`}
+        onOpenChange={setIsOpen}
+        open={isOpen}
         trigger={{
           "aria-label": `Edit filter, ${summary}`,
           className:
@@ -323,7 +388,7 @@ function FilterChip({ field, ...props }: FilterProps & { field: RecipeFilterFiel
           children: summary,
         }}
       >
-        <ValueStep {...props} field={field} inputRef={inputRef} />
+        <ValueStep {...props} field={field} inputRef={inputRef} onDone={() => setIsOpen(false)} />
       </FilterPopup>
       <Button
         aria-label={`Clear ${label.toLowerCase()} filter`}

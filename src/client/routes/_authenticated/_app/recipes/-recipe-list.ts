@@ -14,11 +14,12 @@ function parseIds(value: unknown) {
   return [...new Set(values.filter((item): item is string => typeof item === "string"))];
 }
 
-// Keeps only well-formed search params, so a hand-edited URL never breaks the page.
+// Keeps only well-formed search params, so a hand-edited URL never breaks the page. A recipe
+// has one author, so the filter picks one; a link naming several keeps the first.
 export function parseRecipeListSearch(search: Record<string, unknown>): RecipeListFilters {
   const result: RecipeListFilters = {};
   for (const field of recipeFilterFields) {
-    const ids = parseIds(search[field]);
+    const ids = parseIds(search[field]).slice(0, field === "authors" ? 1 : undefined);
     if (ids.length > 0) result[field] = ids;
   }
   const q = search["q"];
@@ -40,8 +41,8 @@ function searchableText(recipe: Recipe, tags: readonly Tag[]) {
   ].map(normalize);
 }
 
-// A recipe matches the search, any selected value within a field, and every field with a
-// selection.
+// A recipe matches the search, every selected tag (each one narrows the list), the selected
+// author, and so every field with a selection.
 export function filterRecipes(
   recipes: readonly Recipe[],
   tagsByRecipe: ReadonlyMap<string, readonly Tag[]>,
@@ -56,8 +57,7 @@ export function filterRecipes(
         searchableText(recipe, tagsByRecipe.get(recipe.id) ?? []).some((text) =>
           text.includes(query),
         )) &&
-      (tags.length === 0 ||
-        (tagsByRecipe.get(recipe.id) ?? []).some((tag) => tags.includes(tag.id))) &&
+      tags.every((id) => (tagsByRecipe.get(recipe.id) ?? []).some((tag) => tag.id === id)) &&
       (authors.length === 0 || authors.includes(recipe.createdBy)),
   );
   return matches.toSorted((left, right) => {
