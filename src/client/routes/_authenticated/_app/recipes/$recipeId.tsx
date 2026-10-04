@@ -1,5 +1,8 @@
-import { AppHeaderActions } from "@client/components/particles/app-header-actions";
-import { Button, buttonVariants } from "@client/components/ui/button";
+import {
+  AppHeaderActions,
+  AppHeaderTitleActions,
+} from "@client/components/particles/app-header-actions";
+import { Button } from "@client/components/ui/button";
 import { ServingFoodIcon, StarIcon } from "@client/components/ui/icons";
 import { ImagePlaceholder } from "@client/components/ui/image-thumbnail";
 import { useMembersById } from "@client/features/household/members";
@@ -11,7 +14,7 @@ import { groupTagsByRecipe } from "@client/features/recipes/recipe-tags";
 import { storeRegistry } from "@client/lib/livestore/adapter";
 import { formatMetaTitle } from "@client/lib/meta";
 import type { Recipe } from "@shared/recipes";
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 
 import { RecipeContent } from "./-components/recipe-content";
 import { RecipeByline, RecipeTagLinks } from "./-components/recipe-meta";
@@ -58,24 +61,18 @@ function RecipeDetail() {
   return (
     <>
       <title>{formatMetaTitle(recipe.title)}</title>
+      {/* Favoriting belongs with the name; editing is rare enough for the menu. */}
+      <AppHeaderTitleActions>
+        <FavoriteButton isFavorite={isFavorite} onToggle={() => toggleFavorite(recipe.id)} />
+      </AppHeaderTitleActions>
       <AppHeaderActions>
         <div className="-mr-2 flex items-center gap-1">
-          <Link
-            className={buttonVariants({ variant: "ghost" })}
-            params={{ recipeId: recipe.id }}
-            to="/recipes/$recipeId/edit"
-          >
-            Edit
-          </Link>
-          <Button
-            aria-label="Favorite"
-            aria-pressed={isFavorite}
-            onClick={() => toggleFavorite(recipe.id)}
-            size="icon"
-            variant="ghost"
-          >
-            <StarIcon fill={isFavorite ? "currentColor" : "none"} />
-          </Button>
+          {/* Phones show a back link instead of the title, so the star waits here. */}
+          <FavoriteButton
+            className="lg:hidden"
+            isFavorite={isFavorite}
+            onToggle={() => toggleFavorite(recipe.id)}
+          />
           <RecipeActionsMenu
             isFavorite={isFavorite}
             onToggleFavorite={() => toggleFavorite(recipe.id)}
@@ -123,5 +120,28 @@ function RecipeDetail() {
         />
       </article>
     </>
+  );
+}
+
+function FavoriteButton({
+  className,
+  isFavorite,
+  onToggle,
+}: {
+  className?: string;
+  isFavorite: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <Button
+      aria-label="Favorite"
+      aria-pressed={isFavorite}
+      className={className}
+      onClick={onToggle}
+      size="icon"
+      variant="ghost"
+    >
+      <StarIcon fill={isFavorite ? "currentColor" : "none"} />
+    </Button>
   );
 }

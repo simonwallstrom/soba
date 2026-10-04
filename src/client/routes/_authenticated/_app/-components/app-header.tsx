@@ -8,8 +8,15 @@ import type { Ref } from "react";
 
 const noBreadcrumbs: Breadcrumb[] = [];
 
-// Shows the trail the current page declares in `staticData.breadcrumbs`, plus its actions slot.
-export function AppHeader({ actionsRef }: { actionsRef: Ref<HTMLDivElement> }) {
+// Shows the trail the current page declares in `staticData.breadcrumbs`, plus slots for the
+// page's own buttons: one beside its title and one at the end.
+export function AppHeader({
+  actionsRef,
+  titleActionsRef,
+}: {
+  actionsRef: Ref<HTMLDivElement>;
+  titleActionsRef: Ref<HTMLDivElement>;
+}) {
   const breadcrumbs = useMatches({
     select: (matches) => matches.at(-1)?.staticData.breadcrumbs ?? noBreadcrumbs,
   });
@@ -62,6 +69,10 @@ export function AppHeader({ actionsRef }: { actionsRef: Ref<HTMLDivElement> }) {
             <BreadcrumbLabel label={current.label} />
           </h1>
         )}
+        <div
+          className={cn("flex shrink-0 items-center empty:hidden", back && "max-lg:hidden")}
+          ref={titleActionsRef}
+        />
       </div>
       <div className="flex shrink-0 items-center gap-1 empty:hidden" ref={actionsRef} />
     </header>
