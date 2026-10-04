@@ -2,7 +2,7 @@
 
 ## Routes and UI
 
-- Pages own React 19 `<title>` tags, placed first in their JSX. Use `formatMetaTitle` from `@client/lib/meta` for `Page · Soba`; the landing page uses `Soba · Recipe organiser for families`. Give loading, error, and not-found screens titles too. Layouts and `index.html` must not add competing document titles.
+- Pages own React 19 `<title>` tags, placed first in their JSX. Use `formatMetaTitle` from `@client/lib/meta` for `Page · Soba`; the landing page uses `Soba · Recipe organizer for families`. Give loading, error, and not-found screens titles too. Layouts and `index.html` must not add competing document titles.
 
 - Name directory layout routes `_layout.tsx` (configured with TanStack Router’s `routeToken`). Keep `__root.tsx` for the root route and use `_`-prefixed folders for pathless layouts.
 
@@ -33,6 +33,7 @@
 
 ## Code and tooling
 
+- Write American English in UI text, comments, and docs ("color", "favorite", "organizer").
 - Use strict TypeScript, `import type` for type-only imports, and direct imports instead of barrels. Keep the client's Hono `AppType` import type-only.
 - Use `@client/*`, `@server/*`, and `@shared/*` aliases. Validate data at network boundaries.
 - Use Tailwind utilities and let Oxfmt sort imports and classes. Do not hand-format against it.

@@ -1,6 +1,6 @@
 // Shared class lists that keep the form controls, popups, and menu items in step.
 
-// Placeholder and text selection colours for anything you can type into.
+// Placeholder and text selection colors for anything you can type into.
 export const textEntryStyles =
   "placeholder:text-olive-400 selection:bg-olive-800 selection:text-olive-50 dark:placeholder:text-olive-600 dark:selection:bg-olive-200 dark:selection:text-olive-950";
 

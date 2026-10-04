@@ -30,7 +30,7 @@ function Start() {
 
   return (
     <>
-      <title>Soba · Recipe organiser for families</title>
+      <title>Soba · Recipe organizer for families</title>
       <main className="relative isolate flex flex-1 flex-col items-center justify-center overflow-y-auto px-6 py-40">
         <div className="flex flex-col items-center gap-4 text-center">
           <h1>
@@ -39,7 +39,7 @@ function Start() {
           </h1>
 
           <p className="font-medium text-olive-600 dark:text-olive-400">
-            Recipe organiser for families
+            Recipe organizer for families
           </p>
         </div>
 

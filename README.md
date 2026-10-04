@@ -1,6 +1,6 @@
 # Soba
 
-Recipe organiser for families. A React SPA with local-first sync, served by a Cloudflare Worker and configured in `cloudflare.config.ts` with the [cf CLI](https://github.com/cloudflare/cf) (beta).
+Recipe organizer for families. A React SPA with local-first sync, served by a Cloudflare Worker and configured in `cloudflare.config.ts` with the [cf CLI](https://github.com/cloudflare/cf) (beta).
 
 ## Prerequisites
 

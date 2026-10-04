@@ -112,7 +112,7 @@ export function RecipeRowsEditor({
     }
   }
 
-  // Pasting several lines splits them into rows, with headings and list markers recognised.
+  // Pasting several lines splits them into rows, with headings and list markers recognized.
   function handlePaste(event: ClipboardEvent<HTMLTextAreaElement>, row: RecipeRow, index: number) {
     const text = event.clipboardData.getData("text/plain");
     if (!/\r?\n/u.test(text.trim())) return;

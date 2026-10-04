@@ -254,7 +254,7 @@ function ValueStep({
 
   const search = (
     <div className="flex items-center border-b-[0.5px] border-black/15 dark:border-white/15">
-      {/* Centred on the checkbox column below, with the search text over the item labels.
+      {/* Centered on the checkbox column below, with the search text over the item labels.
           Phones pad the list to the page's 20px margin, so the button moves with it. */}
       {onBack && (
         <Button

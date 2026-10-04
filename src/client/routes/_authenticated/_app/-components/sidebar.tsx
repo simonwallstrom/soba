@@ -35,7 +35,7 @@ export function Sidebar({
       </div>
       <ScrollArea className="flex-1" scrollFade>
         <div className="grid gap-1 px-1">
-          {/* Less padding on top centres the first link on the page's toolbar beside it. */}
+          {/* Less padding on top centers the first link on the page's toolbar beside it. */}
           <nav aria-label="Main navigation" className="flex flex-col gap-0.5 px-2 pt-1 pb-2">
             {desktopNavigation.map(({ icon: Icon, label, to }) => (
               <SidebarLink key={to} showActiveState to={to}>
