@@ -8,15 +8,10 @@ import type { Ref } from "react";
 
 const noBreadcrumbs: Breadcrumb[] = [];
 
-// Shows the trail the current page declares in `staticData.breadcrumbs`, plus slots for the
-// page's own buttons: one beside its title and one at the end.
-export function AppHeader({
-  actionsRef,
-  titleActionsRef,
-}: {
-  actionsRef: Ref<HTMLDivElement>;
-  titleActionsRef: Ref<HTMLDivElement>;
-}) {
+// Shows the trail the current page declares in `staticData.breadcrumbs`, plus its actions slot.
+// The slot fills the rest of the row and keeps its contents to the right; a page puts something
+// beside its title by giving it `mr-auto`.
+export function AppHeader({ actionsRef }: { actionsRef: Ref<HTMLDivElement> }) {
   const breadcrumbs = useMatches({
     select: (matches) => matches.at(-1)?.staticData.breadcrumbs ?? noBreadcrumbs,
   });
@@ -30,7 +25,7 @@ export function AppHeader({
 
   return (
     <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b-[0.5px] border-black/18 bg-olive-50 pr-[max(1.25rem,env(safe-area-inset-right))] pl-[max(1.25rem,env(safe-area-inset-left))] font-medium max-lg:h-[calc(3rem+env(safe-area-inset-top))] max-lg:pt-[env(safe-area-inset-top)] lg:px-6 dark:border-white/10 dark:bg-olive-925">
-      <div className="flex min-w-0 flex-1 items-center gap-1.5">
+      <div className="flex min-w-0 items-center gap-1.5">
         {back?.link && (
           <Link
             className={cn(buttonVariants({ variant: "ghost" }), "-ml-3 lg:hidden")}
@@ -69,12 +64,8 @@ export function AppHeader({
             <BreadcrumbLabel label={current.label} />
           </h1>
         )}
-        <div
-          className={cn("flex shrink-0 items-center empty:hidden", back && "max-lg:hidden")}
-          ref={titleActionsRef}
-        />
       </div>
-      <div className="flex shrink-0 items-center gap-1 empty:hidden" ref={actionsRef} />
+      <div className="flex flex-1 items-center justify-end gap-1 empty:hidden" ref={actionsRef} />
     </header>
   );
 }

@@ -1,7 +1,4 @@
-import {
-  AppHeaderActions,
-  AppHeaderTitleActions,
-} from "@client/components/particles/app-header-actions";
+import { AppHeaderActions } from "@client/components/particles/app-header-actions";
 import { Button } from "@client/components/ui/button";
 import { ServingFoodIcon, StarIcon } from "@client/components/ui/icons";
 import { ImagePlaceholder } from "@client/components/ui/image-thumbnail";
@@ -61,26 +58,22 @@ function RecipeDetail() {
   return (
     <>
       <title>{formatMetaTitle(recipe.title)}</title>
-      {/* Favoriting belongs with the name; editing is rare enough for the menu. */}
-      <AppHeaderTitleActions>
-        <FavoriteButton isFavorite={isFavorite} onToggle={() => toggleFavorite(recipe.id)} />
-      </AppHeaderTitleActions>
       <AppHeaderActions>
-        <div className="-mr-2 flex items-center gap-1">
-          {/* Phones show a back link instead of the title, so the star waits here. */}
-          <FavoriteButton
-            className="lg:hidden"
-            isFavorite={isFavorite}
-            onToggle={() => toggleFavorite(recipe.id)}
-          />
-          <RecipeActionsMenu
-            isFavorite={isFavorite}
-            onToggleFavorite={() => toggleFavorite(recipe.id)}
-            recipeId={recipe.id}
-            recipeTitle={recipe.title}
-            size="icon"
-          />
-        </div>
+        {/* Favoriting belongs with the name; editing is rare enough for the menu. Phones show a
+            back link instead of the title, so there the star stays beside the menu. */}
+        <FavoriteButton
+          className="lg:mr-auto"
+          isFavorite={isFavorite}
+          onToggle={() => toggleFavorite(recipe.id)}
+        />
+        <RecipeActionsMenu
+          className="-mr-2"
+          isFavorite={isFavorite}
+          onToggleFavorite={() => toggleFavorite(recipe.id)}
+          recipeId={recipe.id}
+          recipeTitle={recipe.title}
+          size="icon"
+        />
       </AppHeaderActions>
       <article className="mx-auto flex max-w-5xl flex-col gap-8 p-5 lg:gap-12 lg:p-12">
         {/* The photo leads on small screens and sits beside the text on large ones. */}
@@ -141,7 +134,11 @@ function FavoriteButton({
       size="icon"
       variant="ghost"
     >
-      <StarIcon fill={isFavorite ? "currentColor" : "none"} />
+      {/* Filled and yellow once favorited, like stars elsewhere. */}
+      <StarIcon
+        className={isFavorite ? "text-amber-400 dark:text-amber-300" : undefined}
+        fill={isFavorite ? "currentColor" : "none"}
+      />
     </Button>
   );
 }
