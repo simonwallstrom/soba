@@ -1,5 +1,5 @@
 import { AppHeaderActions } from "@client/components/particles/app-header-actions";
-import { Button } from "@client/components/ui/button";
+import { Button, buttonVariants } from "@client/components/ui/button";
 import { ServingFoodIcon, StarIcon } from "@client/components/ui/icons";
 import { ImagePlaceholder } from "@client/components/ui/image-thumbnail";
 import { useMembersById } from "@client/features/household/members";
@@ -15,6 +15,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 
 import { RecipeContent } from "./-components/recipe-content";
 import { RecipeByline, RecipeTagLinks } from "./-components/recipe-meta";
+import { RecipeNotFound } from "./-components/recipe-not-found";
 
 export const Route = createFileRoute("/_authenticated/_app/recipes/$recipeId")({
   // Waits for the local store on first open so a missing recipe shows as not found.
@@ -58,11 +59,14 @@ function RecipeDetail() {
     <>
       <title>{formatMetaTitle(recipe.title)}</title>
       <AppHeaderActions>
-        {/* A prototype: editing arrives later. */}
         <div className="-mr-2 flex items-center gap-1">
-          <Button disabled variant="ghost">
+          <Link
+            className={buttonVariants({ variant: "ghost" })}
+            params={{ recipeId: recipe.id }}
+            to="/recipes/$recipeId/edit"
+          >
             Edit
-          </Button>
+          </Link>
           <Button
             aria-label="Favorite"
             aria-pressed={isFavorite}
@@ -75,6 +79,7 @@ function RecipeDetail() {
           <RecipeActionsMenu
             isFavorite={isFavorite}
             onToggleFavorite={() => toggleFavorite(recipe.id)}
+            recipeId={recipe.id}
             recipeTitle={recipe.title}
             size="icon"
           />
@@ -118,18 +123,5 @@ function RecipeDetail() {
         />
       </article>
     </>
-  );
-}
-
-function RecipeNotFound() {
-  return (
-    <div className="flex flex-col items-start gap-2 p-5 lg:p-6">
-      <title>{formatMetaTitle("Recipe not found")}</title>
-      <h1 className="text-xl font-medium">Recipe not found</h1>
-      <p>It may have been deleted, or the link is wrong.</p>
-      <Link className="underline" to="/recipes">
-        Back to recipes
-      </Link>
-    </div>
   );
 }

@@ -38,6 +38,15 @@ export function rowsToSections(rows: readonly RecipeRow[]): RecipeSection[] {
   });
 }
 
+// Saved sections as rows for editing, with one empty line when there are none.
+export function sectionsToRows(sections: readonly RecipeSection[]): RecipeRow[] {
+  const rows = sections.flatMap(({ heading, items }) => [
+    ...(heading === undefined ? [] : [createRow("heading", heading)]),
+    ...items.map((item) => createRow("item", item)),
+  ]);
+  return rows.length > 0 ? rows : [createRow()];
+}
+
 const listMarker = /^(?:[-*•–]|\d+[.)])\s+/u;
 const markdownHeading = /^#+\s*/u;
 

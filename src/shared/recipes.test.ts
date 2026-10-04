@@ -4,7 +4,16 @@ import { makeInMemoryAdapter } from "@livestore/adapter-web";
 import { createStorePromise, queryDb } from "@livestore/livestore";
 import type { Store } from "@livestore/livestore";
 
-import { favorites, recipeFavorited, recipeSchema, recipeUnfavorited } from "./recipes";
+import {
+  favorites,
+  recipeCreated,
+  recipeFavorited,
+  recipes,
+  recipeSchema,
+  recipeTags,
+  recipeUnfavorited,
+  recipeUpdated,
+} from "./recipes";
 
 let store: Store<typeof recipeSchema>;
 
@@ -42,5 +51,47 @@ describe("favorite events", () => {
     ]);
     store.commit(recipeUnfavorited({ recipeId: "r1", userId: "u1", unfavoritedAt: day(3) }));
     expect(favoriteIds("u1")).toEqual([]);
+  });
+});
+
+describe("recipe events", () => {
+  test("an update replaces the recipe's text, details and tags", () => {
+    store.commit(
+      recipeCreated({
+        id: "r1",
+        title: "Soba",
+        description: "Quick",
+        servings: 2,
+        imageUrl: "https://example.com/soba.jpg",
+        ingredients: [{ items: ["Soba"] }],
+        tagIds: ["t1", "t2"],
+        createdBy: "u1",
+        createdAt: day(1),
+      }),
+      recipeUpdated({
+        id: "r1",
+        title: "Cold soba",
+        ingredients: [{ heading: "Dip", items: ["Tsuyu"] }],
+        instructions: [{ items: ["Boil"] }],
+        tagIds: ["t2", "t3"],
+        updatedBy: "u2",
+        updatedAt: day(2),
+      }),
+    );
+    expect(store.query(queryDb(recipes.where({ id: "r1" }).first()))).toMatchObject({
+      title: "Cold soba",
+      description: null,
+      servings: null,
+      imageUrl: "https://example.com/soba.jpg",
+      ingredients: [{ heading: "Dip", items: ["Tsuyu"] }],
+      instructions: [{ items: ["Boil"] }],
+      createdBy: "u1",
+      createdAt: day(1),
+      updatedBy: "u2",
+      updatedAt: day(2),
+    });
+    expect(
+      store.query(queryDb(recipeTags.where({ recipeId: "r1" }))).map(({ tagId }) => tagId),
+    ).toEqual(["t2", "t3"]);
   });
 });

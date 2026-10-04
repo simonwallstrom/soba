@@ -1,0 +1,128 @@
+import { AppHeaderActions } from "@client/components/particles/app-header-actions";
+import { Button, buttonVariants } from "@client/components/ui/button";
+import { useMembersById } from "@client/features/household/members";
+import {
+  householdStoreOptions,
+  useHouseholdQuery,
+  useHouseholdStore,
+} from "@client/features/household/store";
+import { recipe$, recipeTags$, tags$ } from "@client/features/recipes/queries";
+import {
+  hasDraftChanges,
+  recipeEditEvents,
+  recipeToDraft,
+} from "@client/features/recipes/recipe-draft";
+import { storeRegistry } from "@client/lib/livestore/adapter";
+import { formatMetaTitle } from "@client/lib/meta";
+import type { Recipe, Tag } from "@shared/recipes";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { useRef, useState } from "react";
+
+import { RecipeForm, UnsavedChangesDialog } from "./-components/recipe-form";
+import { RecipeNotFound } from "./-components/recipe-not-found";
+
+export const Route = createFileRoute("/_authenticated/_app/recipes/$recipeId_/edit")({
+  // Waits for the local store on first open so a missing recipe shows as not found.
+  loader: async ({ context, params }) => {
+    const store = await storeRegistry.getOrLoadPromise(householdStoreOptions(context.household.id));
+    if (!store.query(recipe$(params.recipeId))) throw notFound();
+  },
+  staticData: {
+    breadcrumbs: [
+      { label: "Recipes", link: { to: "/recipes" } },
+      // Relative, as naming the recipe route here would make this route type itself.
+      { label: RecipeTitle, link: { to: ".." } },
+      { label: "Edit" },
+    ],
+  },
+  component: EditRecipePage,
+  notFoundComponent: RecipeNotFound,
+});
+
+function useRecipe(): Recipe | undefined {
+  const { household } = Route.useRouteContext();
+  const { recipeId } = Route.useParams();
+  return useHouseholdQuery(household.id, recipe$(recipeId));
+}
+
+function RecipeTitle(): string {
+  return useRecipe()?.title ?? "Recipe";
+}
+
+function EditRecipePage() {
+  const { household } = Route.useRouteContext();
+  const recipe = useRecipe();
+  const tags = useHouseholdQuery(household.id, tags$);
+  const links = useHouseholdQuery(household.id, recipeTags$);
+
+  // The recipe was deleted while open, perhaps on another device.
+  if (!recipe) return <RecipeNotFound />;
+
+  const tagIds = links.filter((link) => link.recipeId === recipe.id).map((link) => link.tagId);
+  return <EditRecipe recipe={recipe} tagIds={tagIds} tags={tags} />;
+}
+
+// Starts from the recipe as it was when the page opened. Saving replaces it, so edits made
+// meanwhile on another device are overwritten.
+function EditRecipe({
+  recipe,
+  tagIds,
+  tags,
+}: {
+  recipe: Recipe;
+  tagIds: readonly string[];
+  tags: readonly Tag[];
+}) {
+  const { household, user } = Route.useRouteContext();
+  const navigate = useNavigate();
+  const store = useHouseholdStore(household.id);
+  const author = useMembersById()?.get(recipe.createdBy);
+  const [original] = useState(() => recipeToDraft(recipe, tagIds));
+  const [draft, setDraft] = useState(original);
+  // Set once saved, so returning to the recipe does not ask about losing changes.
+  const isSaved = useRef(false);
+
+  function save() {
+    store.commit(
+      ...recipeEditEvents(draft, { id: recipe.id, updatedBy: user.id, updatedAt: new Date() }),
+    );
+    isSaved.current = true;
+    // Replaces this page, so going back does not reopen the editor.
+    void navigate({ to: "/recipes/$recipeId", params: { recipeId: recipe.id }, replace: true });
+  }
+
+  return (
+    <>
+      <title>{formatMetaTitle(`Edit ${recipe.title}`)}</title>
+      <AppHeaderActions>
+        <div className="-mr-2 flex items-center gap-1">
+          <Link
+            className={buttonVariants({ className: "max-lg:hidden", variant: "ghost" })}
+            params={{ recipeId: recipe.id }}
+            to="/recipes/$recipeId"
+          >
+            Cancel
+          </Link>
+          <Button form="edit-recipe" type="submit" variant="primary">
+            Save
+          </Button>
+        </div>
+      </AppHeaderActions>
+      <RecipeForm
+        author={author}
+        createdAt={recipe.createdAt}
+        draft={draft}
+        id="edit-recipe"
+        imageUrl={recipe.imageUrl}
+        onChange={setDraft}
+        onSave={save}
+        tags={tags}
+      />
+      <UnsavedChangesDialog
+        description="Your changes have not been saved and will be lost."
+        isDirty={() => !isSaved.current && hasDraftChanges(draft, original)}
+        title="Discard your changes?"
+      />
+    </>
+  );
+}

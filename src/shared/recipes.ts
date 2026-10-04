@@ -109,6 +109,24 @@ export const recipeCreated = Events.synced({
   }),
 });
 
+// Replaces what the recipe page edits, and the last save wins. Leaving out the description or
+// servings clears them. Optional fields added later must mean "unchanged" when left out, so
+// replaying older saves keeps them.
+export const recipeUpdated = Events.synced({
+  name: "v1.RecipeUpdated",
+  schema: Schema.Struct({
+    id: Schema.String,
+    title: Schema.String,
+    description: Schema.optional(Schema.String),
+    servings: Schema.optional(Schema.Int),
+    ingredients: recipeSectionsSchema,
+    instructions: recipeSectionsSchema,
+    tagIds: Schema.Array(Schema.String),
+    updatedBy: Schema.String,
+    updatedAt: Schema.Date,
+  }),
+});
+
 export const tagCreated = Events.synced({
   name: "v1.TagCreated",
   schema: Schema.Struct({ id: Schema.String, name: Schema.String, createdAt: Schema.Date }),
@@ -134,6 +152,7 @@ export const recipeUnfavorited = Events.synced({
 
 const events = {
   recipeCreated,
+  recipeUpdated,
   tagCreated,
   recipeFavorited,
   recipeUnfavorited,
@@ -156,6 +175,13 @@ const materializers = State.SQLite.materializers(events, {
       updatedAt: recipe.createdAt,
     }),
     ...(recipe.tagIds ?? []).map((tagId) => recipeTags.insert({ recipeId: recipe.id, tagId })),
+  ],
+  "v1.RecipeUpdated": ({ id, description, servings, tagIds, ...recipe }) => [
+    recipes
+      .update({ ...recipe, description: description ?? null, servings: servings ?? null })
+      .where({ id }),
+    recipeTags.delete().where({ recipeId: id }),
+    ...tagIds.map((tagId) => recipeTags.insert({ recipeId: id, tagId })),
   ],
   "v1.TagCreated": ({ id, name, createdAt }) => tags.insert({ id, name, createdAt }),
   // Two devices may favorite the same recipe; the first stays.

@@ -14,18 +14,21 @@ import {
   MoreHorizontalIcon,
   StarIcon,
 } from "@client/components/ui/icons";
+import { Link } from "@tanstack/react-router";
 
-// Editing, meal plans, and deleting arrive later.
+// Meal plans and deleting arrive later.
 export function RecipeActionsMenu({
   className,
   isFavorite,
   onToggleFavorite,
+  recipeId,
   recipeTitle,
   size = "icon-sm",
 }: {
   className?: string;
   isFavorite: boolean;
   onToggleFavorite: () => void;
+  recipeId: string;
   recipeTitle: string;
   size?: "icon" | "icon-sm";
 }) {
@@ -39,7 +42,7 @@ export function RecipeActionsMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem render={<Link params={{ recipeId }} to="/recipes/$recipeId/edit" />}>
             <FileEditIcon />
             Edit recipe
           </DropdownMenuItem>

@@ -158,6 +158,7 @@ function Recipes() {
               <RecipeActionsMenu
                 isFavorite={favoriteIds.has(recipe.id)}
                 onToggleFavorite={() => toggleFavorite(recipe.id)}
+                recipeId={recipe.id}
                 recipeTitle={recipe.title}
               />
             )}

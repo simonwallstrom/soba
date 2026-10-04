@@ -1,6 +1,12 @@
 import { describe, expect, test } from "bun:test";
 
-import { createRow, groupRows, parsePastedLines, rowsToSections } from "./recipe-rows";
+import {
+  createRow,
+  groupRows,
+  parsePastedLines,
+  rowsToSections,
+  sectionsToRows,
+} from "./recipe-rows";
 
 function shape(rows: ReturnType<typeof parsePastedLines>) {
   return rows.map(({ kind, text }) => ({ kind, text }));
@@ -45,6 +51,29 @@ describe("rowsToSections", () => {
   test("treats a blank heading as no heading", () => {
     const rows = [createRow("heading", " "), createRow("item", "Leek")];
     expect(rowsToSections(rows)).toEqual([{ items: ["Leek"] }]);
+  });
+});
+
+describe("sectionsToRows", () => {
+  test("puts each heading before its items and round-trips through rowsToSections", () => {
+    const sections = [
+      { items: ["Salt"] },
+      { heading: "Sauce", items: ["Miso", "Mirin"] },
+      { heading: "Topping", items: [] },
+    ];
+    const rows = sectionsToRows(sections);
+    expect(shape(rows)).toEqual([
+      { kind: "item", text: "Salt" },
+      { kind: "heading", text: "Sauce" },
+      { kind: "item", text: "Miso" },
+      { kind: "item", text: "Mirin" },
+      { kind: "heading", text: "Topping" },
+    ]);
+    expect(rowsToSections(rows)).toEqual(sections);
+  });
+
+  test("starts with one empty line when there is nothing saved", () => {
+    expect(shape(sectionsToRows([]))).toEqual([{ kind: "item", text: "" }]);
   });
 });
 
