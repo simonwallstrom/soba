@@ -200,7 +200,7 @@ function FieldStep({
       value={null}
     >
       {/* On phones, the search and icons line up with the page's 20px margin, and the row
-          is as tall as the app's bars, leaving room for the drawer's close button. */}
+          is as tall as the app header, leaving room for the drawer's close button. */}
       <ComboboxInput
         className="max-sm:[&_input]:h-12 max-sm:[&_input]:px-5 max-sm:[&_input]:pr-14"
         placeholder="Filter by…"

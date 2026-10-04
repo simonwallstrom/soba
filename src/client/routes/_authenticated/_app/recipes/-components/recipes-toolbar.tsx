@@ -124,7 +124,7 @@ export function RecipesToolbar({
       aria-label="Recipe list controls"
       className="border-b-[0.5px] border-black/18 bg-olive-100 dark:border-white/10 dark:bg-olive-900"
     >
-      <div className="flex h-12 items-center pr-3 pl-5 lg:pr-4 lg:pl-6">
+      <div className="flex h-10 items-center pr-3 pl-5 lg:pr-4 lg:pl-6">
         {search}
         <div className="mx-3 h-3.5 w-px bg-black/12 dark:bg-white/8" />
         {filter}
