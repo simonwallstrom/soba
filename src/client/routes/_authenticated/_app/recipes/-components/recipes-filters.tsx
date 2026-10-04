@@ -349,7 +349,7 @@ export function ActiveRecipeFilters({ onClear, ...props }: FilterProps & { onCle
   return (
     // The line is inset to the content's edges, while the chips scroll right to the screen's.
     <div className="relative before:absolute before:inset-x-5 before:top-0 before:border-t-[0.5px] before:border-black/8 lg:before:inset-x-6 dark:before:border-white/6">
-      <div className="flex items-center gap-2 overflow-x-auto px-5 py-2 sm:flex-wrap lg:px-6">
+      <div className="flex items-center gap-2 overflow-x-auto px-5 py-1.5 sm:flex-wrap lg:px-6">
         {activeFields.map((field) => (
           <FilterChip {...props} field={field} key={field} />
         ))}
