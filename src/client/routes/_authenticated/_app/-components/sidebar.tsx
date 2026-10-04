@@ -98,9 +98,9 @@ function TagShortcuts({ householdId }: { householdId: string }) {
     <ShortcutSection label="Tag shortcuts" title="Tags">
       {top.map(({ tag, count }) => (
         <SidebarLink key={tag.id} search={{ tags: [tag.id] }} showActiveState to="/recipes">
-          <HashtagIcon />
+          <HashtagIcon className="mx-px size-3.5" />
           <span className="truncate">{tag.name}</span>
-          <span className="ml-auto text-sm text-olive-500 tabular-nums">{count}</span>
+          <span className="mr-1 ml-auto text-sm text-olive-500 tabular-nums">{count}</span>
         </SidebarLink>
       ))}
     </ShortcutSection>
