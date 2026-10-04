@@ -50,7 +50,8 @@ export function RecipeTagLinks({ tags }: { tags: readonly Tag[] }) {
   return (
     <ul aria-label="Tags" className="flex flex-wrap gap-1.5">
       {tags.map((tag) => (
-        <li key={tag.id}>
+        // Flex, so the badge sets the row height instead of a taller text line around it.
+        <li className="flex" key={tag.id}>
           <Link
             aria-label={`Filter recipes by tag: ${tag.name}`}
             className={badgeVariants({
