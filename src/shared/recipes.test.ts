@@ -6,8 +6,11 @@ import type { Store } from "@livestore/livestore";
 
 import {
   favorites,
+  normalizeTagName,
   recipeCreated,
+  recipeDeleted,
   recipeFavorited,
+  recipePhotoChanged,
   recipes,
   recipeSchema,
   recipeTags,
@@ -93,5 +96,41 @@ describe("recipe events", () => {
     expect(
       store.query(queryDb(recipeTags.where({ recipeId: "r1" }))).map(({ tagId }) => tagId),
     ).toEqual(["t2", "t3"]);
+  });
+
+  test("a delete hides the recipe but keeps its row", () => {
+    store.commit(
+      recipeCreated({ id: "r1", title: "Soba", createdBy: "u1", createdAt: day(1) }),
+      recipeDeleted({ id: "r1", deletedBy: "u2", deletedAt: day(2) }),
+    );
+    expect(store.query(queryDb(recipes.where({ deletedAt: null })))).toHaveLength(0);
+    expect(store.query(queryDb(recipes.where({ id: "r1" }).first()))).toMatchObject({
+      title: "Soba",
+      deletedAt: day(2),
+    });
+  });
+
+  test("a photo change sets, replaces, and removes the photo", () => {
+    const imageUrl = () => store.query(queryDb(recipes.where({ id: "r1" }).first()))?.imageUrl;
+    store.commit(
+      recipeCreated({ id: "r1", title: "Soba", createdBy: "u1", createdAt: day(1) }),
+      recipePhotoChanged({ id: "r1", photoId: "p1", updatedBy: "u1", updatedAt: day(1) }),
+    );
+    expect(imageUrl()).toBe("/api/photos/p1");
+    store.commit(
+      recipePhotoChanged({ id: "r1", photoId: "p2", updatedBy: "u2", updatedAt: day(2) }),
+    );
+    expect(imageUrl()).toBe("/api/photos/p2");
+    store.commit(recipePhotoChanged({ id: "r1", updatedBy: "u2", updatedAt: day(3) }));
+    expect(imageUrl()).toBeNull();
+  });
+});
+
+describe("normalizeTagName", () => {
+  test("capitalizes the first letter and keeps the rest as typed", () => {
+    expect(normalizeTagName("  vegetariskt ")).toBe("Vegetariskt");
+    expect(normalizeTagName("ört  och   kryddor")).toBe("Ört och kryddor");
+    expect(normalizeTagName("BBQ")).toBe("BBQ");
+    expect(normalizeTagName("5 min")).toBe("5 min");
   });
 });

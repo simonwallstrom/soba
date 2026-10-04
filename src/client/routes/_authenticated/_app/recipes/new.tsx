@@ -12,7 +12,7 @@ import { formatMetaTitle } from "@client/lib/meta";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 
-import { RecipeForm, UnsavedChangesDialog } from "./-components/recipe-form";
+import { RecipeForm, UnsavedChangesDialog, usePhotoSave } from "./-components/recipe-form";
 
 export const Route = createFileRoute("/_authenticated/_app/recipes/new")({
   staticData: {
@@ -29,15 +29,22 @@ function NewRecipe() {
   const tags = useHouseholdQuery(household.id, tags$);
   const [createdAt] = useState(() => new Date());
   const [draft, setDraft] = useState(createRecipeDraft);
+  const photoSave = usePhotoSave();
   // Set once saved, so leaving for the new recipe does not ask about losing it.
   const isSaved = useRef(false);
 
-  function save() {
+  async function save() {
     const id = crypto.randomUUID();
-    store.commit(...recipeDraftEvents(draft, { id, createdBy: user.id, createdAt: new Date() }));
-    isSaved.current = true;
-    // Replaces this page, so going back returns to the list rather than an empty form.
-    void navigate({ to: "/recipes/$recipeId", params: { recipeId: id }, replace: true });
+    const at = new Date();
+    await photoSave.save({ id, updatedBy: user.id, updatedAt: at }, (photoEvents) => {
+      store.commit(
+        ...recipeDraftEvents(draft, { id, createdBy: user.id, createdAt: at }),
+        ...photoEvents,
+      );
+      isSaved.current = true;
+      // Replaces this page, so going back returns to the list rather than an empty form.
+      void navigate({ to: "/recipes/$recipeId", params: { recipeId: id }, replace: true });
+    });
   }
 
   return (
@@ -51,8 +58,8 @@ function NewRecipe() {
           >
             Cancel
           </Link>
-          <Button form="new-recipe" type="submit" variant="primary">
-            Save
+          <Button disabled={photoSave.isSaving} form="new-recipe" type="submit" variant="primary">
+            {photoSave.isSaving ? "Saving…" : "Save"}
           </Button>
         </div>
       </AppHeaderActions>
@@ -63,12 +70,15 @@ function NewRecipe() {
         draft={draft}
         id="new-recipe"
         onChange={setDraft}
-        onSave={save}
+        onPhotoChange={photoSave.changePhoto}
+        onSave={() => void save()}
+        photo={photoSave.photo}
+        photoError={photoSave.error}
         tags={tags}
       />
       <UnsavedChangesDialog
         description="It has not been saved, so what you wrote will be lost."
-        isDirty={() => !isSaved.current && hasDraftContent(draft)}
+        isDirty={() => !isSaved.current && (hasDraftContent(draft) || photoSave.photo !== null)}
         title="Discard this recipe?"
       />
     </>

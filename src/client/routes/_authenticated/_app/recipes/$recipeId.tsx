@@ -3,15 +3,20 @@ import { Button } from "@client/components/ui/button";
 import { ServingFoodIcon, StarIcon } from "@client/components/ui/icons";
 import { ImagePlaceholder } from "@client/components/ui/image-thumbnail";
 import { useMembersById } from "@client/features/household/members";
-import { householdStoreOptions, useHouseholdQuery } from "@client/features/household/store";
+import {
+  householdStoreOptions,
+  useHouseholdQuery,
+  useHouseholdStore,
+} from "@client/features/household/store";
 import { useFavorites } from "@client/features/recipes/favorites";
 import { recipe$, recipeTags$, tags$ } from "@client/features/recipes/queries";
 import { RecipeActionsMenu } from "@client/features/recipes/recipe-actions-menu";
 import { groupTagsByRecipe } from "@client/features/recipes/recipe-tags";
 import { storeRegistry } from "@client/lib/livestore/adapter";
 import { formatMetaTitle } from "@client/lib/meta";
+import { recipeDeleted } from "@shared/recipes";
 import type { Recipe } from "@shared/recipes";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 
 import { RecipeContent } from "./-components/recipe-content";
 import { RecipeByline, RecipeTagLinks } from "./-components/recipe-meta";
@@ -42,6 +47,8 @@ function RecipeTitle(): string {
 
 function RecipeDetail() {
   const { household, user } = Route.useRouteContext();
+  const navigate = useNavigate();
+  const store = useHouseholdStore(household.id);
   const recipe = useRecipe();
   const tags = useHouseholdQuery(household.id, tags$);
   const links = useHouseholdQuery(household.id, recipeTags$);
@@ -54,6 +61,12 @@ function RecipeDetail() {
   const recipeTags = groupTagsByRecipe(tags, links).get(recipe.id) ?? [];
   const author = membersById?.get(recipe.createdBy);
   const isFavorite = favoriteIds.has(recipe.id);
+
+  // Leaves first, so the page does not flash as not found. Replaces it, so back skips it.
+  async function deleteRecipe(id: string) {
+    await navigate({ to: "/recipes", replace: true });
+    store.commit(recipeDeleted({ id, deletedBy: user.id, deletedAt: new Date() }));
+  }
 
   return (
     <>
@@ -69,6 +82,7 @@ function RecipeDetail() {
         <RecipeActionsMenu
           className="-mr-2"
           isFavorite={isFavorite}
+          onDelete={() => void deleteRecipe(recipe.id)}
           onToggleFavorite={() => toggleFavorite(recipe.id)}
           recipeId={recipe.id}
           recipeTitle={recipe.title}

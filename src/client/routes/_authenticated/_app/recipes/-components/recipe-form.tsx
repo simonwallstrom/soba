@@ -7,8 +7,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@client/components/ui/dialog";
-import { ImageUploadIcon } from "@client/components/ui/icons";
+import { Cancel01Icon, ImageUploadIcon } from "@client/components/ui/icons";
 import type { RecipeDraft } from "@client/features/recipes/recipe-draft";
+import { photoEditEvents, photoInputTypes } from "@client/features/recipes/recipe-photo";
+import type { PhotoEdit } from "@client/features/recipes/recipe-photo";
 import { RecipeRowsEditor } from "@client/features/recipes/recipe-rows-editor";
 import { TagPicker } from "@client/features/recipes/tag-picker";
 import type { Tag } from "@shared/recipes";
@@ -19,10 +21,46 @@ import type { ChangeEvent, ComponentProps, Dispatch, FormEvent, SetStateAction }
 import { ServingsControl } from "./recipe-content";
 import { RecipeByline } from "./recipe-meta";
 
-const photoTypes = ["image/jpeg", "image/png", "image/webp"];
+// The photo picked or removed while writing, and saving that uploads it first. A recipe can
+// only refer to a stored photo, so a failed upload saves nothing and keeps the page open.
+export function usePhotoSave() {
+  const [photo, setPhoto] = useState<PhotoEdit>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(
+    () => () => {
+      if (photo && photo !== "removed") URL.revokeObjectURL(photo.previewUrl);
+    },
+    [photo],
+  );
+
+  function changePhoto(edit: PhotoEdit) {
+    setError(null);
+    setPhoto(edit);
+  }
+
+  async function save(
+    meta: Parameters<typeof photoEditEvents>[1],
+    commit: (photoEvents: Awaited<ReturnType<typeof photoEditEvents>>) => void,
+  ) {
+    if (isSaving) return;
+    setIsSaving(true);
+    setError(null);
+    try {
+      commit(await photoEditEvents(photo, meta));
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "Could not save the photo.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return { photo, changePhoto, isSaving, error, save };
+}
 
 // Writing a recipe on a page laid out like the recipe itself, for creating and editing alike.
-// The photo is a preview until uploads arrive. Saving needs a title.
+// Saving needs a title.
 export function RecipeForm({
   author,
   autoFocusTitle = false,
@@ -31,7 +69,10 @@ export function RecipeForm({
   id,
   imageUrl,
   onChange,
+  onPhotoChange,
   onSave,
+  photo,
+  photoError,
   tags,
 }: {
   author: ComponentProps<typeof RecipeByline>["author"];
@@ -41,38 +82,42 @@ export function RecipeForm({
   id: string;
   imageUrl?: string | null;
   onChange: Dispatch<SetStateAction<RecipeDraft>>;
+  onPhotoChange: (edit: PhotoEdit) => void;
   onSave: () => void;
+  photo: PhotoEdit;
+  // Why the last upload failed.
+  photoError: string | null;
   tags: readonly Tag[];
 }) {
   const [isTitleMissing, setIsTitleMissing] = useState(false);
-  const [photo, setPhoto] = useState<{ file: File; url: string } | null>(null);
-  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [pickError, setPickError] = useState<string | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
-  const photoUrl = photo?.url ?? imageUrl;
+  const photoUrl = photo === "removed" ? null : (photo?.previewUrl ?? imageUrl);
+  const shownPhotoError = pickError ?? photoError;
 
   // Starts typing the title on desktop; on touch screens the keyboard would hide the page.
   useEffect(() => {
     if (autoFocusTitle && window.matchMedia("(pointer: fine)").matches) titleRef.current?.focus();
   }, [autoFocusTitle]);
 
-  useEffect(
-    () => () => {
-      if (photo) URL.revokeObjectURL(photo.url);
-    },
-    [photo],
-  );
-
   function choosePhoto(event: ChangeEvent<HTMLInputElement>) {
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = "";
     if (!file) return;
-    if (!photoTypes.includes(file.type) || file.size > 10 * 1024 * 1024) {
-      setPhotoError("Choose a JPEG, PNG or WebP photo under 10 MB.");
+    // Phone photos can be large; they are shrunk before uploading.
+    if (!photoInputTypes.includes(file.type) || file.size > 30 * 1024 * 1024) {
+      setPickError("Choose a JPEG, PNG or WebP photo under 30 MB.");
       return;
     }
-    setPhotoError(null);
-    setPhoto({ file, url: URL.createObjectURL(file) });
+    setPickError(null);
+    onPhotoChange({ file, previewUrl: URL.createObjectURL(file) });
+  }
+
+  function removePhoto() {
+    setPickError(null);
+    // A photo picked for a recipe that had none simply goes away.
+    onPhotoChange(imageUrl ? "removed" : null);
   }
 
   function update(changes: Partial<RecipeDraft>) {
@@ -104,10 +149,10 @@ export function RecipeForm({
       onSubmit={save}
     >
       <header className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,28rem)] lg:items-center lg:gap-16">
-        <div className="-mx-5 -mt-5 flex flex-col gap-2 lg:col-start-2 lg:row-start-1 lg:m-0">
+        <div className="relative -mx-5 -mt-5 flex flex-col gap-2 lg:col-start-2 lg:row-start-1 lg:m-0">
           <label className="group relative flex aspect-5/4 cursor-pointer items-center justify-center overflow-hidden bg-olive-100 text-olive-500 ring-[0.5px] ring-black/10 transition-colors ring-inset hover:bg-olive-200/60 has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 lg:rounded-xl dark:bg-olive-900 dark:text-olive-400 dark:ring-white/10 dark:hover:bg-olive-800/60">
             <input
-              accept={photoTypes.join(",")}
+              accept={photoInputTypes.join(",")}
               className="sr-only"
               onChange={choosePhoto}
               type="file"
@@ -126,9 +171,21 @@ export function RecipeForm({
               {photoUrl ? "Change photo" : "Add a photo"}
             </span>
           </label>
-          {photoError && (
+          {/* Outside the label, so removing does not open the file picker. */}
+          {photoUrl && (
+            <Button
+              aria-label="Remove photo"
+              className="absolute top-3 right-3 bg-black/60 text-white backdrop-blur-sm hover:bg-black/75 hover:text-white dark:hover:bg-black/75"
+              onClick={removePhoto}
+              size="icon-sm"
+              variant="ghost"
+            >
+              <Cancel01Icon />
+            </Button>
+          )}
+          {shownPhotoError && (
             <p className="px-5 text-sm text-red-700 lg:px-0 dark:text-red-300" role="alert">
-              {photoError}
+              {shownPhotoError}
             </p>
           )}
         </div>

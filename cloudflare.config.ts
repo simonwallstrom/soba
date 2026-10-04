@@ -20,6 +20,8 @@ export default defineConfig({
     env: {
       // Migrations live in drizzle/migrations; the db:migrate scripts pass that directory.
       DB: bindings.d1({ name: "soba-db", id: "3c45797e-8236-4864-af08-a21627c98756" }),
+      // Recipe photos, keyed by household. See src/server/photos.
+      PHOTOS: bindings.r2({ name: "soba-photos" }),
       SYNC_BACKEND_DO: bindings.durableObject({ worker: "soba", exportName: "SyncBackendDO" }),
       AUTH_RATE_LIMITER: bindings.rateLimit({
         namespace: "1001",

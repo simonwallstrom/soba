@@ -12,14 +12,15 @@ import {
 } from "@client/components/ui/combobox";
 import { Add01Icon, Cancel01Icon } from "@client/components/ui/icons";
 import { compareNames } from "@client/features/recipes/recipe-tags";
+import { normalizeTagName } from "@shared/recipes";
 import { cn } from "cn";
 import { useState } from "react";
 
 // Stands in the list for "Create …" so it can be picked like any tag.
 const createItem = "\0create";
 
-// Selected tags as removable chips, with a searchable list of tags. Typing a name that no tag
-// has offers to create it; `onCreate` returns the new tag's ID.
+// Selected tags as removable chips, with a searchable list of tags. Typing a name no tag has, in
+// any case, offers to create it; `onCreate` returns the new tag's ID.
 export function TagPicker({
   onChange,
   onCreate,
@@ -34,7 +35,7 @@ export function TagPicker({
   const anchor = useComboboxAnchor();
   const [query, setQuery] = useState("");
   const names = new Map(tags.map((tag) => [tag.id, tag.name]));
-  const name = query.trim();
+  const name = normalizeTagName(query);
   const canCreate =
     name !== "" &&
     !tags.some((tag) => tag.name.localeCompare(name, "sv-SE", { sensitivity: "base" }) === 0);

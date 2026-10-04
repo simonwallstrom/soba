@@ -127,6 +127,37 @@ export const recipeUpdated = Events.synced({
   }),
 });
 
+// Hides the recipe everywhere. Its row stays, so favorites and later events still find it.
+export const recipeDeleted = Events.synced({
+  name: "v1.RecipeDeleted",
+  schema: Schema.Struct({ id: Schema.String, deletedBy: Schema.String, deletedAt: Schema.Date }),
+});
+
+// Sets, replaces, or (with no photo ID) removes a recipe's uploaded photo.
+export const recipePhotoChanged = Events.synced({
+  name: "v1.RecipePhotoChanged",
+  schema: Schema.Struct({
+    id: Schema.String,
+    photoId: Schema.optional(Schema.String),
+    updatedBy: Schema.String,
+    updatedAt: Schema.Date,
+  }),
+});
+
+// Where the Worker serves a household's uploaded photo.
+export function recipePhotoUrl(photoId: string) {
+  return `/api/photos/${photoId}`;
+}
+
+// How tag names are stored and shown: single spaces and a capital first letter, the rest as
+// typed so "BBQ" stays. The tag picker matches names regardless of case.
+export function normalizeTagName(name: string) {
+  return name
+    .trim()
+    .replace(/\s+/gu, " ")
+    .replace(/^\p{Ll}/u, (first) => first.toLocaleUpperCase("sv-SE"));
+}
+
 export const tagCreated = Events.synced({
   name: "v1.TagCreated",
   schema: Schema.Struct({ id: Schema.String, name: Schema.String, createdAt: Schema.Date }),
@@ -153,6 +184,8 @@ export const recipeUnfavorited = Events.synced({
 const events = {
   recipeCreated,
   recipeUpdated,
+  recipeDeleted,
+  recipePhotoChanged,
   tagCreated,
   recipeFavorited,
   recipeUnfavorited,
@@ -183,7 +216,14 @@ const materializers = State.SQLite.materializers(events, {
     recipeTags.delete().where({ recipeId: id }),
     ...tagIds.map((tagId) => recipeTags.insert({ recipeId: id, tagId })),
   ],
-  "v1.TagCreated": ({ id, name, createdAt }) => tags.insert({ id, name, createdAt }),
+  "v1.RecipeDeleted": ({ id, deletedAt }) => recipes.update({ deletedAt }).where({ id }),
+  "v1.RecipePhotoChanged": ({ id, photoId, updatedBy, updatedAt }) =>
+    recipes
+      .update({ imageUrl: photoId ? recipePhotoUrl(photoId) : null, updatedBy, updatedAt })
+      .where({ id }),
+  // Also tidies names saved before tags were normalized.
+  "v1.TagCreated": ({ id, name, createdAt }) =>
+    tags.insert({ id, name: normalizeTagName(name), createdAt }),
   // Two devices may favorite the same recipe; the first stays.
   "v1.RecipeFavorited": ({ recipeId, userId, favoritedAt }) =>
     favorites

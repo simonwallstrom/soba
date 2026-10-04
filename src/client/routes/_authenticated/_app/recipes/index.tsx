@@ -23,7 +23,7 @@ import { RecipeList } from "@client/features/recipes/recipe-list";
 import type { RecipeListEntry } from "@client/features/recipes/recipe-list";
 import { compareNames, groupTagsByRecipe } from "@client/features/recipes/recipe-tags";
 import { formatMetaTitle } from "@client/lib/meta";
-import { recipeListSettings } from "@shared/recipes";
+import { recipeDeleted, recipeListSettings } from "@shared/recipes";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { MealPlannerSidebar } from "./-components/meal-planner-sidebar";
@@ -157,6 +157,11 @@ function Recipes() {
             renderActions={({ recipe }) => (
               <RecipeActionsMenu
                 isFavorite={favoriteIds.has(recipe.id)}
+                onDelete={() =>
+                  store.commit(
+                    recipeDeleted({ id: recipe.id, deletedBy: user.id, deletedAt: new Date() }),
+                  )
+                }
                 onToggleFavorite={() => toggleFavorite(recipe.id)}
                 recipeId={recipe.id}
                 recipeTitle={recipe.title}

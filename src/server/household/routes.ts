@@ -10,26 +10,14 @@ import {
   createHousehold,
   findInvite,
   getInviteToken,
-  getMembership,
   joinHousehold,
   leaveHousehold,
   listMembers,
   removeMember,
   resetInviteToken,
 } from "./household";
-import type { Membership } from "./household";
-
-type HouseholdEnv = {
-  Bindings: Env;
-  Variables: SessionEnv["Variables"] & { membership: Membership };
-};
-
-const requireHousehold = createMiddleware<HouseholdEnv>(async (c, next) => {
-  const membership = await getMembership(c.get("user").id);
-  if (!membership) return c.json({ error: "Household required" }, 404);
-  c.set("membership", membership);
-  return next();
-});
+import { requireHousehold } from "./middleware";
+import type { HouseholdEnv } from "./middleware";
 
 const requireOwner = createMiddleware<HouseholdEnv>(async (c, next) => {
   if (c.get("membership").role !== "owner") {
