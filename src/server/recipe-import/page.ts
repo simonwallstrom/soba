@@ -43,16 +43,16 @@ export function parseRecipeUrl(value: string) {
   return url.protocol === "https:" || url.protocol === "http:" ? url : null;
 }
 
+// Many recipe sites, and the image servers behind them, turn away requests that do not look
+// like a browser. A Worker's fetch sends no User-Agent at all.
+export const browserUserAgent =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
+
 export async function fetchRecipePage(url: URL): Promise<RecipePage> {
   let response: Response;
   try {
     response = await fetch(url, {
-      headers: {
-        // Many recipe sites turn away requests that do not look like a browser.
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
-        Accept: "text/html,application/xhtml+xml",
-      },
+      headers: { "User-Agent": browserUserAgent, Accept: "text/html,application/xhtml+xml" },
       redirect: "follow",
       signal: AbortSignal.timeout(fetchTimeout),
     });
