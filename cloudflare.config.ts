@@ -17,10 +17,7 @@ export default defineConfig({
     exports: {
       SyncBackendDO: exports.durableObject({ storage: "sqlite" }),
       // Finishes recipe imports in the background. See src/server/recipe-import.
-      RecipeImportWorkflow: exports.workflow({
-        name: "soba-recipe-import",
-        defaultRetention: { successRetention: "1 day", errorRetention: "7 days" },
-      }),
+      RecipeImportWorkflow: exports.workflow({ name: "soba-recipe-import" }),
     },
     env: {
       // Migrations live in drizzle/migrations; the db:migrate scripts pass that directory.
