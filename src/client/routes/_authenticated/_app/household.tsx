@@ -1,8 +1,18 @@
+import { Field, FieldLabel } from "@client/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@client/components/ui/select";
 import { householdOptions } from "@client/features/household/members";
 import { api } from "@client/lib/api";
 import { formatMetaTitle } from "@client/lib/meta";
 import { queryClient } from "@client/lib/query";
 import { invalidateSession } from "@client/lib/session";
+import { householdLanguages, householdUnits } from "@shared/household";
+import type { HouseholdLanguage, HouseholdUnits } from "@shared/household";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
@@ -81,6 +91,12 @@ function Household() {
     if (await run(() => api.household.leave.$post())) await invalidateSession();
   }
 
+  async function updateSettings(settings: { language: HouseholdLanguage; units: HouseholdUnits }) {
+    if (await run(() => api.household.settings.$put({ json: settings }))) {
+      await invalidateSession();
+    }
+  }
+
   async function copyLink(url: string) {
     await navigator.clipboard.writeText(url);
     setCopied(true);
@@ -121,6 +137,57 @@ function Household() {
               ))}
             </ul>
           )}
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="font-medium">Imported recipes</h2>
+          <p>Recipes imported from links and photos are translated and converted to these.</p>
+          <div className="grid max-w-sm gap-4">
+            <Field>
+              <FieldLabel htmlFor="household-language">Language</FieldLabel>
+              <Select
+                disabled={busy}
+                items={householdLanguages}
+                onValueChange={(language) => {
+                  if (language) void updateSettings({ language, units: household.units });
+                }}
+                value={household.language}
+              >
+                <SelectTrigger id="household-language">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {householdLanguages.map((language) => (
+                    <SelectItem key={language.value} value={language.value}>
+                      {language.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="household-units">Units</FieldLabel>
+              <Select
+                disabled={busy}
+                items={householdUnits}
+                onValueChange={(units) => {
+                  if (units) void updateSettings({ language: household.language, units });
+                }}
+                value={household.units}
+              >
+                <SelectTrigger id="household-units">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {householdUnits.map((units) => (
+                    <SelectItem key={units.value} value={units.value}>
+                      {units.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
         </section>
 
         {isOwner && data?.inviteUrl && (

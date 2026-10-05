@@ -79,6 +79,7 @@ const recipe: Recipe = {
   description: null,
   servings: 2,
   imageUrl: null,
+  sourceUrl: null,
   ingredients: [{ heading: "Broth", items: ["Dashi"] }],
   instructions: [],
   createdBy: "user-1",

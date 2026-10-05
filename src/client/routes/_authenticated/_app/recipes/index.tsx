@@ -19,18 +19,28 @@ import {
   tags$,
 } from "@client/features/recipes/queries";
 import { RecipeActionsMenu } from "@client/features/recipes/recipe-actions-menu";
+import {
+  onRecipeImported,
+  useRecentlyImported,
+} from "@client/features/recipes/recipe-import-watcher";
+import { recipeImportsOptions } from "@client/features/recipes/recipe-imports";
 import { RecipeList } from "@client/features/recipes/recipe-list";
 import type { RecipeListEntry } from "@client/features/recipes/recipe-list";
 import { compareNames, groupTagsByRecipe } from "@client/features/recipes/recipe-tags";
 import { formatMetaTitle } from "@client/lib/meta";
 import { recipeDeleted, recipeListSettings } from "@shared/recipes";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 
 import { MealPlannerSidebar } from "./-components/meal-planner-sidebar";
+import { PendingImports } from "./-components/pending-imports";
+import { RecipeImportDialog } from "./-components/recipe-import-dialog";
+import type { ImportSource } from "./-components/recipe-import-dialog";
 import { ActiveRecipeFilters, RecipesFilter } from "./-components/recipes-filters";
 import { RecipesSearch } from "./-components/recipes-search";
 import { RecipesHeaderActions, RecipesToolbar } from "./-components/recipes-toolbar";
-import { filterRecipes, parseRecipeListSearch } from "./-recipe-list";
+import { filterRecipes, parseRecipeListSearch, pinFirst } from "./-recipe-list";
 import type { RecipeFilterField } from "./-recipe-list";
 
 export const Route = createFileRoute("/_authenticated/_app/recipes/")({
@@ -50,6 +60,12 @@ function Recipes() {
   const links = useHouseholdQuery(household.id, recipeTags$);
   const settings = useHouseholdQuery(household.id, recipeListSettings$);
   const membersById = useMembersById();
+  const [importSource, setImportSource] = useState<ImportSource | null>(null);
+  const { data: imports = [] } = useQuery(recipeImportsOptions);
+  const recentlyImported = useRecentlyImported();
+  const tagNames = tags.map((tag) => tag.name);
+  // Imports on their way count as content, so a new household sees its first import arrive.
+  const isEmpty = recipes.length === 0 && imports.length === 0;
 
   const { sort } = settings;
   const tagsByRecipe = groupTagsByRecipe(tags, links);
@@ -58,7 +74,13 @@ function Recipes() {
     tags: tagsByRecipe.get(recipe.id) ?? [],
     author: membersById?.get(recipe.createdBy),
   });
-  const entries = filterRecipes(recipes, tagsByRecipe, search, sort).map(toEntry);
+  // Imported while this page is open, newest first: they stay on top until the member leaves,
+  // rather than vanishing into the sort order the moment they arrive.
+  const [pinnedIds, setPinnedIds] = useState<string[]>([]);
+  useEffect(() => onRecipeImported((id) => setPinnedIds((ids) => [id, ...ids])), []);
+  const entries = pinFirst(filterRecipes(recipes, tagsByRecipe, search, sort), pinnedIds).map(
+    toEntry,
+  );
   const plannerEntries = filterRecipes(recipes, tagsByRecipe, {}, "name").map(toEntry);
 
   const sortedTags = tags.toSorted((left, right) => compareNames(left.name, right.name));
@@ -99,9 +121,17 @@ function Recipes() {
       <AppHeaderActions>
         <RecipesHeaderActions
           isMealPlannerOpen={settings.isMealPlannerOpen}
+          onImport={setImportSource}
           onMealPlannerOpenChange={(isMealPlannerOpen) => updateSettings({ isMealPlannerOpen })}
         />
       </AppHeaderActions>
+      <RecipeImportDialog
+        onOpenChange={(open) => {
+          if (!open) setImportSource(null);
+        }}
+        source={importSource}
+        tagNames={tagNames}
+      />
       {/* With no recipes yet, there is nothing to search or sort. */}
       <AppToolbar>
         {recipes.length > 0 && (
@@ -125,22 +155,32 @@ function Recipes() {
         )}
       </AppToolbar>
       {/* Items pad their content, so an empty box takes that padding to line up with the header. */}
-      <div className={recipes.length === 0 ? "p-5 lg:p-6" : "p-2 lg:p-3"}>
+      <div className={isEmpty ? "p-5 lg:p-6" : "p-2 lg:p-3"}>
+        {imports.length > 0 && (
+          <PendingImports
+            imports={imports}
+            onImportPhoto={() => setImportSource("photos")}
+            tagNames={tagNames}
+            view={settings.view}
+          />
+        )}
         {recipes.length === 0 ? (
-          <Empty>
-            <EmptyIcon>
-              <CookBookIcon />
-            </EmptyIcon>
-            <EmptyHeader>
-              <EmptyTitle>No recipes yet</EmptyTitle>
-              <EmptyDescription>
-                Add the recipes your family cooks, to find them and plan meals with.
-              </EmptyDescription>
-            </EmptyHeader>
-            <Link className={buttonVariants({ variant: "primary" })} to="/recipes/new">
-              New recipe
-            </Link>
-          </Empty>
+          isEmpty && (
+            <Empty>
+              <EmptyIcon>
+                <CookBookIcon />
+              </EmptyIcon>
+              <EmptyHeader>
+                <EmptyTitle>No recipes yet</EmptyTitle>
+                <EmptyDescription>
+                  Add the recipes your family cooks, to find them and plan meals with.
+                </EmptyDescription>
+              </EmptyHeader>
+              <Link className={buttonVariants({ variant: "primary" })} to="/recipes/new">
+                New recipe
+              </Link>
+            </Empty>
+          )
         ) : entries.length === 0 ? (
           // Filtering is quick to undo, so no matches gets a lighter message than an empty household.
           <div className="flex min-h-48 flex-col items-center justify-center gap-2 text-center">
@@ -154,6 +194,8 @@ function Recipes() {
             // Sorting by a date shows that date.
             date={sort === "name" ? undefined : sort}
             entries={entries}
+            highlightedIds={recentlyImported}
+            newIds={new Set(pinnedIds)}
             renderActions={({ recipe }) => (
               <RecipeActionsMenu
                 isFavorite={favoriteIds.has(recipe.id)}

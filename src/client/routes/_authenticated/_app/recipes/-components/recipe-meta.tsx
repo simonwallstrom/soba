@@ -11,14 +11,18 @@ const dateFormat = new Intl.DateTimeFormat("en-GB", {
   year: "numeric",
 });
 
-// Who added the recipe and when. The author shows once members load and links to their recipes.
+// Who added the recipe and when, and the site an imported recipe came from. The author shows once
+// members load and links to their recipes.
 export function RecipeByline({
   author,
   createdAt,
+  sourceUrl = null,
 }: {
   author: HouseholdMember | undefined;
   createdAt: Date;
+  sourceUrl?: string | null;
 }) {
+  const sourceHost = sourceUrl ? hostname(sourceUrl) : null;
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-olive-500">
       {author && (
@@ -39,8 +43,29 @@ export function RecipeByline({
         </>
       )}
       <time dateTime={createdAt.toISOString()}>{dateFormat.format(createdAt)}</time>
+      {sourceUrl && sourceHost && (
+        <>
+          <span aria-hidden="true">·</span>
+          <a
+            className="hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+            href={sourceUrl}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            {sourceHost}
+          </a>
+        </>
+      )}
     </div>
   );
+}
+
+function hostname(url: string) {
+  try {
+    return new URL(url).hostname.replace(/^www\./u, "");
+  } catch {
+    return null;
+  }
 }
 
 // Each tag links to the recipe list filtered by it.

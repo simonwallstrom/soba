@@ -13,6 +13,7 @@ import { photoEditEvents, photoInputTypes } from "@client/features/recipes/recip
 import type { PhotoEdit } from "@client/features/recipes/recipe-photo";
 import { RecipeRowsEditor } from "@client/features/recipes/recipe-rows-editor";
 import { TagPicker } from "@client/features/recipes/tag-picker";
+import { recipeDescriptionMaxLength, recipeTitleMaxLength } from "@shared/recipes";
 import type { Tag } from "@shared/recipes";
 import { useBlocker } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
@@ -73,6 +74,7 @@ export function RecipeForm({
   onSave,
   photo,
   photoError,
+  sourceUrl = null,
   tags,
 }: {
   author: ComponentProps<typeof RecipeByline>["author"];
@@ -87,6 +89,7 @@ export function RecipeForm({
   photo: PhotoEdit;
   // Why the last upload failed.
   photoError: string | null;
+  sourceUrl?: string | null;
   tags: readonly Tag[];
 }) {
   const [isTitleMissing, setIsTitleMissing] = useState(false);
@@ -190,7 +193,7 @@ export function RecipeForm({
           )}
         </div>
         <div className="flex flex-col gap-3 lg:col-start-1 lg:row-start-1">
-          <RecipeByline author={author} createdAt={createdAt} />
+          <RecipeByline author={author} createdAt={createdAt} sourceUrl={sourceUrl} />
           <h1 className="text-3xl font-medium tracking-tight">
             <textarea
               aria-describedby={isTitleMissing ? "title-error" : undefined}
@@ -207,6 +210,7 @@ export function RecipeForm({
                 event.preventDefault();
                 descriptionRef.current?.focus();
               }}
+              maxLength={recipeTitleMaxLength}
               placeholder="Recipe title…"
               ref={titleRef}
               rows={1}
@@ -222,6 +226,7 @@ export function RecipeForm({
             aria-label="Description"
             className="block field-sizing-content max-w-xl resize-none bg-transparent p-0 leading-6 text-olive-600 outline-none placeholder:text-olive-400 dark:text-olive-400 dark:placeholder:text-olive-600"
             onChange={(event) => update({ description: event.currentTarget.value })}
+            maxLength={recipeDescriptionMaxLength}
             placeholder="What makes it special? A tip or serving idea…"
             ref={descriptionRef}
             rows={1}

@@ -1,4 +1,5 @@
 import { MediaGridItem, MediaItems, MediaListItem } from "@client/components/particles/media-item";
+import { Badge } from "@client/components/ui/badge";
 import { ServingFoodIcon } from "@client/components/ui/icons";
 import type { HouseholdMember } from "@client/features/household/members";
 import type { Recipe, RecipeDetail, RecipeView, Tag } from "@shared/recipes";
@@ -23,11 +24,17 @@ type DetailsProps = {
 
 export function RecipeList({
   entries,
+  highlightedIds,
+  newIds,
   renderActions,
   view,
   ...detailsProps
 }: Omit<DetailsProps, "entry"> & {
   entries: readonly RecipeListEntry[];
+  // Recipes that just arrived, such as imports.
+  highlightedIds?: ReadonlySet<string>;
+  // Recipes shown out of sort order because they are new, marked so the order makes sense.
+  newIds?: ReadonlySet<string>;
   renderActions: (entry: RecipeListEntry) => ReactNode;
   view: RecipeView;
 }) {
@@ -38,8 +45,10 @@ export function RecipeList({
       {entries.map((entry) => (
         <Item
           actions={renderActions(entry)}
+          badge={newIds?.has(entry.recipe.id) && <Badge variant="primary">New</Badge>}
           details={<Details entry={entry} {...detailsProps} />}
           imageUrl={entry.recipe.imageUrl}
+          isHighlighted={highlightedIds?.has(entry.recipe.id)}
           key={entry.recipe.id}
           link={{ to: "/recipes/$recipeId", params: { recipeId: entry.recipe.id } }}
           placeholderIcon={<ServingFoodIcon />}

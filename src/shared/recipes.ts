@@ -10,6 +10,11 @@ export type RecipeSection = typeof recipeSectionSchema.Type;
 // camelCase: React Refresh registers PascalCase bindings, which breaks this module in the LiveStore worker.
 const recipeSectionsSchema = Schema.Array(recipeSectionSchema);
 
+// Enforced where recipes are written (the form and imports), never in events, so tightening a
+// limit later cannot break replaying recipes saved under an older one.
+export const recipeTitleMaxLength = 60;
+export const recipeDescriptionMaxLength = 160;
+
 export const recipes = State.SQLite.table({
   name: "recipes",
   columns: {
@@ -18,6 +23,8 @@ export const recipes = State.SQLite.table({
     description: State.SQLite.text({ nullable: true }),
     servings: State.SQLite.integer({ nullable: true }),
     imageUrl: State.SQLite.text({ nullable: true }),
+    // The page an imported recipe came from.
+    sourceUrl: State.SQLite.text({ nullable: true }),
     ingredients: State.SQLite.json({ schema: recipeSectionsSchema, default: [] }),
     instructions: State.SQLite.json({ schema: recipeSectionsSchema, default: [] }),
     // User IDs; names and photos come from the household's members.
@@ -101,6 +108,7 @@ export const recipeCreated = Events.synced({
     description: Schema.optional(Schema.String),
     servings: Schema.optional(Schema.Int),
     imageUrl: Schema.optional(Schema.String),
+    sourceUrl: Schema.optional(Schema.String),
     ingredients: Schema.optional(recipeSectionsSchema),
     instructions: Schema.optional(recipeSectionsSchema),
     tagIds: Schema.optional(Schema.Array(Schema.String)),
@@ -200,6 +208,7 @@ const materializers = State.SQLite.materializers(events, {
       description: recipe.description ?? null,
       servings: recipe.servings ?? null,
       imageUrl: recipe.imageUrl ?? null,
+      sourceUrl: recipe.sourceUrl ?? null,
       ingredients: recipe.ingredients ?? [],
       instructions: recipe.instructions ?? [],
       createdBy: recipe.createdBy,

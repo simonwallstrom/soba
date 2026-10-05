@@ -1,10 +1,17 @@
 import { MAX_HOUSEHOLD_MEMBERS } from "@shared/household";
+import type { HouseholdLanguage, HouseholdUnits } from "@shared/household";
 import { and, count, eq, ne } from "drizzle-orm";
 
 import { getDatabase } from "../db/client";
 import { householdInvites, householdMembers, households, users } from "../db/schema";
 
-export type Membership = { id: string; name: string; role: "owner" | "member" };
+export type HouseholdSettings = { language: HouseholdLanguage; units: HouseholdUnits };
+
+export type Membership = HouseholdSettings & {
+  id: string;
+  name: string;
+  role: "owner" | "member";
+};
 
 // D1 reports constraint failures as error messages, sometimes wrapped by Drizzle.
 function isUniqueViolation(error: unknown): boolean {
@@ -14,7 +21,13 @@ function isUniqueViolation(error: unknown): boolean {
 
 export async function getMembership(userId: string): Promise<Membership | null> {
   const [membership] = await getDatabase()
-    .select({ id: households.id, name: households.name, role: householdMembers.role })
+    .select({
+      id: households.id,
+      name: households.name,
+      role: householdMembers.role,
+      language: households.language,
+      units: households.units,
+    })
     .from(householdMembers)
     .innerJoin(households, eq(householdMembers.householdId, households.id))
     .where(eq(householdMembers.userId, userId))
@@ -32,12 +45,15 @@ export async function isMember(userId: string, householdId: string) {
 }
 
 /** Returns false when the user already belongs to a household. */
-export async function createHousehold(name: string, userId: string) {
+export async function createHousehold(
+  { name, ...settings }: HouseholdSettings & { name: string },
+  userId: string,
+) {
   const db = getDatabase();
   const householdId = crypto.randomUUID();
   try {
     await db.batch([
-      db.insert(households).values({ id: householdId, name }),
+      db.insert(households).values({ id: householdId, name, ...settings }),
       db.insert(householdMembers).values({ userId, householdId, role: "owner" }),
       db
         .insert(householdInvites)
@@ -48,6 +64,10 @@ export async function createHousehold(name: string, userId: string) {
     if (isUniqueViolation(error)) return false;
     throw error;
   }
+}
+
+export async function updateHouseholdSettings(householdId: string, settings: HouseholdSettings) {
+  await getDatabase().update(households).set(settings).where(eq(households.id, householdId));
 }
 
 export async function listMembers(householdId: string) {

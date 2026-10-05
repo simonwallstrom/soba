@@ -72,3 +72,12 @@ export function filterRecipes(
     return compareNames(left.title, right.title);
   });
 }
+
+// Moves the pinned recipes to the top, in the pinned order, and keeps the rest as they are.
+export function pinFirst<T extends { id: string }>(
+  recipes: readonly T[],
+  pinnedIds: readonly string[],
+) {
+  const pinned = pinnedIds.flatMap((id) => recipes.find((recipe) => recipe.id === id) ?? []);
+  return [...pinned, ...recipes.filter((recipe) => !pinnedIds.includes(recipe.id))];
+}

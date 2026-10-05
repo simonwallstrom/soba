@@ -9,3 +9,4 @@ dist/
 *.tsbuildinfo
 .types/
 .cloudflare/
+.import-comparison/

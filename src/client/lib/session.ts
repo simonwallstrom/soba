@@ -1,5 +1,6 @@
 import { api } from "@client/lib/api";
 import { queryClient } from "@client/lib/query";
+import { householdLanguages, householdUnits } from "@shared/household";
 import { queryOptions } from "@tanstack/react-query";
 import type { InferResponseType } from "hono/client";
 import * as v from "valibot";
@@ -20,7 +21,14 @@ const snapshotSchema = v.object({
     image: v.optional(v.nullable(v.string()), null),
   }),
   household: v.nullable(
-    v.object({ id: v.string(), name: v.string(), role: v.picklist(["owner", "member"]) }),
+    v.object({
+      id: v.string(),
+      name: v.string(),
+      role: v.picklist(["owner", "member"]),
+      // Snapshots saved before household settings were added have neither.
+      language: v.optional(v.picklist(householdLanguages.map((language) => language.value)), "en"),
+      units: v.optional(v.picklist(householdUnits.map((units) => units.value)), "metric"),
+    }),
   ),
   canCreateHousehold: v.boolean(),
 });

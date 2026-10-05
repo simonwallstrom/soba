@@ -52,6 +52,23 @@
   }
 }
 
+@keyframes highlight-fade {
+  from {
+    background-color: var(--highlight-color);
+  }
+}
+
+/* Washes an item that just arrived in a soft color that fades out. */
+@utility highlight-fade {
+  --highlight-color: var(--color-olive-200);
+
+  @media (prefers-color-scheme: dark) {
+    --highlight-color: var(--color-olive-800);
+  }
+
+  animation: highlight-fade 3s ease-out;
+}
+
 /* Sweeps a highlight across text; the base color comes from the text color. */
 @utility shimmer {
   --shimmer-color: var(--color-olive-950);

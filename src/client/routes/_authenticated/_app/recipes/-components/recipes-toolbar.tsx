@@ -25,6 +25,8 @@ import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
 import type { ReactNode } from "react";
 
+import type { ImportSource } from "./recipe-import-dialog";
+
 const viewOptions = [
   { label: "List", value: "list" },
   { label: "Grid", value: "grid" },
@@ -44,14 +46,15 @@ const detailOptions = [
 // Creating a recipe, then the side panel.
 export function RecipesHeaderActions({
   isMealPlannerOpen,
+  onImport,
   onMealPlannerOpenChange,
 }: {
   isMealPlannerOpen: boolean;
+  onImport: (source: ImportSource) => void;
   onMealPlannerOpenChange: (isOpen: boolean) => void;
 }) {
   return (
     <div className="-mr-2 flex items-center">
-      {/* A prototype: only manual entry opens, and it does not save yet. */}
       <DropdownMenu>
         {/* The page's main action gets a label; phones shrink it back to an icon. */}
         <DropdownMenuTrigger
@@ -68,11 +71,11 @@ export function RecipesHeaderActions({
             <FileEditIcon />
             Manual entry
           </DropdownMenuItem>
-          <DropdownMenuItem disabled>
+          <DropdownMenuItem onClick={() => onImport("url")}>
             <LinkSquare02Icon />
-            Import from URL
+            Import from link
           </DropdownMenuItem>
-          <DropdownMenuItem disabled>
+          <DropdownMenuItem onClick={() => onImport("photos")}>
             <ImageUploadIcon />
             Import from photo
           </DropdownMenuItem>

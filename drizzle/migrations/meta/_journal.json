@@ -8,6 +8,20 @@
       "when": 1790691192473,
       "tag": "0000_dizzy_ironclad",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1791190196546,
+      "tag": "0001_household_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791225494301,
+      "tag": "0002_recipe_imports",
+      "breakpoints": true
     }
   ]
 }

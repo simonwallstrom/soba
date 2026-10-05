@@ -1,3 +1,5 @@
+import type { HouseholdLanguage, HouseholdUnits } from "@shared/household";
+import type { ImportedRecipe } from "@shared/recipe-import";
 import { sql } from "drizzle-orm";
 import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
@@ -86,6 +88,9 @@ export const verifications = sqliteTable(
 export const households = sqliteTable("household", {
   id: text().primaryKey(),
   name: text().notNull(),
+  // See householdLanguages and householdUnits in @shared/household.
+  language: text().$type<HouseholdLanguage>().default("en").notNull(),
+  units: text().$type<HouseholdUnits>().default("metric").notNull(),
   createdAt: createdAt(),
 });
 
@@ -119,4 +124,37 @@ export const householdInvites = sqliteTable(
     createdAt: createdAt(),
   },
   (table) => [uniqueIndex("household_invite_token_unique").on(table.token)],
+);
+
+// Recipe imports a Workflow is still working on, or that failed. The importer's browser saves a
+// finished import as a recipe, then deletes its row. The ID becomes the recipe's ID.
+export const recipeImports = sqliteTable(
+  "recipe_import",
+  {
+    id: text().primaryKey(),
+    householdId: text("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: text({ enum: ["page", "photos"] }).notNull(),
+    status: text({ enum: ["reading", "writing", "ready", "failed"] }).notNull(),
+    // The link as entered, then the page it led to.
+    sourceUrl: text("source_url"),
+    // Uploaded photos of the recipe, as a JSON array of photo IDs.
+    sourcePhotoIds: text("source_photo_ids", { mode: "json" }).$type<string[]>(),
+    // Known once the page is read, to show while the recipe is written.
+    title: text(),
+    // The page's shared image, which becomes the recipe's photo.
+    photoId: text("photo_id"),
+    // The finished recipe, as ImportedRecipe JSON.
+    recipe: text({ mode: "json" }).$type<ImportedRecipe>(),
+    error: text(),
+    // The Workflow instance running the latest attempt, so it can be stopped.
+    runId: text("run_id").notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [index("recipe_import_user_id_idx").on(table.userId)],
 );

@@ -107,7 +107,11 @@ function RecipeDetail() {
             </ImagePlaceholder>
           )}
           <div className="flex flex-col gap-3 lg:col-start-1 lg:row-start-1">
-            <RecipeByline author={author} createdAt={recipe.createdAt} />
+            <RecipeByline
+              author={author}
+              createdAt={recipe.createdAt}
+              sourceUrl={recipe.sourceUrl}
+            />
             <h1 className="text-3xl font-medium tracking-tight text-balance">{recipe.title}</h1>
             {recipe.description && (
               <p className="max-w-xl text-base leading-6 text-pretty text-olive-600 dark:text-olive-400">

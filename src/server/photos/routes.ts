@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { requireSession } from "../auth/middleware";
 import { requireHousehold } from "../household/middleware";
 import type { HouseholdEnv } from "../household/middleware";
-import { detectPhotoType, isPhotoId, maxPhotoBytes, photoKey } from "./photo";
+import { detectPhotoType, isPhotoId, maxPhotoBytes, photoKey, savePhoto } from "./photo";
 
 // Recipe photos for the signed-in member's household. Recipes refer to a photo by its ID.
 export const photoRoutes = new Hono<HouseholdEnv>()
@@ -17,11 +17,12 @@ export const photoRoutes = new Hono<HouseholdEnv>()
     const type = detectPhotoType(bytes);
     if (!type) return c.json({ error: "Choose a JPEG, PNG or WebP photo" }, 415);
 
-    const photoId = crypto.randomUUID();
-    await c.env.PHOTOS.put(photoKey(c.get("membership").id, photoId), bytes, {
-      httpMetadata: { contentType: type },
-      customMetadata: { uploadedBy: c.get("user").id },
-    });
+    const photoId = await savePhoto(
+      c.env.PHOTOS,
+      { householdId: c.get("membership").id, uploadedBy: c.get("user").id },
+      bytes,
+      type,
+    );
     return c.json({ photoId }, 201);
   })
   .get("/:photoId", async (c) => {

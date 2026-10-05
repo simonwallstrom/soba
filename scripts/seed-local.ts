@@ -1,5 +1,6 @@
-// Resets your household's local recipes and tags to the sample recipes, all added by you.
-// Your account and household in D1 stay as they are. Usage: bun run db:seed [email]
+// Resets your household's local recipes and tags to the sample recipes, all added by you, and
+// sets the household to Swedish and metric to match them. Your account, household, and members
+// in D1 stay as they are. Usage: bun run db:seed [email]
 //
 // Recipes live in the household's sync backend (a Durable Object), so this rewrites its event
 // log and gives it a new identity. Open tabs notice the change, clear their local copy, and
@@ -106,6 +107,9 @@ syncDb.transaction(() => {
     [storeId, events.length, crypto.randomUUID()],
   );
 })();
+
+// The samples are Swedish, so imports should be too.
+authDb.run("UPDATE household SET language = 'sv', units = 'metric' WHERE id = ?", [household.id]);
 
 const recipeCount = events.filter((event) => event.name === "v1.RecipeCreated").length;
 console.log(

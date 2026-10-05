@@ -19,7 +19,13 @@ const { clearSession, getSession, invalidateSession, sessionOptions, watchSessio
   await import("@client/lib/session");
 const signedIn: Session = {
   user: { id: "user-1", name: "Test", email: "test@example.com", image: null },
-  household: { id: "household-1", name: "Test household", role: "owner" },
+  household: {
+    id: "household-1",
+    name: "Test household",
+    role: "owner",
+    language: "en",
+    units: "metric",
+  },
   canCreateHousehold: false,
 };
 

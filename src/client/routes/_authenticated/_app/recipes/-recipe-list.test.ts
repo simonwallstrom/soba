@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import type { Recipe, Tag } from "@shared/recipes";
 
-import { filterRecipes, parseRecipeListSearch } from "./-recipe-list";
+import { filterRecipes, parseRecipeListSearch, pinFirst } from "./-recipe-list";
 
 function recipe(id: string, title: string, overrides: Partial<Recipe> = {}): Recipe {
   const date = new Date("2026-01-01T00:00:00Z");
@@ -12,6 +12,7 @@ function recipe(id: string, title: string, overrides: Partial<Recipe> = {}): Rec
     description: null,
     servings: null,
     imageUrl: null,
+    sourceUrl: null,
     ingredients: [],
     instructions: [],
     createdBy: "anna",
@@ -139,5 +140,16 @@ describe("parseRecipeListSearch", () => {
 
   test("keeps the first of several authors", () => {
     expect(parseRecipeListSearch({ authors: ["simon", "anna"] })).toEqual({ authors: ["simon"] });
+  });
+});
+
+describe("pinFirst", () => {
+  test("moves pinned recipes to the top in pinned order", () => {
+    const list = [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }];
+    expect(pinFirst(list, ["d", "b"]).map((item) => item.id)).toEqual(["d", "b", "a", "c"]);
+  });
+
+  test("ignores pinned recipes that are not in the list", () => {
+    expect(pinFirst([{ id: "a" }], ["gone"]).map((item) => item.id)).toEqual(["a"]);
   });
 });

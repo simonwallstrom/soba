@@ -27,3 +27,20 @@ export function isPhotoId(value: string) {
 export function photoKey(householdId: string, photoId: string) {
   return `households/${householdId}/photos/${photoId}`;
 }
+
+export type PhotoType = NonNullable<ReturnType<typeof detectPhotoType>>;
+
+// Stores a photo for the household and returns the ID recipes refer to it by.
+export async function savePhoto(
+  bucket: R2Bucket,
+  { householdId, uploadedBy }: { householdId: string; uploadedBy: string },
+  bytes: Uint8Array,
+  type: PhotoType,
+) {
+  const photoId = crypto.randomUUID();
+  await bucket.put(photoKey(householdId, photoId), bytes, {
+    httpMetadata: { contentType: type },
+    customMetadata: { uploadedBy },
+  });
+  return photoId;
+}

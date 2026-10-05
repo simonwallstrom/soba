@@ -2,6 +2,7 @@ import { AppAsideSlot } from "@client/components/particles/app-aside";
 import { AppHeaderActionsSlot } from "@client/components/particles/app-header-actions";
 import { AppToolbarSlot } from "@client/components/particles/app-toolbar";
 import { householdStoreOptions, householdStoreReady } from "@client/features/household/store";
+import { RecipeImportWatcher } from "@client/features/recipes/recipe-import-watcher";
 import {
   RecipeSearchRequestProvider,
   useRequestRecipeSearch,
@@ -78,6 +79,7 @@ function AppLayout() {
                   }
                 >
                   <HouseholdStore householdId={household.id}>
+                    <RecipeImportWatcher householdId={household.id} userId={user.id} />
                     <AppHeaderActionsSlot value={actionsSlot}>
                       <AppToolbarSlot value={toolbarSlot}>
                         <AppAsideSlot value={asideSlot}>

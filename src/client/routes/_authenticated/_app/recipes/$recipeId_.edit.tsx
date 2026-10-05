@@ -121,6 +121,7 @@ function EditRecipe({
         onSave={() => void save()}
         photo={photoSave.photo}
         photoError={photoSave.error}
+        sourceUrl={recipe.sourceUrl}
         tags={tags}
       />
       <UnsavedChangesDialog

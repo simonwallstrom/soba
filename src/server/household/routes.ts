@@ -1,3 +1,4 @@
+import { householdLanguages, householdUnits } from "@shared/household";
 import { Hono } from "hono";
 import { createMiddleware } from "hono/factory";
 import * as v from "valibot";
@@ -15,6 +16,7 @@ import {
   listMembers,
   removeMember,
   resetInviteToken,
+  updateHouseholdSettings,
 } from "./household";
 import { requireHousehold } from "./middleware";
 import type { HouseholdEnv } from "./middleware";
@@ -25,6 +27,17 @@ const requireOwner = createMiddleware<HouseholdEnv>(async (c, next) => {
   }
   return next();
 });
+
+const settingsSchema = {
+  language: v.picklist(
+    householdLanguages.map((language) => language.value),
+    "Choose a language",
+  ),
+  units: v.picklist(
+    householdUnits.map((units) => units.value),
+    "Choose units",
+  ),
+};
 
 function inviteUrl(requestUrl: string, token: string) {
   return new URL(`/invite/${token}`, requestUrl).toString();
@@ -42,6 +55,7 @@ export const householdRoutes = new Hono<SessionEnv>()
           v.minLength(1, "Enter a household name"),
           v.maxLength(80, "Use at most 80 characters"),
         ),
+        ...settingsSchema,
       }),
     ),
     async (c) => {
@@ -49,7 +63,7 @@ export const householdRoutes = new Hono<SessionEnv>()
       if (!isAllowlisted(user.email, c.env.AUTH_ALLOWED_EMAILS)) {
         return c.json({ error: "Ask your family for an invite link to join their household" }, 403);
       }
-      const created = await createHousehold(c.req.valid("json").name, user.id);
+      const created = await createHousehold(c.req.valid("json"), user.id);
       if (!created) return c.json({ error: "You are already in a household" }, 409);
       return c.json({ ok: true }, 200);
     },
@@ -61,6 +75,11 @@ export const householdRoutes = new Hono<SessionEnv>()
       membership.role === "owner" ? getInviteToken(membership.id) : null,
     ]);
     return c.json({ members, inviteUrl: token ? inviteUrl(c.req.url, token) : null }, 200);
+  })
+  // Any member can change how imported recipes are written.
+  .put("/settings", requireHousehold, validateJson(v.object(settingsSchema)), async (c) => {
+    await updateHouseholdSettings(c.get("membership").id, c.req.valid("json"));
+    return c.json({ ok: true }, 200);
   })
   .post("/invite/reset", requireHousehold, requireOwner, async (c) => {
     const token = await resetInviteToken(c.get("membership").id, c.get("user").id);

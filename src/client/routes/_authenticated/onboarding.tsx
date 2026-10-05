@@ -2,6 +2,7 @@ import { api } from "@client/lib/api";
 import { signOut } from "@client/lib/auth";
 import { formatMetaTitle } from "@client/lib/meta";
 import { invalidateSession } from "@client/lib/session";
+import { defaultHouseholdLanguage, defaultHouseholdUnits } from "@shared/household";
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import type { SubmitEvent } from "react";
@@ -25,7 +26,14 @@ function Onboarding() {
     setError("");
     setCreating(true);
     try {
-      const response = await api.household.$post({ json: { name } });
+      // Changeable later on the household page.
+      const response = await api.household.$post({
+        json: {
+          name,
+          language: defaultHouseholdLanguage(navigator.languages),
+          units: defaultHouseholdUnits(navigator.languages),
+        },
+      });
       if (!response.ok) {
         const result = await response.json();
         setError("error" in result ? result.error : "Could not create household");

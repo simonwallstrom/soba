@@ -19,26 +19,48 @@ export function MediaItems({ children, view }: { children: ReactNode; view: Medi
 
 type MediaItemProps = {
   title: string;
-  link: Omit<LinkComponentProps, "aria-label" | "children" | "className">;
+  // Items without a link, like ones still being prepared, cannot be opened.
+  link?: Omit<LinkComponentProps, "aria-label" | "children" | "className"> | undefined;
   imageUrl: string | null;
   // Centered in the image's place when there is no image.
   placeholderIcon: ReactNode;
+  // Sits right after the title, like a "New" badge.
+  badge?: ReactNode;
   details?: ReactNode;
   actions?: ReactNode;
+  // Briefly marks an item that just arrived.
+  isHighlighted?: boolean | undefined;
 };
 
-const itemStyles =
-  "group relative rounded-2xl p-3 hover:bg-black/5 has-data-popup-open:bg-black/5 dark:hover:bg-white/6 dark:has-data-popup-open:bg-white/6";
+const itemStyles = "group relative rounded-2xl p-3";
+const linkedItemStyles =
+  "hover:bg-black/5 has-data-popup-open:bg-black/5 dark:hover:bg-white/6 dark:has-data-popup-open:bg-white/6";
+
+function itemClassName({ isHighlighted, link }: Pick<MediaItemProps, "isHighlighted" | "link">) {
+  return cn(itemStyles, link && linkedItemStyles, isHighlighted && "highlight-fade");
+}
 const actionsStyles =
   "relative z-10 -mr-1.5 flex shrink-0 text-olive-500 transition-colors group-focus-within:text-olive-700 group-hover:text-olive-700 dark:group-focus-within:text-olive-300 dark:group-hover:text-olive-300";
 
-export function MediaListItem({ actions, details, title, ...props }: MediaItemProps) {
+export function MediaListItem({
+  actions,
+  badge,
+  details,
+  isHighlighted,
+  title,
+  ...props
+}: MediaItemProps) {
   return (
-    <div className={cn(itemStyles, "flex items-center gap-3")}>
-      <MediaLink title={title} {...props} />
+    <div
+      className={cn(itemClassName({ isHighlighted, link: props.link }), "flex items-center gap-3")}
+    >
+      {props.link && <MediaLink link={props.link} title={title} />}
       <MediaImage className="size-13 shrink-0 [&_svg]:size-5" height={104} width={104} {...props} />
       <div className="pointer-events-none flex min-w-0 flex-1 flex-col gap-1">
-        <div className="truncate font-medium">{title}</div>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <div className="truncate font-medium">{title}</div>
+          {badge}
+        </div>
         <div className="truncate text-sm text-olive-500 empty:hidden">{details}</div>
       </div>
       {actions && <div className={cn(actionsStyles, "ml-auto")}>{actions}</div>}
@@ -46,10 +68,17 @@ export function MediaListItem({ actions, details, title, ...props }: MediaItemPr
   );
 }
 
-export function MediaGridItem({ actions, details, title, ...props }: MediaItemProps) {
+export function MediaGridItem({
+  actions,
+  badge,
+  details,
+  isHighlighted,
+  title,
+  ...props
+}: MediaItemProps) {
   return (
-    <article className={cn(itemStyles, "min-w-0")}>
-      <MediaLink title={title} {...props} />
+    <article className={cn(itemClassName({ isHighlighted, link: props.link }), "min-w-0")}>
+      {props.link && <MediaLink link={props.link} title={title} />}
       <MediaImage
         className="aspect-5/4 w-full [&_svg]:size-8"
         height={960}
@@ -58,9 +87,10 @@ export function MediaGridItem({ actions, details, title, ...props }: MediaItemPr
       />
       <div className="mt-1.5 flex min-w-0 flex-col">
         <div className="flex min-w-0 items-center gap-1">
-          <h2 className="pointer-events-none line-clamp-2 min-w-0 flex-1 font-medium text-balance">
-            {title}
-          </h2>
+          <div className="pointer-events-none flex min-w-0 flex-1 items-center gap-1.5">
+            <h2 className="line-clamp-2 min-w-0 font-medium text-balance">{title}</h2>
+            {badge}
+          </div>
           {actions && <div className={actionsStyles}>{actions}</div>}
         </div>
         <div className="pointer-events-none flex flex-col gap-1 text-sm leading-5 empty:hidden">
@@ -72,7 +102,10 @@ export function MediaGridItem({ actions, details, title, ...props }: MediaItemPr
 }
 
 // The whole item opens the link; the actions sit above it.
-function MediaLink({ link, title }: Pick<MediaItemProps, "link" | "title">) {
+function MediaLink({
+  link,
+  title,
+}: { link: NonNullable<MediaItemProps["link"]> } & Pick<MediaItemProps, "title">) {
   return (
     <Link
       aria-label={`Open ${title}`}

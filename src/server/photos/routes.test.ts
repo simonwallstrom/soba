@@ -10,8 +10,8 @@ await mock.module(new URL("../auth/auth.ts", import.meta.url).pathname, () => ({
 await mock.module(new URL("../household/household.ts", import.meta.url).pathname, () => ({
   getMembership: async (userId: string) =>
     userId === "stranger"
-      ? { id: "h2", name: "Other", role: "owner" }
-      : { id: "h1", name: "Home", role: "member" },
+      ? { id: "h2", name: "Other", role: "owner", language: "en", units: "metric" }
+      : { id: "h1", name: "Home", role: "member", language: "en", units: "metric" },
 }));
 const { photoRoutes } = await import("./routes");
 

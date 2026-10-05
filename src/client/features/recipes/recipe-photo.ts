@@ -10,7 +10,7 @@ export type PhotoEdit = { file: File; previewUrl: string } | "removed" | null;
 const maxEdge = 1600;
 
 // Fits a photo within maxEdge and re-encodes it, as WebP where the browser can encode it.
-async function shrinkPhoto(file: File): Promise<Blob> {
+export async function shrinkPhoto(file: File): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");

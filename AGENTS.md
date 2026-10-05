@@ -20,8 +20,8 @@
 ## Synced data
 
 - LiveStore events are the stored data; tables are rebuilt from them. Change tables and materializers freely: LiveStore rematerializes when the state schema changes.
-- Published events are permanent, because every synced event is replayed with the current code. Only add optional fields that the materializer defaults for older events, or make required fields optional. To add a required field, rename, remove, or retype one, add a new version (`v2.RecipeCreated`) and keep the old definition and its materializer.
-- Bumping `SYNC_HISTORY_VERSION` in `@shared/household` throws every household's history away. Never use it to get around an event change once real data exists.
+- Soba is pre-launch and production holds no data worth keeping. Until launch, change events freely and bump `SYNC_HISTORY_VERSION` in `@shared/household` when a change breaks replay of existing events. The bump throws every household's history away; D1 data (users, households, invites) is kept.
+- After launch, published events are permanent, because every synced event is replayed with the current code. Only add optional fields that the materializer defaults for older events, or make required fields optional. To add a required field, rename, remove, or retype one, add a new version (`v2.RecipeCreated`) and keep the old definition and its materializer. Never bump `SYNC_HISTORY_VERSION` once real data exists.
 
 ## Code organization
 
