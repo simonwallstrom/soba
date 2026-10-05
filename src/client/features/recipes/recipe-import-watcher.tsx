@@ -77,6 +77,13 @@ export function RecipeImportWatcher({
   const save = useEffectEvent(async (item: RecipeImport) => {
     const claimed = await claimImport(item.id).catch(() => null);
     if (claimed) {
+      // Drops the pending item in the same render the recipe appears in, instead of after the
+      // refetch below, so the two never show side by side. A poll already under way could
+      // still bring the item back, so it is canceled first.
+      await queryClient.cancelQueries({ queryKey: recipeImportsOptions.queryKey });
+      queryClient.setQueryData(recipeImportsOptions.queryKey, (current) =>
+        current?.filter((other) => other.id !== item.id),
+      );
       store.commit(...importedRecipeEvents(claimed, { id: item.id, tags, userId, at: new Date() }));
       markRecentlyImported(item.id);
       toast.add({
