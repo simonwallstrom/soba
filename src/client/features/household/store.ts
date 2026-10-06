@@ -4,6 +4,7 @@ import { storeOptions, useStore } from "@livestore/react";
 import type { ReactApi } from "@livestore/react";
 import { householdStoreId } from "@shared/household";
 import { recipeSchema } from "@shared/recipes";
+import { use } from "react";
 
 export function householdStoreOptions(
   householdId: string,
@@ -35,7 +36,9 @@ export function householdStoreReady(householdId: string) {
   return ready;
 }
 
+// Safe to call before the store opens, as from a breadcrumb outside the layout's Suspense.
 export function useHouseholdStore(householdId: string): Store<typeof recipeSchema> & ReactApi {
+  use(householdStoreReady(householdId));
   return useStore(householdStoreOptions(householdId));
 }
 

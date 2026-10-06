@@ -8,6 +8,7 @@ import {
   useRequestRecipeSearch,
 } from "@client/features/recipes/search-request";
 import { storeRegistry } from "@client/lib/livestore/adapter";
+import { formatMetaTitle } from "@client/lib/meta";
 import { StoreRegistryProvider, useStore } from "@livestore/react";
 import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-router";
 import { Suspense, use, useEffect, useState } from "react";
@@ -74,6 +75,7 @@ function AppLayout() {
                 <Suspense
                   fallback={
                     <p aria-busy="true" className="shimmer p-5 text-olive-500 lg:p-6">
+                      <title>{formatMetaTitle("Loading")}</title>
                       Loading…
                     </p>
                   }

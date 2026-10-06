@@ -1,32 +1,22 @@
 import { AppHeaderActions } from "@client/components/particles/app-header-actions";
 import { Button, buttonVariants } from "@client/components/ui/button";
 import { useMembersById } from "@client/features/household/members";
-import {
-  householdStoreOptions,
-  useHouseholdQuery,
-  useHouseholdStore,
-} from "@client/features/household/store";
+import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
 import { recipe$, recipeTags$, tags$ } from "@client/features/recipes/queries";
 import {
   hasDraftChanges,
   recipeEditEvents,
   recipeToDraft,
 } from "@client/features/recipes/recipe-draft";
-import { storeRegistry } from "@client/lib/livestore/adapter";
 import { formatMetaTitle } from "@client/lib/meta";
 import type { Recipe, Tag } from "@shared/recipes";
-import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 
 import { RecipeForm, UnsavedChangesDialog, usePhotoSave } from "./-components/recipe-form";
 import { RecipeNotFound } from "./-components/recipe-not-found";
 
 export const Route = createFileRoute("/_authenticated/_app/recipes/$recipeId_/edit")({
-  // Waits for the local store on first open so a missing recipe shows as not found.
-  loader: async ({ context, params }) => {
-    const store = await storeRegistry.getOrLoadPromise(householdStoreOptions(context.household.id));
-    if (!store.query(recipe$(params.recipeId))) throw notFound();
-  },
   staticData: {
     breadcrumbs: [
       { label: "Recipes", link: { to: "/recipes" } },
@@ -36,7 +26,6 @@ export const Route = createFileRoute("/_authenticated/_app/recipes/$recipeId_/ed
     ],
   },
   component: EditRecipePage,
-  notFoundComponent: RecipeNotFound,
 });
 
 function useRecipe(): Recipe | undefined {
@@ -55,7 +44,7 @@ function EditRecipePage() {
   const tags = useHouseholdQuery(household.id, tags$);
   const links = useHouseholdQuery(household.id, recipeTags$);
 
-  // The recipe was deleted while open, perhaps on another device.
+  // A wrong link, or a recipe deleted while open, perhaps on another device.
   if (!recipe) return <RecipeNotFound />;
 
   const tagIds = links.filter((link) => link.recipeId === recipe.id).map((link) => link.tagId);

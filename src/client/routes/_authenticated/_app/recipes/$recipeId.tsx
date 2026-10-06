@@ -3,36 +3,25 @@ import { Button } from "@client/components/ui/button";
 import { ServingFoodIcon, StarIcon } from "@client/components/ui/icons";
 import { ImagePlaceholder } from "@client/components/ui/image-thumbnail";
 import { useMembersById } from "@client/features/household/members";
-import {
-  householdStoreOptions,
-  useHouseholdQuery,
-  useHouseholdStore,
-} from "@client/features/household/store";
+import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
 import { useFavorites } from "@client/features/recipes/favorites";
 import { recipe$, recipeTags$, tags$ } from "@client/features/recipes/queries";
 import { RecipeActionsMenu } from "@client/features/recipes/recipe-actions-menu";
 import { groupTagsByRecipe } from "@client/features/recipes/recipe-tags";
-import { storeRegistry } from "@client/lib/livestore/adapter";
 import { formatMetaTitle } from "@client/lib/meta";
 import { recipeDeleted } from "@shared/recipes";
 import type { Recipe } from "@shared/recipes";
-import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { RecipeContent } from "./-components/recipe-content";
 import { RecipeByline, RecipeTagLinks } from "./-components/recipe-meta";
 import { RecipeNotFound } from "./-components/recipe-not-found";
 
 export const Route = createFileRoute("/_authenticated/_app/recipes/$recipeId")({
-  // Waits for the local store on first open so a missing recipe shows as not found.
-  loader: async ({ context, params }) => {
-    const store = await storeRegistry.getOrLoadPromise(householdStoreOptions(context.household.id));
-    if (!store.query(recipe$(params.recipeId))) throw notFound();
-  },
   staticData: {
     breadcrumbs: [{ label: "Recipes", link: { to: "/recipes" } }, { label: RecipeTitle }],
   },
   component: RecipeDetail,
-  notFoundComponent: RecipeNotFound,
 });
 
 function useRecipe(): Recipe | undefined {
@@ -55,7 +44,7 @@ function RecipeDetail() {
   const membersById = useMembersById();
   const { favoriteIds, toggleFavorite } = useFavorites(household.id, user.id);
 
-  // The recipe was deleted while open, perhaps on another device.
+  // A wrong link, or a recipe deleted while open, perhaps on another device.
   if (!recipe) return <RecipeNotFound />;
 
   const recipeTags = groupTagsByRecipe(tags, links).get(recipe.id) ?? [];
