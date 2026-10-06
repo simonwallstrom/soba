@@ -4,6 +4,7 @@ import { ServingFoodIcon, StarIcon } from "@client/components/ui/icons";
 import { ImagePlaceholder } from "@client/components/ui/image-thumbnail";
 import { useMembersById } from "@client/features/household/members";
 import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
+import { AddToMealPlanDialog } from "@client/features/meal-plan/add-to-meal-plan";
 import { useFavorites } from "@client/features/recipes/favorites";
 import { recipe$, recipeTags$, tags$ } from "@client/features/recipes/queries";
 import { RecipeActionsMenu } from "@client/features/recipes/recipe-actions-menu";
@@ -12,6 +13,7 @@ import { formatMetaTitle } from "@client/lib/meta";
 import { recipeDeleted } from "@shared/recipes";
 import type { Recipe } from "@shared/recipes";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 
 import { RecipeContent } from "./-components/recipe-content";
 import { RecipeByline, RecipeTagLinks } from "./-components/recipe-meta";
@@ -43,6 +45,7 @@ function RecipeDetail() {
   const links = useHouseholdQuery(household.id, recipeTags$);
   const membersById = useMembersById();
   const { favoriteIds, toggleFavorite } = useFavorites(household.id, user.id);
+  const [isPlanning, setIsPlanning] = useState(false);
 
   // A wrong link, or a recipe deleted while open, perhaps on another device.
   if (!recipe) return <RecipeNotFound />;
@@ -71,6 +74,7 @@ function RecipeDetail() {
         <RecipeActionsMenu
           className="-mr-2"
           isFavorite={isFavorite}
+          onAddToMealPlan={() => setIsPlanning(true)}
           onDelete={() => void deleteRecipe(recipe.id)}
           onToggleFavorite={() => toggleFavorite(recipe.id)}
           recipeId={recipe.id}
@@ -78,6 +82,13 @@ function RecipeDetail() {
           size="icon"
         />
       </AppHeaderActions>
+      <AddToMealPlanDialog
+        householdId={household.id}
+        onOpenChange={setIsPlanning}
+        open={isPlanning}
+        recipe={recipe}
+        userId={user.id}
+      />
       <article className="mx-auto flex max-w-5xl flex-col gap-8 p-5 lg:gap-12 lg:p-12">
         {/* The photo leads on small screens and sits beside the text on large ones. */}
         <header className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,28rem)] lg:items-center lg:gap-16">

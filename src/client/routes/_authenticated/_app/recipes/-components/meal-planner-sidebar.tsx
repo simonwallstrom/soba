@@ -8,6 +8,7 @@ import {
 } from "@client/components/ui/icons";
 import { ImagePlaceholder, ImageThumbnail } from "@client/components/ui/image-thumbnail";
 import { ScrollArea } from "@client/components/ui/scroll-area";
+import { getWeek } from "@client/features/meal-plan/weeks";
 import type { RecipeListEntry } from "@client/features/recipes/recipe-list";
 import { Link } from "@tanstack/react-router";
 
@@ -20,22 +21,6 @@ const dayFormat = new Intl.DateTimeFormat("en-GB", {
   month: "short",
 });
 
-function getCurrentWeek(today = new Date()) {
-  const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
-  const days = Array.from({ length: 7 }, (_, index) => {
-    const day = new Date(monday);
-    day.setDate(monday.getDate() + index);
-    return day;
-  });
-  // ISO weeks belong to the year of their Thursday.
-  const thursday = days[3] ?? monday;
-  const firstThursday = new Date(thursday.getFullYear(), 0, 4);
-  firstThursday.setDate(firstThursday.getDate() - ((firstThursday.getDay() + 6) % 7) + 3);
-  const number = 1 + Math.round((thursday.getTime() - firstThursday.getTime()) / 604_800_000);
-  return { days, number };
-}
-
 export function MealPlannerSidebar({
   entries,
   onClose,
@@ -43,7 +28,7 @@ export function MealPlannerSidebar({
   entries: readonly RecipeListEntry[];
   onClose: () => void;
 }) {
-  const week = getCurrentWeek();
+  const week = getWeek(new Date());
 
   return (
     <AppAside>

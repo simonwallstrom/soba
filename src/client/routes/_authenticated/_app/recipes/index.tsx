@@ -11,6 +11,7 @@ import {
 import { CookBookIcon } from "@client/components/ui/icons";
 import { useMembersById } from "@client/features/household/members";
 import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
+import { AddToMealPlanDialog } from "@client/features/meal-plan/add-to-meal-plan";
 import { useFavorites } from "@client/features/recipes/favorites";
 import {
   recipeListSettings$,
@@ -77,6 +78,10 @@ function Recipes() {
   // Imported while this page is open, newest first: they stay on top until the member leaves,
   // rather than vanishing into the sort order the moment they arrive.
   const [pinnedIds, setPinnedIds] = useState<string[]>([]);
+  // The dialog keeps its recipe while it closes.
+  const [planning, setPlanning] = useState<{ open: boolean; recipe?: RecipeListEntry["recipe"] }>({
+    open: false,
+  });
   useEffect(() => onRecipeImported((id) => setPinnedIds((ids) => [id, ...ids])), []);
   const entries = pinFirst(filterRecipes(recipes, tagsByRecipe, search, sort), pinnedIds).map(
     toEntry,
@@ -199,6 +204,7 @@ function Recipes() {
             renderActions={({ recipe }) => (
               <RecipeActionsMenu
                 isFavorite={favoriteIds.has(recipe.id)}
+                onAddToMealPlan={() => setPlanning({ open: true, recipe })}
                 onDelete={() =>
                   store.commit(
                     recipeDeleted({ id: recipe.id, deletedBy: user.id, deletedAt: new Date() }),
@@ -220,6 +226,13 @@ function Recipes() {
           onClose={() => updateSettings({ isMealPlannerOpen: false })}
         />
       )}
+      <AddToMealPlanDialog
+        householdId={household.id}
+        onOpenChange={(open) => setPlanning((current) => ({ ...current, open }))}
+        open={planning.open}
+        recipe={planning.recipe}
+        userId={user.id}
+      />
     </>
   );
 }

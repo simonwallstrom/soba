@@ -25,10 +25,12 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 
-// Meal plans arrive later. Deleting asks first, as the recipe disappears for the whole household.
+// Deleting asks first, as the recipe disappears for the whole household. The route opens its
+// own meal plan dialog, so recipes don't depend on meal planning.
 export function RecipeActionsMenu({
   className,
   isFavorite,
+  onAddToMealPlan,
   onDelete,
   onToggleFavorite,
   recipeId,
@@ -37,6 +39,7 @@ export function RecipeActionsMenu({
 }: {
   className?: string;
   isFavorite: boolean;
+  onAddToMealPlan: () => void;
   onDelete: () => void;
   onToggleFavorite: () => void;
   recipeId: string;
@@ -61,7 +64,7 @@ export function RecipeActionsMenu({
               <FileEditIcon />
               Edit recipe
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={onAddToMealPlan}>
               <Calendar03Icon />
               Add to meal plan…
             </DropdownMenuItem>

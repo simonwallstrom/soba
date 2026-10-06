@@ -1,5 +1,7 @@
 import { Events, makeSchema, Schema, State } from "@livestore/livestore";
 
+import { mealPlanEvents, mealPlanMaterializers, mealPlanTables } from "./meal-plan";
+
 // Ingredients and instructions: plain-text lines, optionally grouped under headings.
 const recipeSectionSchema = Schema.Struct({
   heading: Schema.optional(Schema.String),
@@ -241,7 +243,11 @@ const materializers = State.SQLite.materializers(events, {
   "v1.RecipeUnfavorited": ({ recipeId, userId }) => favorites.delete().where({ userId, recipeId }),
 });
 
+// The household's whole synced state: recipes and the meal plan.
 export const recipeSchema = makeSchema({
-  state: State.SQLite.makeState({ tables, materializers }),
-  events,
+  state: State.SQLite.makeState({
+    tables: { ...tables, ...mealPlanTables },
+    materializers: { ...materializers, ...mealPlanMaterializers },
+  }),
+  events: { ...events, ...mealPlanEvents },
 });
