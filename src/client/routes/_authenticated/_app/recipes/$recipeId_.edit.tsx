@@ -8,6 +8,7 @@ import {
   recipeEditEvents,
   recipeToDraft,
 } from "@client/features/recipes/recipe-draft";
+import { changesProfile, profileRecipe } from "@client/features/recipes/recipe-profile";
 import { formatMetaTitle } from "@client/lib/meta";
 import type { Recipe, Tag } from "@shared/recipes";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -76,6 +77,8 @@ function EditRecipe({
     const meta = { id: recipe.id, updatedBy: user.id, updatedAt: new Date() };
     await photoSave.save(meta, (photoEvents) => {
       store.commit(...recipeEditEvents(draft, meta), ...photoEvents);
+      const saved = store.query(recipe$(recipe.id));
+      if (saved && changesProfile(recipe, saved)) void profileRecipe(store, recipe.id);
       isSaved.current = true;
       // Replaces this page, so going back does not reopen the editor.
       void navigate({ to: "/recipes/$recipeId", params: { recipeId: recipe.id }, replace: true });

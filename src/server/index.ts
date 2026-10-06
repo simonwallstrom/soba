@@ -11,6 +11,7 @@ import { getMembership } from "./household/household";
 import { householdRoutes, inviteRoutes } from "./household/routes";
 import { photoRoutes } from "./photos/routes";
 import { recipeImportRoutes } from "./recipe-import/routes";
+import { recipeProfileRoutes } from "./recipe-profile/routes";
 
 export { RecipeImportWorkflow } from "./recipe-import/workflow";
 export { SyncBackendDO } from "./sync";
@@ -63,6 +64,7 @@ const app = new Hono<{ Bindings: Env }>()
   .route("/api/invites", inviteRoutes)
   .route("/api/photos", photoRoutes)
   .route("/api/recipe-import", recipeImportRoutes)
+  .route("/api/recipe-profile", recipeProfileRoutes)
   .all("/api/sync", async (c) => {
     const storeId = new URL(c.req.url).searchParams.get("storeId");
     if (!storeId) return c.text("Missing store ID", 400);

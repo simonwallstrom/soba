@@ -39,6 +39,14 @@ export default defineConfig({
         namespace: "1002",
         simple: { limit: 10, period: 60 },
       }),
+      // Reads recipes for meal suggestions; see src/server/recipe-profile. Keyed by user.
+      PROFILE_RATE_LIMITER: bindings.rateLimit({
+        namespace: "1003",
+        simple: { limit: 30, period: 60 },
+      }),
+      // Workers AI, for Clef. See src/server/recipe-profile. Models only run on Cloudflare, so
+      // local dev calls them remotely, which needs a Cloudflare login.
+      AI: bindings.ai({ dev: { remote: true } }),
       ASSETS: bindings.assets(),
       BETTER_AUTH_SECRET: bindings.secret(),
       BETTER_AUTH_URL: bindings.secret(),
