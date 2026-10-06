@@ -28,7 +28,7 @@ export function AppHeader({ actionsRef }: { actionsRef: Ref<HTMLDivElement> }) {
       <div className="flex min-w-0 items-center gap-1.5">
         {back?.link && (
           <Link
-            className={cn(buttonVariants({ variant: "ghost" }), "-ml-3 lg:hidden")}
+            className={cn(buttonVariants({ shape: "pill", variant: "ghost" }), "-ml-3 lg:hidden")}
             {...back.link}
           >
             <ArrowLeftIcon />

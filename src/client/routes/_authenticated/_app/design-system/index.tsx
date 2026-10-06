@@ -211,6 +211,9 @@ function DesignSystem() {
                 With icon
               </Button>
               <Button size="sm">Small</Button>
+              <Button shape="pill" variant="ghost">
+                Pill
+              </Button>
               <Button aria-label="Filter" size="icon">
                 <Icons.FilterIcon />
               </Button>

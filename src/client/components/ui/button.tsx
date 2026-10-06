@@ -45,15 +45,26 @@ export const buttonVariants = cva(
         ],
       },
       size: {
-        default: "h-8 gap-2 rounded-lg px-3",
-        sm: "h-7 gap-1 rounded-lg px-2",
+        default: "h-8 gap-2 px-3",
+        sm: "h-7 gap-1 px-2",
         icon: "size-8 rounded-full",
         "icon-sm": "size-7 rounded-full",
       },
+      // Text buttons keep corners in content, forms, and dialogs. In the app header and the bars
+      // under it they're pills, matching the round icon buttons beside them.
+      shape: {
+        default: "",
+        pill: "",
+      },
     },
+    compoundVariants: [
+      { size: ["default", "sm"], shape: "default", className: "rounded-lg" },
+      { size: ["default", "sm"], shape: "pill", className: "rounded-full" },
+    ],
     defaultVariants: {
       variant: "default",
       size: "default",
+      shape: "default",
     },
   },
 );
@@ -62,11 +73,12 @@ export function Button({
   className,
   variant,
   size,
+  shape,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
   return (
     <ButtonPrimitive
-      className={cn(buttonVariants({ variant, size }), className)}
+      className={cn(buttonVariants({ variant, size, shape }), className)}
       data-slot="button"
       {...props}
     />

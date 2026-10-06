@@ -59,8 +59,8 @@ export function RecipesHeaderActions({
         {/* The page's main action gets a label; phones shrink it back to an icon. */}
         <DropdownMenuTrigger
           className={cn(
-            buttonVariants({ variant: "ghost" }),
-            "max-sm:size-8 rounded-full max-sm:p-0",
+            buttonVariants({ shape: "pill", variant: "ghost" }),
+            "max-sm:size-8 max-sm:p-0",
           )}
         >
           <Add01Icon />
