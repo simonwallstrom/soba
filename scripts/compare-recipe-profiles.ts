@@ -5,7 +5,7 @@
 //
 // Usage: bun run profile:compare
 //
-// Runs Workers AI through the cf CLI, so log in with it first. Each run reads 20 recipes, which
+// Runs Workers AI through the cf CLI, so log in with it first. Each run reads every sample recipe, which
 // costs a fraction of a cent.
 import { recipeProfileSource } from "@shared/recipe-profile";
 import type { RecipeProfileAnswers } from "@shared/recipe-profile";

@@ -137,6 +137,17 @@ describe("suggestWeek", () => {
     expect(pasta.length).toBeLessThanOrEqual(2);
   });
 
+  test("brings round the recipes that have waited longest, and new ones", () => {
+    const alike = new Map(["recent", "older", "new"].map((id) => [id, dinner]));
+    // Three and six weeks before the planned week.
+    const plan: MealPlan = new Map([
+      planned(new Date(2026, 8, 21), "recent"),
+      planned(new Date(2026, 7, 31), "older"),
+    ]);
+    // Nothing else differs, so the days fill in order of the best fit.
+    expect(suggest(plan, alike).map((meal) => meal.recipeId)).toEqual(["new", "older", "recent"]);
+  });
+
   test("keeps involved dishes off weeknights", () => {
     const weeknights = suggest(new Map()).filter(
       (meal) => weekdayOf(new Date(`${meal.date}T00:00`)) <= 3,

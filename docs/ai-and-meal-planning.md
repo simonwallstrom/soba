@@ -42,7 +42,7 @@ This covers new and edited recipes, imports, reads that failed, and tabs closed 
 - Except for recipes saved in this session, reads wait 10 seconds after the app opens, so profiles from other devices can sync in first.
 - A failed read isn't retried until the recipe changes or the app opens again. Hitting the rate limit pauses reads for a minute.
 
-`bun run profile:compare` reads the 20 hand-labeled sample recipes with Clef and reports agreement per question, with how close each disagreement was. Run it after changing the questions.
+`bun run profile:compare` reads the 47 hand-labeled sample recipes with Clef and reports agreement per question, with how close each disagreement was. Run it after changing the questions.
 
 Until a recipe has a profile, a regex guess from its title and tags stands in, so new recipes can be suggested right away.
 
@@ -53,7 +53,7 @@ Code: [`src/shared/recipe-profile.ts`](../src/shared/recipe-profile.ts) (schema 
 **Suggest meals** fills the week's open days. It scores every dinner recipe for every open day and fills the day with the strongest pick first, so taco Friday is planned before a Wednesday that would happily take the tacos. Scores come from:
 
 - **Habits:** recipes the household often eats on a weekday score higher on that weekday (taco Friday). A habit has to start with dinners the household picked themselves, at least twice on that weekday. Accepted suggestions keep it going but can't start one, or the planner would learn from itself and repeat the same week forever.
-- **Recency:** a recipe from the last 7 days is almost never suggested again, one from 1–3 weeks back less so the longer ago it was, and one not eaten for a while gets a small boost.
+- **Recency:** a recipe from the last 7 days is almost never suggested again, one from 1–3 weeks back less so the longer ago it was. After that, a recipe climbs the longer it goes unplanned, so the whole collection comes round; one never planned, like one just added, counts as long ago.
 - **Variety:** a second dish on the same base or protein that week is penalized, a third almost never wins. One fish dinner on a weeknight gets a boost.
 - **Effort:** involved dishes are kept off Monday to Thursday, unless they're that day's habit: better a quick dish from last week. Quick dishes get a small boost on weeknights, and involved ones on weekends.
 - **Treats:** one a week at most, on the days the household has them. Until it shows its treat days, weekends are for treats.

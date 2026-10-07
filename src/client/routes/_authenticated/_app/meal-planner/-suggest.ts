@@ -99,6 +99,12 @@ export function learn(
 // week is almost never right; three weeks on, much less of a problem.
 const recentPenalties: Record<number, number> = { 0: -5, 1: -3, 2: -2, 3: -1 };
 
+// After that, a recipe climbs the longer it goes unplanned, so the whole collection comes round
+// instead of the same few dozen. One never planned, like one just added, counts as long ago.
+function restBonus(weeksSince: number | undefined) {
+  return Math.min(0.2 * ((weeksSince ?? Infinity) - 3), 1.2);
+}
+
 // Random noise added to every score, so near-ties vary between runs instead of always going to
 // the first recipe in the list. Small enough not to beat a real preference.
 const tieBreak = 0.4;
@@ -128,7 +134,9 @@ function rate(
     // shows its treat days, weekends are for treats.
     (profile.isTreat ? 2.5 * treatShare - (isWeeknight ? 2 : 0.5) - 3 * treatsPlanned : 0) +
     // Not again so soon, unless it's a habit for the day; welcome back after a while.
-    (weeksSince === undefined ? 0.3 : habit >= 0.5 ? 0 : (recentPenalties[weeksSince] ?? 0.4)) +
+    (habit >= 0.5 && weeksSince !== undefined
+      ? 0
+      : (recentPenalties[weeksSince ?? -1] ?? restBonus(weeksSince))) +
     // A varied week: a second dish on the same base is fine now and then, a third almost never.
     -2 * sameBase ** 2 +
     -0.8 * sameProtein ** 2 +

@@ -977,4 +977,812 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       },
     ],
   },
+  {
+    title: "Pytt i panna med stekt ägg",
+    description: "Klassisk pytt på potatis, korv och lök, med stekt ägg och rödbetor.",
+    servings: 4,
+    createdAt: "2025-07-04T16:30:00.000Z",
+    tags: ["Swedish", "Pork", "Potato", "Quick"],
+    profile: { isDinner: true, base: "potato", protein: "pork", effort: "quick", isTreat: false },
+    ingredients: [
+      {
+        items: [
+          "800 g fast potatis, i tärningar",
+          "300 g falukorv, i tärningar",
+          "1 gul lök, hackad",
+          "2 msk smör",
+          "4 ägg",
+          "Inlagda rödbetor",
+          "Salt och peppar",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Stek potatisen i hälften av smöret på medelvärme tills den är gyllene och mjuk, cirka 15 minuter.",
+          "Tillsätt lök och korv och stek ytterligare 5 minuter. Salta och peppra.",
+          "Stek äggen i resten av smöret och servera ovanpå med rödbetor.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Fläskpannkaka med lingon",
+    description: "Ugnspannkaka med knaprigt bacon, serverad med rårörda lingon.",
+    servings: 4,
+    createdAt: "2025-07-18T16:00:00.000Z",
+    tags: ["Swedish", "Pork", "Egg"],
+    profile: { isDinner: true, base: "other", protein: "pork", effort: "normal", isTreat: false },
+    ingredients: [
+      {
+        items: [
+          "140 g bacon, i bitar",
+          "3 ägg",
+          "2½ dl vetemjöl",
+          "6 dl mjölk",
+          "½ tsk salt",
+          "Rårörda lingon",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Sätt ugnen på 225 °C. Stek baconet knaprigt och lägg det i en smord långpanna.",
+          "Vispa mjöl och hälften av mjölken slät, vispa i resten av mjölken, äggen och saltet.",
+          "Häll smeten över baconet och grädda i 25–30 minuter. Servera med lingon.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Kalops med rödbetor",
+    description:
+      "Långkokt högrev med kryddpeppar och lagerblad, serverad med kokt potatis och rödbetor.",
+    servings: 4,
+    createdAt: "2025-08-02T14:00:00.000Z",
+    tags: ["Swedish", "Beef", "Potato", "Involved"],
+    profile: {
+      isDinner: true,
+      base: "potato",
+      protein: "beef",
+      effort: "involved",
+      isTreat: false,
+    },
+    ingredients: [
+      {
+        items: [
+          "1 kg högrev, i bitar",
+          "2 gula lökar, i klyftor",
+          "2 msk smör",
+          "2 msk vetemjöl",
+          "10 kryddpepparkorn",
+          "2 lagerblad",
+          "6 dl vatten",
+          "1 kg potatis",
+          "Inlagda rödbetor",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Bryn köttet i omgångar i smör i en gryta. Pudra över mjölet och rör om.",
+          "Tillsätt lök, kryddor och vatten. Låt sjuda under lock i 2 timmar tills köttet är mört.",
+          "Koka potatisen under den sista halvtimmen. Servera med rödbetor.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Stekt strömming med potatismos",
+    description: "Panerad strömming stekt i smör, med potatismos och lingon.",
+    servings: 4,
+    createdAt: "2025-08-15T16:15:00.000Z",
+    tags: ["Swedish", "Fish", "Potato"],
+    profile: { isDinner: true, base: "potato", protein: "fish", effort: "normal", isTreat: false },
+    ingredients: [
+      {
+        items: [
+          "600 g strömmingsfiléer",
+          "1 dl rågmjöl",
+          "2 msk smör",
+          "1 kg mjölig potatis",
+          "2 dl mjölk",
+          "Rårörda lingon",
+          "Salt och vitpeppar",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Skala och koka potatisen mjuk, cirka 20 minuter. Mosa med varm mjölk och smör, och smaka av med salt.",
+          "Vänd strömmingen i rågmjöl med salt och peppar och stek den i smör, 2 minuter per sida.",
+          "Servera med moset och lingon.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Kycklingteriyaki med ris",
+    description: "Snabb kyckling i blank teriyakisås, med jasminris och broccoli.",
+    servings: 4,
+    createdAt: "2025-08-29T16:20:00.000Z",
+    tags: ["Japanese", "Chicken", "Rice", "Quick"],
+    profile: { isDinner: true, base: "rice", protein: "chicken", effort: "quick", isTreat: false },
+    ingredients: [
+      {
+        items: [
+          "600 g kycklinglårfilé, i bitar",
+          "3 msk japansk soja",
+          "2 msk mirin",
+          "1 msk honung",
+          "1 tsk riven ingefära",
+          "3 dl jasminris",
+          "1 broccoli",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Koka riset. Ånga broccolin de sista 5 minuterna.",
+          "Stek kycklingen gyllene i en het panna, cirka 8 minuter.",
+          "Rör ihop soja, mirin, honung och ingefära och låt det koka ihop med kycklingen till en blank sås. Servera med ris och broccoli.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Wok med fläskfilé och grönsaker",
+    description: "Snabbwok med strimlad fläskfilé, paprika och sockerärtor i ostronsås.",
+    servings: 4,
+    createdAt: "2025-09-12T16:10:00.000Z",
+    tags: ["Asian", "Pork", "Rice", "Quick"],
+    profile: { isDinner: true, base: "rice", protein: "pork", effort: "quick", isTreat: false },
+    ingredients: [
+      {
+        items: [
+          "500 g fläskfilé, strimlad",
+          "1 röd paprika, strimlad",
+          "200 g sockerärtor",
+          "2 vitlöksklyftor",
+          "3 msk ostronsås",
+          "1 msk soja",
+          "3 dl ris",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Koka riset.",
+          "Woka köttet på hög värme i lite olja tills det fått färg. Lägg åt sidan.",
+          "Woka grönsaker och vitlök i 3 minuter, vänd tillbaka köttet och smaka av med ostronsås och soja.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Röd linsgryta med kokosmjölk",
+    description: "Mild och krämig linsgryta med tomat, kokosmjölk och spenat, med ris.",
+    servings: 4,
+    createdAt: "2025-09-26T16:00:00.000Z",
+    tags: ["Indian", "Legumes", "Rice"],
+    profile: {
+      isDinner: true,
+      base: "rice",
+      protein: "vegetarian",
+      effort: "normal",
+      isTreat: false,
+    },
+    ingredients: [
+      {
+        items: [
+          "2 dl röda linser",
+          "1 gul lök",
+          "2 vitlöksklyftor",
+          "1 msk currypulver",
+          "1 burk krossade tomater",
+          "1 burk kokosmjölk",
+          "2 dl vatten",
+          "100 g babyspenat",
+          "3 dl ris",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Fräs lök, vitlök och curry i olja.",
+          "Tillsätt linser, tomater, kokosmjölk och vatten och sjud i 20 minuter tills linserna är mjuka.",
+          "Rör ner spenaten, smaka av och servera med ris.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Laxbowl med ris och edamame",
+    description: "Bowl med sesamstekt lax, ris, edamame, gurka och srirachamajonnäs.",
+    servings: 4,
+    createdAt: "2025-10-10T16:30:00.000Z",
+    tags: ["Asian", "Fish", "Rice", "Quick"],
+    profile: { isDinner: true, base: "rice", protein: "fish", effort: "quick", isTreat: false },
+    ingredients: [
+      {
+        items: [
+          "500 g laxfilé, i bitar",
+          "2 msk soja",
+          "1 msk sesamfrön",
+          "3 dl sushiris",
+          "2 dl edamamebönor",
+          "1 gurka",
+          "1 avokado",
+          "Majonnäs och sriracha",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Koka riset.",
+          "Vänd laxen i soja och sesam och stek den snabbt i en het panna.",
+          "Fördela ris, lax, edamame, gurka och avokado i skålar och toppa med srirachamajonnäs.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Kycklingfrikassé",
+    description: "Kyckling i krämig sås med morötter, ärtor och persilja, med ris.",
+    servings: 4,
+    createdAt: "2025-10-24T16:00:00.000Z",
+    tags: ["Swedish", "Chicken", "Rice"],
+    profile: { isDinner: true, base: "rice", protein: "chicken", effort: "normal", isTreat: false },
+    ingredients: [
+      {
+        items: [
+          "600 g kycklingfilé",
+          "2 morötter",
+          "2 dl gröna ärtor",
+          "2 msk smör",
+          "2 msk vetemjöl",
+          "4 dl kycklingbuljong",
+          "1 dl grädde",
+          "Persilja",
+          "3 dl ris",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Koka riset. Skär kycklingen och morötterna i bitar.",
+          "Smält smöret, rör i mjölet och späd med buljong och grädde. Lägg i kyckling och morötter och sjud i 15 minuter.",
+          "Tillsätt ärtorna de sista minuterna och toppa med persilja.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Pasta med lax och spenat",
+    description: "Krämig pasta med varmrökt lax, spenat och citron.",
+    servings: 4,
+    createdAt: "2025-11-07T16:45:00.000Z",
+    tags: ["Italian", "Fish", "Pasta", "Quick"],
+    profile: { isDinner: true, base: "pasta", protein: "fish", effort: "quick", isTreat: false },
+    ingredients: [
+      {
+        items: [
+          "400 g penne",
+          "250 g varmrökt lax",
+          "2 dl matlagningsgrädde",
+          "100 g babyspenat",
+          "1 citron, rivet skal och saft",
+          "Salt och peppar",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Koka pastan.",
+          "Värm grädden med citronskal, rör ner spenaten och låt den sjunka ihop.",
+          "Bryt ner laxen, vänd ner pastan och smaka av med citronsaft, salt och peppar.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Pestopasta med kyckling",
+    description: "Pasta med grönt pesto, stekt kyckling och körsbärstomater.",
+    servings: 4,
+    createdAt: "2025-11-21T16:30:00.000Z",
+    tags: ["Italian", "Chicken", "Pasta", "Quick"],
+    profile: { isDinner: true, base: "pasta", protein: "chicken", effort: "quick", isTreat: false },
+    ingredients: [
+      {
+        items: [
+          "400 g fusilli",
+          "500 g kycklingfilé, i bitar",
+          "1 burk grönt pesto",
+          "250 g körsbärstomater",
+          "Parmesan",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Koka pastan.",
+          "Stek kycklingen genomstekt i lite olja.",
+          "Vänd pasta, kyckling, pesto och halverade tomater och toppa med parmesan.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Tortellini med tomatsås",
+    description: "Färsk ricottatortellini i en snabb tomatsås med basilika.",
+    servings: 4,
+    createdAt: "2025-12-05T16:40:00.000Z",
+    tags: ["Italian", "Dairy", "Pasta", "Quick"],
+    profile: {
+      isDinner: true,
+      base: "pasta",
+      protein: "vegetarian",
+      effort: "quick",
+      isTreat: false,
+    },
+    ingredients: [
+      {
+        items: [
+          "500 g färsk tortellini med ricotta och spenat",
+          "1 burk krossade tomater",
+          "1 vitlöksklyfta",
+          "1 msk olivolja",
+          "Färsk basilika",
+          "Parmesan",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Fräs vitlöken i olivolja, tillsätt tomaterna och sjud i 10 minuter.",
+          "Koka tortellinin enligt förpackningen.",
+          "Vänd pastan i såsen och toppa med basilika och parmesan.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Nudelwok med räkor",
+    description: "Äggnudlar wokade med räkor, salladslök och sötchilisås.",
+    servings: 4,
+    createdAt: "2026-01-09T16:30:00.000Z",
+    tags: ["Asian", "Shellfish", "Pasta", "Quick"],
+    profile: { isDinner: true, base: "pasta", protein: "fish", effort: "quick", isTreat: false },
+    ingredients: [
+      {
+        items: [
+          "250 g äggnudlar",
+          "300 g skalade räkor",
+          "1 knippa salladslök",
+          "1 paprika",
+          "2 msk soja",
+          "2 msk sötchilisås",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Koka nudlarna och spola dem kalla.",
+          "Woka paprika och salladslök i några minuter på hög värme.",
+          "Tillsätt nudlar, räkor, soja och sötchilisås och woka tills allt är varmt.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Makaronipudding",
+    description: "Ugnsbakad makaronipudding med skinka och ost, serverad med ketchup.",
+    servings: 4,
+    createdAt: "2026-01-23T16:00:00.000Z",
+    tags: ["Swedish", "Pork", "Pasta", "Egg"],
+    profile: { isDinner: true, base: "pasta", protein: "pork", effort: "normal", isTreat: false },
+    ingredients: [
+      {
+        items: [
+          "4 dl makaroner",
+          "200 g kokt skinka, i tärningar",
+          "3 ägg",
+          "5 dl mjölk",
+          "2 dl riven ost",
+          "Salt och peppar",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Sätt ugnen på 200 °C och koka makaronerna nästan klara.",
+          "Blanda makaroner och skinka i en smord form. Vispa ägg, mjölk, salt och peppar och häll över.",
+          "Strö över osten och grädda i 35–40 minuter tills puddingen stannat.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Fisksoppa med aioli",
+    description: "Saffransdoftande fisksoppa med torsk och räkor, serverad med aioli och bröd.",
+    servings: 4,
+    createdAt: "2026-02-06T16:30:00.000Z",
+    tags: ["French", "Fish", "Shellfish", "Bread"],
+    profile: { isDinner: true, base: "bread", protein: "fish", effort: "normal", isTreat: false },
+    ingredients: [
+      {
+        items: [
+          "400 g torskfilé",
+          "200 g skalade räkor",
+          "1 fänkål",
+          "1 gul lök",
+          "1 burk krossade tomater",
+          "1 l fiskbuljong",
+          "1 påse saffran",
+          "Aioli",
+          "Bröd",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Fräs fänkål och lök mjuka i olivolja. Tillsätt tomater, buljong och saffran och sjud i 15 minuter.",
+          "Lägg i torsken i bitar och låt den dra i 5 minuter. Tillsätt räkorna.",
+          "Servera med aioli och bröd.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Skinkpaj med purjolök",
+    description: "Mördegspaj med skinka, purjolök och gräddig äggstanning.",
+    servings: 4,
+    createdAt: "2026-02-20T15:00:00.000Z",
+    tags: ["Swedish", "Pork", "Egg", "Involved"],
+    profile: { isDinner: true, base: "bread", protein: "pork", effort: "involved", isTreat: false },
+    ingredients: [
+      { heading: "Pajdeg", items: ["3 dl vetemjöl", "125 g smör", "2 msk vatten"] },
+      {
+        heading: "Fyllning",
+        items: [
+          "200 g kokt skinka",
+          "1 purjolök",
+          "3 ägg",
+          "3 dl mjölk",
+          "1 dl grädde",
+          "2 dl riven ost",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Nyp ihop mjöl och smör, tillsätt vattnet och tryck ut degen i en pajform. Låt vila i kylen i 30 minuter.",
+          "Sätt ugnen på 200 °C och förgrädda skalet i 10 minuter.",
+          "Fräs purjolöken, fördela den med skinkan i skalet och häll över ägg, mjölk, grädde och ost.",
+          "Grädda i 35 minuter tills fyllningen stannat.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Falafel med tabbouleh",
+    description: "Hemgjord falafel på kikärtor, med tabbouleh och vitlöksyoghurt.",
+    servings: 4,
+    createdAt: "2026-03-06T16:15:00.000Z",
+    tags: ["Middle Eastern", "Legumes"],
+    profile: {
+      isDinner: true,
+      base: "other",
+      protein: "vegetarian",
+      effort: "normal",
+      isTreat: false,
+    },
+    ingredients: [
+      {
+        heading: "Falafel",
+        items: [
+          "2 burkar kikärtor, avrunna",
+          "1 gul lök",
+          "2 vitlöksklyftor",
+          "1 knippa persilja",
+          "1 tsk spiskummin",
+          "3 msk vetemjöl",
+        ],
+      },
+      {
+        heading: "Tabbouleh",
+        items: ["2 dl bulgur", "2 tomater", "½ gurka", "Persilja och mynta", "1 citron"],
+      },
+      { heading: "Till servering", items: ["Turkisk yoghurt med riven vitlök"] },
+    ],
+    instructions: [
+      {
+        items: [
+          "Koka bulguren och blanda med hackade tomater, gurka, örter och citronsaft.",
+          "Mixa kikärtor, lök, vitlök, persilja, kummin och mjöl grovt. Forma små bollar.",
+          "Stek falafeln gyllene i olja och servera med tabbouleh och yoghurt.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Omelett med svamp och ost",
+    description: "Fluffig omelett med stekt svamp, ost och gräslök, med en enkel sallad.",
+    servings: 4,
+    createdAt: "2026-03-20T16:50:00.000Z",
+    tags: ["French", "Egg", "Dairy", "Quick"],
+    profile: {
+      isDinner: true,
+      base: "other",
+      protein: "vegetarian",
+      effort: "quick",
+      isTreat: false,
+    },
+    ingredients: [
+      {
+        items: [
+          "8 ägg",
+          "250 g champinjoner",
+          "1 dl riven ost",
+          "1 knippa gräslök",
+          "2 msk smör",
+          "Grönsallad",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Stek svampen i smör och lägg åt sidan.",
+          "Vispa äggen med salt och häll dem i en panna med smör. Rör försiktigt tills de nästan stannat.",
+          "Strö över svamp, ost och gräslök, vik omeletten och servera med sallad.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Kycklingspett med couscous",
+    description: "Citronmarinerade kycklingspett från ugnen, med couscous och tzatziki.",
+    servings: 4,
+    createdAt: "2026-04-03T16:00:00.000Z",
+    tags: ["Mediterranean", "Chicken"],
+    profile: {
+      isDinner: true,
+      base: "other",
+      protein: "chicken",
+      effort: "normal",
+      isTreat: false,
+    },
+    ingredients: [
+      {
+        items: [
+          "700 g kycklinglårfilé, i bitar",
+          "1 citron",
+          "2 msk olivolja",
+          "1 tsk oregano",
+          "2 vitlöksklyftor",
+          "3 dl couscous",
+          "Tzatziki",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Marinera kycklingen i citron, olja, oregano och vitlök i 20 minuter. Trä upp den på spett.",
+          "Grilla spetten i ugnen på 250 °C i 15 minuter, vänd en gång.",
+          "Häll kokande vatten över couscousen och låt den svälla. Servera med tzatziki.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Kycklingfajitas",
+    description:
+      "Fredagsfajitas med kryddig kyckling, stekt paprika och lök, guacamole och gräddfil.",
+    servings: 4,
+    createdAt: "2026-04-17T16:30:00.000Z",
+    tags: ["Mexican", "Chicken", "Tortilla"],
+    profile: { isDinner: true, base: "other", protein: "chicken", effort: "normal", isTreat: true },
+    ingredients: [
+      {
+        items: [
+          "600 g kycklingfilé, strimlad",
+          "2 paprikor",
+          "1 rödlök",
+          "1 påse fajitaskrydda",
+          "8 tortillabröd",
+          "Guacamole",
+          "Gräddfil",
+          "Riven ost",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Stek kycklingen med fajitakryddan i en het panna.",
+          "Stek paprika och lök i strimlor tills de fått färg men har tuggmotstånd.",
+          "Värm tortillabröden och låt alla bygga sina egna fajitas.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Kebab i pitabröd",
+    description: "Hemmagjord kebab på kryddad färs i pitabröd, med vitlökssås och sallad.",
+    servings: 4,
+    createdAt: "2026-05-01T16:15:00.000Z",
+    tags: ["Middle Eastern", "Beef", "Bread"],
+    profile: { isDinner: true, base: "bread", protein: "beef", effort: "normal", isTreat: true },
+    ingredients: [
+      {
+        items: [
+          "500 g nötfärs",
+          "1 tsk spiskummin",
+          "1 tsk paprikapulver",
+          "½ tsk kanel",
+          "4 pitabröd",
+          "Vitlökssås",
+          "Isbergssallad, tomat och rödlök",
+          "Peperoni",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Blanda färsen med kryddor och salt och stek den i tunna plattor i en het panna tills den är krispig.",
+          "Skär köttet i strimlor och värm pitabröden.",
+          "Fyll bröden med kött, grönsaker och vitlökssås.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Fiskpinnar med potatismos",
+    description: "Ugnsbakade fiskpinnar med hemmagjort potatismos, ärtor och remouladsås.",
+    servings: 4,
+    createdAt: "2026-05-15T16:40:00.000Z",
+    tags: ["Swedish", "Fish", "Potato", "Quick"],
+    profile: { isDinner: true, base: "potato", protein: "fish", effort: "quick", isTreat: false },
+    ingredients: [
+      {
+        items: [
+          "20 fiskpinnar",
+          "800 g mjölig potatis",
+          "2 dl mjölk",
+          "2 msk smör",
+          "2 dl gröna ärtor",
+          "Remouladsås",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Koka potatisen mjuk och mosa den med varm mjölk och smör.",
+          "Grädda fiskpinnarna i ugnen enligt förpackningen.",
+          "Värm ärtorna och servera med moset och remouladsås.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Pannbiff med lök",
+    description: "Saftiga pannbiffar med stekt lök, gräddsås och kokt potatis.",
+    servings: 4,
+    createdAt: "2026-05-29T16:00:00.000Z",
+    tags: ["Swedish", "Beef", "Potato"],
+    profile: { isDinner: true, base: "potato", protein: "beef", effort: "normal", isTreat: false },
+    ingredients: [
+      {
+        items: [
+          "500 g nötfärs",
+          "1 ägg",
+          "½ dl ströbröd",
+          "1 dl mjölk",
+          "3 gula lökar",
+          "2 dl grädde",
+          "1 kg potatis",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Koka potatisen. Blanda färs, ägg, ströbröd, mjölk, salt och peppar och forma fyra biffar.",
+          "Stek löken mjuk och gyllene och lägg åt sidan. Stek biffarna i samma panna.",
+          "Häll grädden i pannan och låt den koka ihop till en sås. Servera med lök och potatis.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Kladdkaka",
+    description: "Seg chokladkaka med vispgrädde, en klassiker till fikat.",
+    servings: 8,
+    createdAt: "2026-06-12T13:00:00.000Z",
+    tags: ["Fika", "Dessert", "Baking", "Swedish"],
+    profile: {
+      isDinner: false,
+      base: "other",
+      protein: "vegetarian",
+      effort: "normal",
+      isTreat: false,
+    },
+    ingredients: [
+      {
+        items: [
+          "100 g smör",
+          "2 ägg",
+          "2½ dl strösocker",
+          "1 dl vetemjöl",
+          "4 msk kakao",
+          "1 tsk vaniljsocker",
+          "Vispgrädde",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Sätt ugnen på 175 °C och smörj en form.",
+          "Smält smöret och rör ner övriga ingredienser.",
+          "Grädda i 15–20 minuter så att kakan är kladdig i mitten. Låt svalna och servera med grädde.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Overnight oats med bär",
+    description: "Havregryn som svällt i yoghurt över natten, toppade med bär och honung.",
+    servings: 2,
+    createdAt: "2026-06-26T07:00:00.000Z",
+    tags: ["Breakfast", "Oats", "Dairy", "Quick"],
+    profile: {
+      isDinner: false,
+      base: "other",
+      protein: "vegetarian",
+      effort: "quick",
+      isTreat: false,
+    },
+    ingredients: [
+      {
+        items: [
+          "2 dl havregryn",
+          "2 dl turkisk yoghurt",
+          "2 dl mjölk",
+          "1 msk chiafrön",
+          "Bär",
+          "Honung",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Rör ihop havregryn, yoghurt, mjölk och chiafrön i burkar.",
+          "Ställ i kylen över natten.",
+          "Toppa med bär och honung.",
+        ],
+      },
+    ],
+  },
 ];
