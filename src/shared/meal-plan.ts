@@ -19,17 +19,14 @@ export const plannedMeals = State.SQLite.table({
 });
 export type PlannedMealRow = typeof plannedMeals.Type;
 
-export const declineKinds = ["shuffled", "removed"] as const;
-export type DeclineKind = (typeof declineKinds)[number];
-
-// Suggestions the household turned down, which later suggestions learn from. Planning the same
-// recipe on that day again takes the decline back.
+// Suggestions the household shuffled past, which later suggestions learn from. Removing a meal
+// isn't one: it usually means the day is taken, not that the recipe is unwanted. Planning the
+// same recipe on that day again takes the decline back.
 export const declinedSuggestions = State.SQLite.table({
   name: "declined_suggestions",
   columns: {
     date: State.SQLite.text(),
     recipeId: State.SQLite.text(),
-    kind: State.SQLite.text({ schema: Schema.Literal(...declineKinds) }),
     declinedAt: State.SQLite.datetime(),
   },
   indexes: [{ name: "declined_suggestions_date", columns: ["date", "recipeId"] }],
@@ -71,7 +68,6 @@ export const mealSuggestionDeclined = Events.synced({
   schema: Schema.Struct({
     date: dateSchema,
     recipeId: Schema.String,
-    kind: Schema.Literal(...declineKinds),
     declinedBy: Schema.String,
     declinedAt: Schema.Date,
   }),
@@ -110,6 +106,7 @@ export const mealPlanMaterializers = State.SQLite.materializers(mealPlanEvents, 
       plannedMeals.insert({ ...moving, date: to }).onConflict("date", "replace"),
     ];
   },
-  "v1.MealSuggestionDeclined": ({ date, recipeId, kind, declinedAt }) =>
-    declinedSuggestions.insert({ date, recipeId, kind, declinedAt }),
+  // Older events also carry a `kind`, which is ignored.
+  "v1.MealSuggestionDeclined": ({ date, recipeId, declinedAt }) =>
+    declinedSuggestions.insert({ date, recipeId, declinedAt }),
 });

@@ -1,7 +1,7 @@
 import { toast } from "@client/components/ui/toast";
 import type { useHouseholdStore } from "@client/features/household/store";
 import { mealMoved, mealPlanned, mealSuggestionDeclined, mealUnplanned } from "@shared/meal-plan";
-import type { DeclineKind, PlannedMealRow } from "@shared/meal-plan";
+import type { PlannedMealRow } from "@shared/meal-plan";
 
 type HouseholdStore = ReturnType<typeof useHouseholdStore>;
 
@@ -27,28 +27,24 @@ export function moveMeal(userId: string, from: string, to: string) {
   return mealMoved({ from, to, movedBy: userId, movedAt: new Date() });
 }
 
-export function declineMeal(userId: string, meal: PlannedMealRow, kind: DeclineKind) {
+// Shuffling past a suggested meal, which counts against it next time.
+export function declineMeal(userId: string, meal: PlannedMealRow) {
   return mealSuggestionDeclined({
     date: meal.date,
     recipeId: meal.recipeId,
-    kind,
     declinedBy: userId,
     declinedAt: new Date(),
   });
 }
 
-// One click removes a meal, so the toast can put it back. Removing a suggestion counts against
-// it, until the undo plans it again.
+// One click removes a meal, so the toast can put it back.
 export function removeMeal(
   store: HouseholdStore,
   userId: string,
   meal: PlannedMealRow,
   title: string | undefined,
 ) {
-  store.commit(
-    ...(meal.suggestionId ? [declineMeal(userId, meal, "removed")] : []),
-    unplanMeal(userId, meal.date),
-  );
+  store.commit(unplanMeal(userId, meal.date));
   toast.add({
     title: title ? `Removed ${title}` : "Removed from the plan",
     actionProps: {

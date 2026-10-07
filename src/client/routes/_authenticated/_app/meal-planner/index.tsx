@@ -175,10 +175,7 @@ function MealPlanner() {
     const taken = new Set(week.days.flatMap((day) => plan.get(dayKey(day))?.recipeId ?? []));
     const recipeId = nextAlternative(meal, taken);
     if (recipeId) {
-      store.commit(
-        declineMeal(user.id, meal, "shuffled"),
-        planMeal(user.id, meal.date, recipeId, meal),
-      );
+      store.commit(declineMeal(user.id, meal), planMeal(user.id, meal.date, recipeId, meal));
     }
   }
 

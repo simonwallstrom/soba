@@ -40,7 +40,6 @@ function decline(recipeId: string) {
   return mealSuggestionDeclined({
     date: "2026-10-12",
     recipeId,
-    kind: "removed",
     declinedBy: "u1",
     declinedAt: at,
   });

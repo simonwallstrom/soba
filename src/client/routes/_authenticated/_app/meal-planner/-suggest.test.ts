@@ -6,7 +6,7 @@ import type { RecipeProfileAnswers } from "@shared/recipe-profile";
 
 import { getPlannerWeeks } from "./-meal-plan";
 import type { MealPlan } from "./-meal-plan";
-import { suggestWeek } from "./-suggest";
+import { learn, suggestWeek } from "./-suggest";
 
 // Tuesday 6 October 2026; the week planned is the next one, Monday 12 to Sunday 18.
 const today = new Date(2026, 9, 6);
@@ -81,6 +81,31 @@ function suggest(
   });
 }
 
+// The recipe suggested for next Monday, with no history but these shuffles.
+function mondayPick(declined: DeclinedSuggestion[]) {
+  return suggest(new Map(), { declined })[0]?.recipeId;
+}
+
+function shuffledSalmon(...dates: Date[]) {
+  return dates.map((date) => ({ date: dayKey(date), recipeId: "salmon", declinedAt: today }));
+}
+
+// How strong a habit, keyed `recipeId:weekday`, the planner learns from a plan.
+function habitAfter(plan: MealPlan, key: string) {
+  return learn(nextWeek(plan), plan, profiles, [], today).habits.get(key);
+}
+
+// Tacos on three Fridays from `start`, and other dinners on the last four Fridays.
+function fridayTacosHabit(start: Date) {
+  const tacos = [0, 1, 2].map((week) =>
+    planned(new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7 * week), "tacos"),
+  );
+  const since = ["curry", "soup", "salmon", "carbonara"].map((recipeId, index) =>
+    planned(new Date(2026, 8, 11 + 7 * index), recipeId),
+  );
+  return habitAfter(new Map([...tacos, ...since]), "tacos:4") ?? 0;
+}
+
 describe("suggestWeek", () => {
   test("fills every open day with a different dinner", () => {
     const suggested = suggest(history);
@@ -112,17 +137,47 @@ describe("suggestWeek", () => {
     }
   });
 
-  test("suggests a recipe less on a weekday where it was removed", () => {
-    const removed = fridays.map((date) => ({
-      date: dayKey(date),
-      recipeId: "tacos",
-      kind: "removed" as const,
-      declinedAt: today,
-    }));
-    const friday = suggest(history, { declined: removed }).find(
-      (meal) => meal.date === "2026-10-16",
+  test("suggests a recipe less after it was shuffled past, less so as time goes by", () => {
+    expect(mondayPick([])).toBe("salmon");
+    // Shuffled on the last two Mondays, and on two Mondays half a year ago.
+    expect(mondayPick(shuffledSalmon(new Date(2026, 9, 5), new Date(2026, 8, 28)))).not.toBe(
+      "salmon",
     );
-    expect(friday?.recipeId).not.toBe("tacos");
+    const longAgo = shuffledSalmon(new Date(2026, 3, 6), new Date(2026, 2, 30));
+    expect(suggest(new Map(), { declined: longAgo }).map((meal) => meal.recipeId)).toContain(
+      "salmon",
+    );
+  });
+
+  test("counts a shuffle against the recipe on other weekdays too", () => {
+    const alike = new Map(["dish0", "dish1", "dish2"].map((id) => [id, dinner]));
+    const monday = (declined: DeclinedSuggestion[]) =>
+      suggest(new Map(), { declined, withProfiles: alike })[0]?.recipeId;
+    expect(monday([])).toBe("dish0");
+    // Shuffled past on a Sunday, not a Monday.
+    const sunday = { date: "2026-10-04", recipeId: "dish0", declinedAt: today };
+    expect(monday([sunday])).not.toBe("dish0");
+  });
+
+  test("lets an old habit fade when the household moved on", () => {
+    // Just before the other four, or almost a year earlier.
+    const recent = fridayTacosHabit(new Date(2026, 7, 21));
+    const yearOld = fridayTacosHabit(new Date(2025, 10, 7));
+    expect(recent).toBeCloseTo(3 / 7, 1);
+    expect(yearOld).toBeLessThan(recent / 2);
+  });
+
+  test("starts habits only from meals the household picked", () => {
+    const wednesdays = [new Date(2026, 8, 23), new Date(2026, 8, 30)];
+    const accepted: MealPlan = new Map(
+      wednesdays.map((date) => {
+        const [key, meal] = planned(date, "curry");
+        return [key, { ...meal, suggestionId: "s1" }];
+      }),
+    );
+    const picked: MealPlan = new Map(wednesdays.map((date) => planned(date, "curry")));
+    expect(habitAfter(accepted, "curry:2")).toBeUndefined();
+    expect(habitAfter(picked, "curry:2")).toBe(1);
   });
 
   test("varies bases even when the fresh recipes share one", () => {
