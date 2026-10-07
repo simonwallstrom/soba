@@ -41,7 +41,8 @@ export type RecipeProfileAnswers = Pick<
 
 // Bump when the profile questions change (src/server/recipe-profile/clef.ts), so every recipe is
 // read again with the new ones.
-export const recipeProfileVersion = 1;
+// v2: clearer dinner and treat questions, with their own thresholds.
+export const recipeProfileVersion = 2;
 
 // Replaces a recipe's profile.
 export const recipeProfiled = Events.synced({

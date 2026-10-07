@@ -309,7 +309,7 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       isDinner: true,
       base: "bread",
       protein: "vegetarian",
-      effort: "quick",
+      effort: "normal",
       isTreat: false,
     },
     ingredients: [
@@ -537,7 +537,7 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/2474661/pexels-photo-2474661.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-06-20T16:10:00.000Z",
     tags: ["American", "Beef", "Legumes", "Rice"],
-    profile: { isDinner: true, base: "rice", protein: "beef", effort: "normal", isTreat: false },
+    profile: { isDinner: true, base: "rice", protein: "beef", effort: "involved", isTreat: false },
     ingredients: [
       {
         items: [

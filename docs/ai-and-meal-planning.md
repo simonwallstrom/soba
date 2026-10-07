@@ -18,11 +18,13 @@ Code: [`src/server/recipe-import/`](../src/server/recipe-import/). `bun run impo
 
 The Worker asks Clef, Cloudflare's decision model, five fixed questions about each recipe:
 
-- **Dinner:** is it a family main course, rather than dessert, baking, breakfast, or a side?
+- **Dinner:** could a family eat it as their whole dinner? Soups and pancakes count; desserts, baking, and sides don't.
 - **Base:** potato, rice, pasta, bread, or other
 - **Protein:** fish, chicken, beef, pork, vegetarian, or other
 - **Effort:** quick, normal, or involved
-- **Treat:** is it fun food saved for a treat, like tacos, pizza, or burgers?
+- **Treat:** is it festive "Friday food", like tacos, pizza, or burgers, rather than everyday cooking?
+
+Each yes/no question has its own threshold in `clef.ts`, set from the comparison script below: a doubtful dinner is kept, but only a clear treat counts.
 
 The answers are validated and returned to the browser, which saves them as a hidden **profile** (a `v1.RecipeProfiled` event). Users never see profiles, so tags stay the household's own.
 

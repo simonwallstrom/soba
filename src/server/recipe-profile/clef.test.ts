@@ -37,6 +37,14 @@ describe("profileFromAnswers", () => {
     expect(effort(1.7)).toBe("involved");
   });
 
+  test("keeps a doubtful dinner, but only a clear treat", () => {
+    const doubtful = { type: "noul", noul: 0.45 };
+    expect(profileFromAnswers(response({ isDinner: doubtful }))?.isDinner).toBe(true);
+    expect(profileFromAnswers(response({ isTreat: doubtful }))?.isTreat).toBe(false);
+    const sure = { type: "noul", noul: 0.9 };
+    expect(profileFromAnswers(response({ isTreat: sure }))?.isTreat).toBe(true);
+  });
+
   test("rejects answers outside the options it asked about", () => {
     expect(profileFromAnswers(response({ base: { type: "choice", choice: "quinoa" } }))).toBeNull();
     expect(profileFromAnswers({ answers: {} })).toBeNull();

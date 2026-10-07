@@ -8,7 +8,7 @@ export const profileQuestions = {
   isDinner: {
     type: "noul",
     instructions:
-      "Is this a main course a family would eat for dinner, rather than a dessert, baked good, bread, drink, breakfast, snack, or side dish?",
+      "Could a family eat this as their whole dinner? Soups, pancakes, porridge, and hearty salads count. Desserts, cakes, buns, bread, drinks, snacks, and side dishes don't.",
   },
   base: {
     type: "choice",
@@ -45,9 +45,15 @@ export const profileQuestions = {
   isTreat: {
     type: "noul",
     instructions:
-      "Is this fun food that families save for a treat, like tacos, pizza, burgers, or kebab?",
+      'Is this festive "Friday food" that families save for a treat, like tacos, pizza, burgers, kebab, or nachos? Everyday home cooking, like pasta, stews, casseroles, sausage dishes, and pancakes, isn\'t.',
   },
 } as const;
+
+// How sure Clef must be to answer yes, set from `bun run profile:compare`. Real dinners score
+// 0.48 and up and everything else 0.04 or less, so a low bar keeps soups and pancakes. Only
+// real treats score above 0.55, and a dinner wrongly kept for treat days is rarely suggested.
+const dinnerThreshold = 0.3;
+const treatThreshold = 0.7;
 
 const probability = v.pipe(v.number(), v.minValue(0), v.maxValue(1));
 
@@ -67,12 +73,12 @@ export function profileFromAnswers(response: unknown): RecipeProfileAnswers | nu
   if (!result.success) return null;
   const { isDinner, base, protein, effort, isTreat } = result.output.answers;
   return {
-    isDinner: isDinner.noul >= 0.5,
+    isDinner: isDinner.noul >= dinnerThreshold,
     base: base.choice,
     protein: protein.choice,
     // The score lands between levels; the nearest one is the recipe's effort.
     effort: recipeEfforts[Math.round(effort.score)] ?? "normal",
-    isTreat: isTreat.noul >= 0.5,
+    isTreat: isTreat.noul >= treatThreshold,
   };
 }
 
