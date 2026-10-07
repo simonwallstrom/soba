@@ -33,3 +33,12 @@ export function getWeek(date: Date): Week {
   const number = 1 + Math.round((thursday.getTime() - firstThursday.getTime()) / 604_800_000);
   return { days, number };
 }
+
+export function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+// Days before today are history: they show what was eaten but can't change.
+export function isPast(date: Date, today: Date) {
+  return date < startOfDay(today);
+}

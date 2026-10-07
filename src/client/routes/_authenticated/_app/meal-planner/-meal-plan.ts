@@ -1,4 +1,4 @@
-import { dayKey, getWeek } from "@client/features/meal-plan/weeks";
+import { dayKey, getWeek, isPast, startOfDay } from "@client/features/meal-plan/weeks";
 import type { PlannedMealRow } from "@shared/meal-plan";
 
 // The planner reaches back to the first planned week, at most this far, and always this far ahead.
@@ -14,15 +14,6 @@ export type PlannerWeek = {
 
 // Planned meals by day, keyed by `dayKey`.
 export type MealPlan = ReadonlyMap<string, PlannedMealRow>;
-
-function startOfDay(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-// Days before today are history: they show what was eaten but can't change.
-export function isPast(date: Date, today: Date) {
-  return date < startOfDay(today);
-}
 
 // Past weeks back to the first one with a meal, this week, and the weeks ahead. Past weeks
 // can't change, so the list stays put while the household plans.

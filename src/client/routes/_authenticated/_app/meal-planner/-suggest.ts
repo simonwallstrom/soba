@@ -1,7 +1,6 @@
-import { dayKey, weekdayOf } from "@client/features/meal-plan/weeks";
+import { dayKey, isPast, weekdayOf } from "@client/features/meal-plan/weeks";
 import type { DeclinedSuggestion, DeclineKind } from "@shared/meal-plan";
 
-import { isPast } from "./-meal-plan";
 import type { MealPlan, PlannerWeek } from "./-meal-plan";
 import type { Profile } from "./-recipe-profile";
 

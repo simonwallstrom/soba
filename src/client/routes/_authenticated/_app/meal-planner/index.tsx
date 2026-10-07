@@ -4,23 +4,29 @@ import { toast } from "@client/components/ui/toast";
 import { useMembersById } from "@client/features/household/members";
 import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
 import {
+  declineMeal,
+  planMeal,
+  removeMeal,
+  unplanMeal,
+} from "@client/features/meal-plan/meal-events";
+import { MealPicker } from "@client/features/meal-plan/meal-picker";
+import {
   declinedSuggestions$,
   plannedMeals$,
   recipeProfiles$,
 } from "@client/features/meal-plan/queries";
-import { dayKey } from "@client/features/meal-plan/weeks";
+import { dayKey, isPast } from "@client/features/meal-plan/weeks";
 import { recipes$, recipeTags$, tags$ } from "@client/features/recipes/queries";
 import { groupTagsByRecipe } from "@client/features/recipes/recipe-tags";
 import { formatMetaTitle } from "@client/lib/meta";
-import { mealPlanned, mealSuggestionDeclined, mealUnplanned } from "@shared/meal-plan";
+import { mealPlanned } from "@shared/meal-plan";
 import type { PlannedMealRow } from "@shared/meal-plan";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { MealPicker } from "./-components/meal-picker";
 import { PlannedDay } from "./-components/planned-day";
 import { WeekHeader } from "./-components/week-header";
-import { clearableDays, copyMeals, getPlannerWeeks, isPast, nextAlternative } from "./-meal-plan";
+import { clearableDays, copyMeals, getPlannerWeeks, nextAlternative } from "./-meal-plan";
 import type { PlannerWeek } from "./-meal-plan";
 import { guessProfile } from "./-recipe-profile";
 import { suggestWeek } from "./-suggest";
@@ -106,33 +112,6 @@ function MealPlanner() {
     [currentWeekIndex],
   );
 
-  // Plans a recipe for a day, keeping the suggestion `from` was part of, if any.
-  function planMeal(date: string, recipeId: string, from?: PlannedMealRow) {
-    return mealPlanned({
-      date,
-      recipeId,
-      ...(from?.suggestionId
-        ? { suggestion: { id: from.suggestionId, alternatives: from.alternatives } }
-        : {}),
-      plannedBy: user.id,
-      plannedAt: new Date(),
-    });
-  }
-
-  function unplan(date: string) {
-    return mealUnplanned({ date, unplannedBy: user.id, unplannedAt: new Date() });
-  }
-
-  function decline(meal: PlannedMealRow, kind: "shuffled" | "removed") {
-    return mealSuggestionDeclined({
-      date: meal.date,
-      recipeId: meal.recipeId,
-      kind,
-      declinedBy: user.id,
-      declinedAt: new Date(),
-    });
-  }
-
   // The week's open days fill in at once; shuffle any day you don't like, or undo the lot.
   function suggest(week: PlannerWeek) {
     const id = crypto.randomUUID();
@@ -159,7 +138,7 @@ function MealPlanner() {
           const days = store
             .query(plannedMeals$)
             .filter((row) => row.suggestionId === id)
-            .map((row) => unplan(row.date));
+            .map((row) => unplanMeal(user.id, row.date));
           if (days.length > 0) store.commit(...days);
         },
       },
@@ -173,27 +152,18 @@ function MealPlanner() {
   function shuffle(week: PlannerWeek, meal: PlannedMealRow) {
     const taken = new Set(week.days.flatMap((day) => plan.get(dayKey(day))?.recipeId ?? []));
     const recipeId = nextAlternative(meal, taken);
-    if (recipeId) store.commit(decline(meal, "shuffled"), planMeal(meal.date, recipeId, meal));
-  }
-
-  // One click removes a meal, so the toast can put it back. Removing a suggestion counts against
-  // it, until the undo plans it again.
-  function remove(meal: PlannedMealRow) {
-    const entry = entriesById.get(meal.recipeId);
-    store.commit(...(meal.suggestionId ? [decline(meal, "removed")] : []), unplan(meal.date));
-    toast.add({
-      title: entry ? `Removed ${entry.recipe.title}` : "Removed from the plan",
-      actionProps: {
-        children: "Undo",
-        onClick: () => store.commit(planMeal(meal.date, meal.recipeId, meal)),
-      },
-    });
+    if (recipeId) {
+      store.commit(
+        declineMeal(user.id, meal, "shuffled"),
+        planMeal(user.id, meal.date, recipeId, meal),
+      );
+    }
   }
 
   function copy(from: PlannerWeek, to: PlannerWeek) {
     const copies = copyMeals(from, to, plan, today);
     if (copies.length > 0) {
-      store.commit(...copies.map(({ date, recipeId }) => planMeal(date, recipeId)));
+      store.commit(...copies.map(({ date, recipeId }) => planMeal(user.id, date, recipeId)));
     }
     toast.add({
       title:
@@ -215,7 +185,7 @@ function MealPlanner() {
 
   function clear(week: PlannerWeek) {
     const days = clearableDays(week, plan, today);
-    if (days.length > 0) store.commit(...days.map(unplan));
+    if (days.length > 0) store.commit(...days.map((date) => unplanMeal(user.id, date)));
   }
 
   return (
@@ -240,7 +210,7 @@ function MealPlanner() {
         entries={entries}
         onOpenChange={(open) => setPicker((current) => ({ ...current, open }))}
         onPick={(recipeId) => {
-          if (picker.date) store.commit(planMeal(dayKey(picker.date), recipeId));
+          if (picker.date) store.commit(planMeal(user.id, dayKey(picker.date), recipeId));
         }}
         open={picker.open}
       />
@@ -275,7 +245,15 @@ function MealPlanner() {
                       key={date.toISOString()}
                       meal={meal}
                       onChoose={() => setPicker({ date, open: true })}
-                      onRemove={() => meal && remove(meal)}
+                      onRemove={() =>
+                        meal &&
+                        removeMeal(
+                          store,
+                          user.id,
+                          meal,
+                          entriesById.get(meal.recipeId)?.recipe.title,
+                        )
+                      }
                       onShuffle={() => meal && shuffle(week, meal)}
                     />
                   );

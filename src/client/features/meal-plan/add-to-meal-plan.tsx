@@ -18,10 +18,10 @@ import {
 import { Dialog, DialogClose } from "@client/components/ui/dialog";
 import { toast } from "@client/components/ui/toast";
 import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
+import { planMeal, unplanMeal } from "@client/features/meal-plan/meal-events";
 import { plannedMeals$ } from "@client/features/meal-plan/queries";
 import { dayKey, getWeek } from "@client/features/meal-plan/weeks";
 import { recipes$ } from "@client/features/recipes/queries";
-import { mealPlanned, mealUnplanned } from "@shared/meal-plan";
 import type { PlannedMealRow } from "@shared/meal-plan";
 import { useState } from "react";
 
@@ -130,9 +130,7 @@ function DaySearch({
 
   function planOn(day: PlanDay) {
     const { key, date, planned: previous } = day;
-    store.commit(
-      mealPlanned({ date: key, recipeId: recipe.id, plannedBy: userId, plannedAt: new Date() }),
-    );
+    store.commit(planMeal(userId, key, recipe.id));
     onPlanned();
     toast.add({
       title: `Planned for ${toastDayFormat.format(date)}`,
@@ -141,22 +139,7 @@ function DaySearch({
         children: "Undo",
         onClick: () =>
           store.commit(
-            previous
-              ? mealPlanned({
-                  date: key,
-                  recipeId: previous.recipeId,
-                  ...(previous.suggestionId
-                    ? {
-                        suggestion: {
-                          id: previous.suggestionId,
-                          alternatives: previous.alternatives,
-                        },
-                      }
-                    : {}),
-                  plannedBy: userId,
-                  plannedAt: new Date(),
-                })
-              : mealUnplanned({ date: key, unplannedBy: userId, unplannedAt: new Date() }),
+            previous ? planMeal(userId, key, previous.recipeId, previous) : unplanMeal(userId, key),
           ),
       },
     });

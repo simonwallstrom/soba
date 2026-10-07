@@ -223,7 +223,9 @@ function Recipes() {
       {settings.isMealPlannerOpen && (
         <MealPlannerSidebar
           entries={plannerEntries}
+          householdId={household.id}
           onClose={() => updateSettings({ isMealPlannerOpen: false })}
+          userId={user.id}
         />
       )}
       <AddToMealPlanDialog
