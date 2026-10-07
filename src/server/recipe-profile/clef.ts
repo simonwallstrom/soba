@@ -50,8 +50,9 @@ export const profileQuestions = {
 } as const;
 
 // How sure Clef must be to answer yes, set from `bun run profile:compare`. Real dinners score
-// 0.48 and up and everything else 0.04 or less, so a low bar keeps soups and pancakes. Only
-// real treats score above 0.55, and a dinner wrongly kept for treat days is rarely suggested.
+// 0.48 and up and everything else 0.04 or less, so a low bar keeps soups and pancakes. Treats
+// (tacos, pizza, burgers) score 0.97 and up and everyday dinners 0.55 or less, and a dinner
+// wrongly kept for treat days is rarely suggested.
 const dinnerThreshold = 0.3;
 const treatThreshold = 0.7;
 

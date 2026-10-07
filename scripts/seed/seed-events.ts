@@ -22,8 +22,13 @@ const sampleDinners: readonly (readonly (string | null)[])[] = [
     "Krämig svamprisotto",
   ],
   ["Pannkakor", "Krämig tomatsoppa", "Potatis- och purjolökssoppa", null],
-  ["Tacos med rostad majs", "Tacos med rostad majs", null, "Tacos med rostad majs"],
-  ["Pasta carbonara", "Raggmunk med fläsk", null, "Korv stroganoff"],
+  [
+    "Tacos med rostad majs",
+    "Tacos med rostad majs",
+    "Hemgjord pizza med skinka och champinjoner",
+    "Tacos med rostad majs",
+  ],
+  ["Pasta carbonara", "Raggmunk med fläsk", "Smashburgare med coleslaw", "Korv stroganoff"],
   [
     "Köttbullar med gräddsås",
     "Lasagne med soltorkade tomater",

@@ -6,7 +6,8 @@ export type SampleRecipe = {
   title: string;
   description: string;
   servings: number | null;
-  imageUrl: string;
+  // Left out for some, as recipes without a photo.
+  imageUrl?: string;
   createdAt: string;
   tags: readonly string[];
   // What a model would have read from the recipe for meal suggestions.
@@ -889,6 +890,89 @@ export const sampleRecipes: readonly SampleRecipe[] = [
           "Gnid in kycklingen med smör, salt och peppar. Fyll den med en halverad citron, vitlöken och timjan.",
           "Lägg kycklingen på potatisen. Pressa över saften från den andra citronen.",
           "Rosta i 1 timme och 15 minuter tills köttsaften är klar och potatisen gyllene. Låt vila 10 minuter innan den skärs upp.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Hemgjord pizza med skinka och champinjoner",
+    description: "Fredagspizza på egen deg, med tomatsås, mozzarella, skinka och champinjoner.",
+    servings: 4,
+    createdAt: "2025-06-13T16:50:00.000Z",
+    tags: ["Italian", "Pork", "Dairy"],
+    profile: { isDinner: true, base: "bread", protein: "pork", effort: "involved", isTreat: true },
+    ingredients: [
+      {
+        heading: "Deg",
+        items: [
+          "25 g jäst",
+          "3 dl ljummet vatten",
+          "2 msk olivolja",
+          "1 tsk salt",
+          "ca 8 dl vetemjöl",
+        ],
+      },
+      {
+        heading: "Fyllning",
+        items: [
+          "2 dl krossade tomater",
+          "1 tsk torkad oregano",
+          "250 g riven mozzarella",
+          "200 g kokt skinka",
+          "250 g champinjoner, skivade",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Lös jästen i vattnet. Tillsätt olja, salt och nästan allt mjöl och arbeta degen smidig i 5 minuter.",
+          "Låt degen jäsa under bakduk i 45 minuter.",
+          "Sätt ugnen på 250 °C. Rör ihop krossade tomater med oregano och salt.",
+          "Dela degen i fyra delar och kavla ut tunna bottnar. Bred på tomatsås och lägg på ost, skinka och champinjoner.",
+          "Grädda en pizza i taget mitt i ugnen i 10–12 minuter.",
+        ],
+      },
+    ],
+  },
+  {
+    title: "Smashburgare med coleslaw",
+    description:
+      "Krispiga smashburgare med cheddar, picklad gurka och krämig coleslaw i briochebröd.",
+    servings: 4,
+    createdAt: "2025-06-20T17:15:00.000Z",
+    tags: ["American", "Beef"],
+    profile: { isDinner: true, base: "bread", protein: "beef", effort: "normal", isTreat: true },
+    ingredients: [
+      {
+        heading: "Burgare",
+        items: [
+          "600 g nötfärs",
+          "8 skivor cheddar",
+          "4 briochebröd",
+          "Picklad gurka",
+          "Hamburgerdressing",
+          "Salt och peppar",
+        ],
+      },
+      {
+        heading: "Coleslaw",
+        items: [
+          "¼ vitkål, strimlad",
+          "2 morötter, rivna",
+          "1 dl majonnäs",
+          "1 msk äppelcidervinäger",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        items: [
+          "Blanda kål, morötter, majonnäs och vinäger. Smaka av med salt och peppar.",
+          "Rulla färsen till åtta bollar. Hetta upp en stekpanna av gjutjärn ordentligt.",
+          "Lägg bollarna i pannan och platta till dem hårt med en stekspade. Salta och peppra.",
+          "Vänd efter 2 minuter, lägg på cheddar och stek 1 minut till.",
+          "Rosta bröden och bygg burgarna med två biffar, gurka, dressing och coleslaw.",
         ],
       },
     ],
