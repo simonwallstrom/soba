@@ -40,6 +40,8 @@ This covers new and edited recipes, imports, reads that failed, and tabs closed 
 - Except for recipes saved in this session, reads wait 10 seconds after the app opens, so profiles from other devices can sync in first.
 - A failed read isn't retried until the recipe changes or the app opens again. Hitting the rate limit pauses reads for a minute.
 
+`bun run profile:compare` reads the 20 hand-labeled sample recipes with Clef and reports agreement per question, with how close each disagreement was. Run it after changing the questions.
+
 Until a recipe has a profile, a regex guess from its title and tags stands in, so new recipes can be suggested right away.
 
 Code: [`src/server/recipe-profile/clef.ts`](../src/server/recipe-profile/clef.ts) (questions), [`features/recipes/recipe-profiler.tsx`](../src/client/features/recipes/recipe-profiler.tsx) (background reads), [`meal-planner/-recipe-profile.ts`](../src/client/routes/_authenticated/_app/meal-planner/-recipe-profile.ts) (fallback guess).

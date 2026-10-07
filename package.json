@@ -13,6 +13,7 @@
     "db:migrate:local": "cf d1 migrations apply 3c45797e-8236-4864-af08-a21627c98756 --dir drizzle/migrations --local --persist-to .cloudflare/state",
     "db:seed": "bun scripts/seed-local.ts",
     "import:compare": "bun scripts/compare-import-models.ts",
+    "profile:compare": "bun scripts/compare-recipe-profiles.ts",
     "db:migrate:remote": "cf d1 migrations apply 3c45797e-8236-4864-af08-a21627c98756 --dir drizzle/migrations",
     "lint": "oxlint .",
     "format": "oxfmt .",

@@ -42,6 +42,7 @@ Until launch, schema changes replace `drizzle/migrations/0000_*.sql` instead of 
 | `bun run db:migrate:remote` | Apply D1 migrations to the deployed database                 |
 | `bun run db:seed`           | Reset local recipes, tags, and meal plan to the samples      |
 | `bun run import:compare`    | Compare models on recipe import sources                      |
+| `bun run profile:compare`   | Check Clef's recipe profiles against the labeled samples     |
 
 ## Deploy
 
