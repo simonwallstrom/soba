@@ -61,6 +61,16 @@ function pastWeeks(now: Date, count: number) {
   );
 }
 
+// The sample dinners eaten in the four weeks before `now`'s, by recipe title.
+export function sampleDinnerHistory(now: Date) {
+  return pastWeeks(now, 4).flatMap((days, week) =>
+    days.flatMap((date, weekday) => {
+      const title = sampleDinners[weekday]?.[week];
+      return title ? [{ date, title }] : [];
+    }),
+  );
+}
+
 // The events that add every sample recipe, its tags and profile, and a month of dinners, all
 // added by one user.
 export function sampleRecipeEvents(userId: string, now = new Date()) {
@@ -94,13 +104,11 @@ export function sampleRecipeEvents(userId: string, now = new Date()) {
         }),
       ];
     }),
-    ...pastWeeks(now, 4).flatMap((days, week) =>
-      days.flatMap((date, weekday) => {
-        const recipeId = recipeIds.get(sampleDinners[weekday]?.[week] ?? "");
-        return recipeId
-          ? [mealPlanned({ date: dayKey(date), recipeId, plannedBy: userId, plannedAt: now })]
-          : [];
-      }),
-    ),
+    ...sampleDinnerHistory(now).flatMap(({ date, title }) => {
+      const recipeId = recipeIds.get(title);
+      return recipeId
+        ? [mealPlanned({ date: dayKey(date), recipeId, plannedBy: userId, plannedAt: now })]
+        : [];
+    }),
   ];
 }

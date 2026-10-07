@@ -43,6 +43,7 @@ Until launch, schema changes replace `drizzle/migrations/0000_*.sql` instead of 
 | `bun run db:seed`           | Reset local recipes, tags, and meal plan to the samples      |
 | `bun run import:compare`    | Compare models on recipe import sources                      |
 | `bun run profile:compare`   | Check Clef's recipe profiles against the labeled samples     |
+| `bun run suggest:simulate`  | Simulate weeks of meal suggestions for the sample household  |
 
 ## Deploy
 
