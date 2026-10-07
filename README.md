@@ -6,6 +6,7 @@ Recipe organizer for families. A React SPA with local-first sync, served by a Cl
 
 - [Bun](https://bun.sh/) 1.4.2, the version in `packageManager`
 - A Google OAuth web client with `http://localhost:5173/api/auth/callback/google` as an authorized redirect URI
+- A Cloudflare account with an AI Gateway, for recipe imports and profiles. Workers AI runs remotely in local dev, so log in with the cf CLI first.
 
 ## Get started
 
@@ -17,7 +18,7 @@ bun run db:migrate:local
 bun run dev
 ```
 
-Fill in `.dev.vars` before starting: Google OAuth credentials, a random `BETTER_AUTH_SECRET`, and your Google email in `AUTH_ALLOWED_EMAILS`. The app runs at `http://localhost:5173/`.
+Fill in `.dev.vars` before starting: Google OAuth credentials, a random `BETTER_AUTH_SECRET`, your Google email in `AUTH_ALLOWED_EMAILS`, and the AI Gateway URL and token. The app runs at `http://localhost:5173/`.
 
 `hooks:install` sets up a pre-commit hook that formats, lints, and typechecks staged changes.
 
@@ -39,6 +40,8 @@ Until launch, schema changes replace `drizzle/migrations/0000_*.sql` instead of 
 | `bun run db:generate`       | Generate D1 migration SQL after changing the database schema |
 | `bun run db:migrate:local`  | Apply D1 migrations locally                                  |
 | `bun run db:migrate:remote` | Apply D1 migrations to the deployed database                 |
+| `bun run db:seed`           | Reset local recipes, tags, and meal plan to the samples      |
+| `bun run import:compare`    | Compare models on recipe import sources                      |
 
 ## Deploy
 
@@ -55,7 +58,13 @@ Setup, one time:
 
 - **App:** React, TanStack Router and Query, Tailwind CSS, LiveStore
 - **API:** Hono RPC, Better Auth with Google, Valibot
-- **Platform:** Vite, Cloudflare Workers, D1, Durable Objects
+- **Platform:** Vite, Cloudflare Workers, D1, Durable Objects, Workflows
+- **AI:** Claude Sonnet and Workers AI's Clef, through AI Gateway
 - **Tooling:** Bun, TypeScript, Oxlint, Oxfmt, Lefthook, React Compiler
 
-See [AGENTS.md](./AGENTS.md) for code conventions.
+## Docs
+
+- [Local-first sync](./docs/local-first-sync.md): how household data syncs, and the rules for changing events
+- [Auth and households](./docs/auth-and-households.md): sign-up, invites, roles, and the client session cache
+- [AI and meal planning](./docs/ai-and-meal-planning.md): how recipes are imported and profiled, and how meal suggestions are scored
+- [Conventions](./docs/conventions.md): code organization, routes, and tooling

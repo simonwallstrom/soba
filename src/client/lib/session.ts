@@ -9,7 +9,7 @@ export type Session = InferResponseType<typeof api.me.$get>;
 
 export const SIGNED_OUT: Session = { user: null, household: null, canCreateHousehold: false };
 
-// The last signed-in session lets the app render before the server check finishes, and offline.
+// The last signed-in session lets the app render before the server check finishes.
 const SNAPSHOT_KEY = "soba-session";
 
 const snapshotSchema = v.object({
