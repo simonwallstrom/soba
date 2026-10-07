@@ -1,11 +1,6 @@
-import { recipeBases, recipeEfforts, recipeProteins } from "@shared/meal-plan";
-import type { RecipeProfile, recipeProfileSource } from "@shared/meal-plan";
+import { recipeBases, recipeEfforts, recipeProteins } from "@shared/recipe-profile";
+import type { RecipeProfileAnswers, recipeProfileSource } from "@shared/recipe-profile";
 import * as v from "valibot";
-
-export type ProfileAnswers = Pick<
-  RecipeProfile,
-  "isDinner" | "base" | "protein" | "effort" | "isTreat"
->;
 
 // What meal suggestions need to know, asked of Clef, Workers AI's decision model. Each option
 // describes itself, so the model reads recipes in any language the same way.
@@ -67,7 +62,7 @@ const answersSchema = v.object({
   }),
 });
 
-export function profileFromAnswers(response: unknown): ProfileAnswers | null {
+export function profileFromAnswers(response: unknown): RecipeProfileAnswers | null {
   const result = v.safeParse(answersSchema, response);
   if (!result.success) return null;
   const { isDinner, base, protein, effort, isTreat } = result.output.answers;
@@ -87,7 +82,7 @@ export async function readRecipeProfile(
   ai: Ai,
   gatewayId: string,
   source: ReturnType<typeof recipeProfileSource>,
-): Promise<ProfileAnswers | null> {
+): Promise<RecipeProfileAnswers | null> {
   const response: unknown = await ai.run(
     "@cf/cloudflare/clef",
     { model: "clef", state: source, questions: profileQuestions },

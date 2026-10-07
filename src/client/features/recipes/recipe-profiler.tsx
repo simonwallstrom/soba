@@ -2,7 +2,7 @@ import { useHouseholdStore } from "@client/features/household/store";
 import { recipeProfiles$, recipes$ } from "@client/features/recipes/queries";
 import { profileRecipe, recipesToProfile } from "@client/features/recipes/recipe-profile";
 import type { Store } from "@livestore/livestore";
-import { recipeProfileSource, recipeProfileSourceHash } from "@shared/meal-plan";
+import { recipeProfileSource, recipeProfileSourceHash } from "@shared/recipe-profile";
 import type { recipeSchema } from "@shared/recipes";
 import { useEffect } from "react";
 

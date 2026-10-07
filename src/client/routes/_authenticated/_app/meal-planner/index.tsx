@@ -21,6 +21,7 @@ import {
   recipeTags$,
   tags$,
 } from "@client/features/recipes/queries";
+import { guessProfile } from "@client/features/recipes/recipe-profile";
 import { groupTagsByRecipe } from "@client/features/recipes/recipe-tags";
 import { formatMetaTitle } from "@client/lib/meta";
 import { mealPlanned } from "@shared/meal-plan";
@@ -32,7 +33,6 @@ import { PlannedDay } from "./-components/planned-day";
 import { WeekHeader } from "./-components/week-header";
 import { clearableDays, copyMeals, getPlannerWeeks, nextAlternative } from "./-meal-plan";
 import type { PlannerWeek } from "./-meal-plan";
-import { guessProfile } from "./-recipe-profile";
 import { suggestWeek } from "./-suggest";
 
 export const Route = createFileRoute("/_authenticated/_app/meal-planner/")({

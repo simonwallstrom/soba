@@ -1,4 +1,4 @@
-import { recipeProfileSource, recipeProfileVersion } from "@shared/meal-plan";
+import { recipeProfileSource, recipeProfileVersion } from "@shared/recipe-profile";
 import { Hono } from "hono";
 import { createMiddleware } from "hono/factory";
 import * as v from "valibot";

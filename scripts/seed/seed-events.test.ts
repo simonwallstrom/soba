@@ -7,7 +7,7 @@ import {
   recipeProfileSource,
   recipeProfileSourceHash,
   recipeProfileVersion,
-} from "@shared/meal-plan";
+} from "@shared/recipe-profile";
 import { recipes as recipesTable, recipeSchema } from "@shared/recipes";
 
 import { sampleRecipes } from "./sample-recipes";

@@ -22,7 +22,7 @@ Browser tab ─┘
 
 A store holds an ordered log of events, such as `v1.RecipeCreated` and `v1.MealPlanned`. Tables like `recipes` and `planned_meals` are built from that log by materializers. Only the events sync; every client rebuilds its tables locally.
 
-- Events and tables are defined in `src/shared/recipes.ts` and `src/shared/meal-plan.ts`, shared by the client worker and the server.
+- Events and tables are defined in `src/shared/recipes.ts`, `src/shared/meal-plan.ts`, and `src/shared/recipe-profile.ts`, shared by the client worker and the server.
 - Tables and materializers can change freely. LiveStore rebuilds the tables from the events when the state schema changes.
 - Events are the contract. A change to an event's shape has to keep every event already in the log replayable. See [Changing events](#changing-events).
 

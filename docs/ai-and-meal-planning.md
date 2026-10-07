@@ -30,7 +30,7 @@ The answers are validated and returned to the browser, which saves them as a hid
 
 `RecipeProfiler`, mounted in the app layout, reads any recipe whose profile is missing or out of date, one at a time in the background. Each profile stores:
 
-- **`version`:** the version of the questions it answered. Bump `recipeProfileVersion` in `@shared/meal-plan` when the questions change, and every recipe is read again.
+- **`version`:** the version of the questions it answered. Bump `recipeProfileVersion` in `@shared/recipe-profile` when the questions change, and every recipe is read again.
 - **`sourceHash`:** a hash of the title, description, ingredients, and steps it was read from. Editing those triggers a new read; changing only a photo, tags, or servings doesn't.
 
 This covers new and edited recipes, imports, reads that failed, and tabs closed before a read finished. To avoid reading the same recipe twice:
@@ -44,7 +44,7 @@ This covers new and edited recipes, imports, reads that failed, and tabs closed 
 
 Until a recipe has a profile, a regex guess from its title and tags stands in, so new recipes can be suggested right away.
 
-Code: [`src/server/recipe-profile/clef.ts`](../src/server/recipe-profile/clef.ts) (questions), [`features/recipes/recipe-profiler.tsx`](../src/client/features/recipes/recipe-profiler.tsx) (background reads), [`meal-planner/-recipe-profile.ts`](../src/client/routes/_authenticated/_app/meal-planner/-recipe-profile.ts) (fallback guess).
+Code: [`src/shared/recipe-profile.ts`](../src/shared/recipe-profile.ts) (schema and versioning), [`src/server/recipe-profile/clef.ts`](../src/server/recipe-profile/clef.ts) (questions), [`features/recipes/recipe-profiler.tsx`](../src/client/features/recipes/recipe-profiler.tsx) (background reads), [`features/recipes/recipe-profile.ts`](../src/client/features/recipes/recipe-profile.ts) (reading and the fallback guess).
 
 ## 3. Suggesting meals
 

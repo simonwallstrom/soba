@@ -1,8 +1,8 @@
 import { dayKey, isPast, weekdayOf } from "@client/features/meal-plan/weeks";
 import type { DeclinedSuggestion, DeclineKind } from "@shared/meal-plan";
+import type { RecipeProfileAnswers } from "@shared/recipe-profile";
 
 import type { MealPlan, PlannerWeek } from "./-meal-plan";
-import type { Profile } from "./-recipe-profile";
 
 // How much turning a suggestion down counts against that recipe on that weekday.
 const declineWeights: Record<DeclineKind, number> = { shuffled: -0.5, removed: -1.5 };
@@ -37,7 +37,7 @@ type Taste = {
 function learn(
   week: PlannerWeek,
   plan: MealPlan,
-  profiles: ReadonlyMap<string, Profile>,
+  profiles: ReadonlyMap<string, RecipeProfileAnswers>,
   declined: readonly DeclinedSuggestion[],
   today: Date,
 ): Taste {
@@ -91,9 +91,9 @@ const tieBreak = 0.4;
 // Scores a recipe for a day: higher is a better fit.
 function rate(
   recipeId: string,
-  profile: Profile,
+  profile: RecipeProfileAnswers,
   weekday: number,
-  planned: readonly Profile[],
+  planned: readonly RecipeProfileAnswers[],
   taste: Taste,
   favoritedBy: number,
 ) {
@@ -137,7 +137,7 @@ export type SuggestedMeal = { date: string; recipeId: string; alternatives: stri
 
 export type SuggestInput = {
   plan: MealPlan;
-  profiles: ReadonlyMap<string, Profile>;
+  profiles: ReadonlyMap<string, RecipeProfileAnswers>;
   declined: readonly DeclinedSuggestion[];
   // How many members favorited each recipe.
   favorites: ReadonlyMap<string, number>;

@@ -1,10 +1,10 @@
+import { mealPlanned } from "@shared/meal-plan";
 import {
-  mealPlanned,
   recipeProfiled,
   recipeProfileSource,
   recipeProfileSourceHash,
   recipeProfileVersion,
-} from "@shared/meal-plan";
+} from "@shared/recipe-profile";
 import { recipeCreated, tagCreated } from "@shared/recipes";
 
 import { sampleRecipes } from "./sample-recipes";

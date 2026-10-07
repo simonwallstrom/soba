@@ -1,5 +1,5 @@
 import { queryDb } from "@livestore/livestore";
-import { recipeProfiles } from "@shared/meal-plan";
+import { recipeProfiles } from "@shared/recipe-profile";
 import { favorites, recipeListSettings, recipes, recipeTags, tags } from "@shared/recipes";
 
 export const recipes$ = queryDb(recipes.where({ deletedAt: null }), { label: "recipes" });

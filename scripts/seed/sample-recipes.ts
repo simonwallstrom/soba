@@ -1,4 +1,4 @@
-import type { RecipeProfileAnswers } from "@shared/meal-plan";
+import type { RecipeProfileAnswers } from "@shared/recipe-profile";
 import type { RecipeSection } from "@shared/recipes";
 
 // Sample recipes for trying the app, ported from the cookbase seed.

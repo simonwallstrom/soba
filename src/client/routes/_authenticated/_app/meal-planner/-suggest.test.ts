@@ -2,16 +2,16 @@ import { describe, expect, test } from "bun:test";
 
 import { dayKey, weekdayOf } from "@client/features/meal-plan/weeks";
 import type { DeclinedSuggestion, PlannedMealRow } from "@shared/meal-plan";
+import type { RecipeProfileAnswers } from "@shared/recipe-profile";
 
 import { getPlannerWeeks } from "./-meal-plan";
 import type { MealPlan } from "./-meal-plan";
-import type { Profile } from "./-recipe-profile";
 import { suggestWeek } from "./-suggest";
 
 // Tuesday 6 October 2026; the week planned is the next one, Monday 12 to Sunday 18.
 const today = new Date(2026, 9, 6);
 
-const dinner: Profile = {
+const dinner: RecipeProfileAnswers = {
   isDinner: true,
   base: "other",
   protein: "other",
@@ -19,7 +19,7 @@ const dinner: Profile = {
   isTreat: false,
 };
 
-const profiles = new Map<string, Profile>([
+const profiles = new Map<string, RecipeProfileAnswers>([
   ["tacos", { ...dinner, isTreat: true, protein: "beef" }],
   ["salmon", { ...dinner, base: "potato", protein: "fish", effort: "quick" }],
   ["curry", { ...dinner, base: "rice", protein: "chicken" }],
@@ -68,7 +68,7 @@ function suggest(
   }: {
     declined?: DeclinedSuggestion[];
     favorites?: ReadonlyMap<string, number>;
-    withProfiles?: ReadonlyMap<string, Profile>;
+    withProfiles?: ReadonlyMap<string, RecipeProfileAnswers>;
   } = {},
 ) {
   return suggestWeek(nextWeek(plan), {
