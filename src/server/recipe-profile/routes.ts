@@ -1,4 +1,4 @@
-import { recipeProfileSource } from "@shared/meal-plan";
+import { recipeProfileSource, recipeProfileVersion } from "@shared/meal-plan";
 import { Hono } from "hono";
 import { createMiddleware } from "hono/factory";
 import * as v from "valibot";
@@ -27,7 +27,7 @@ const limitProfiles = createMiddleware<HouseholdEnv>(async (c, next) => {
 });
 
 // Reads a recipe for meal suggestions. The client sends the recipe, since recipes live in the
-// synced store, and saves the profile it gets back.
+// synced store, and saves the profile it gets back with the version of the questions it answered.
 export const recipeProfileRoutes = new Hono<HouseholdEnv>()
   .use(requireSession, requireHousehold)
   .post(
@@ -52,6 +52,6 @@ export const recipeProfileRoutes = new Hono<HouseholdEnv>()
         },
       );
       if (!profile) return c.json({ error: "Couldn't read the recipe" }, 502);
-      return c.json({ profile }, 200);
+      return c.json({ profile, version: recipeProfileVersion }, 200);
     },
   );

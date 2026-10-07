@@ -1,4 +1,5 @@
 import { queryDb } from "@livestore/livestore";
+import { recipeProfiles } from "@shared/meal-plan";
 import { favorites, recipeListSettings, recipes, recipeTags, tags } from "@shared/recipes";
 
 export const recipes$ = queryDb(recipes.where({ deletedAt: null }), { label: "recipes" });
@@ -25,3 +26,6 @@ export function favorites$(userId: string) {
 export const recipeListSettings$ = queryDb(recipeListSettings.get(), {
   label: "recipeListSettings",
 });
+
+// What meal suggestions know about each recipe; see recipe-profile.ts.
+export const recipeProfiles$ = queryDb(recipeProfiles.select(), { label: "recipeProfiles" });

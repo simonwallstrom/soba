@@ -8,7 +8,6 @@ import {
   hasDraftContent,
   recipeDraftEvents,
 } from "@client/features/recipes/recipe-draft";
-import { profileRecipe } from "@client/features/recipes/recipe-profile";
 import { formatMetaTitle } from "@client/lib/meta";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
@@ -42,7 +41,6 @@ function NewRecipe() {
         ...recipeDraftEvents(draft, { id, createdBy: user.id, createdAt: at }),
         ...photoEvents,
       );
-      void profileRecipe(store, id);
       isSaved.current = true;
       // Replaces this page, so going back returns to the list rather than an empty form.
       void navigate({ to: "/recipes/$recipeId", params: { recipeId: id }, replace: true });

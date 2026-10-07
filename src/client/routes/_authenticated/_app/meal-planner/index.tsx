@@ -12,13 +12,9 @@ import {
   unplanMeal,
 } from "@client/features/meal-plan/meal-events";
 import { MealPicker } from "@client/features/meal-plan/meal-picker";
-import {
-  declinedSuggestions$,
-  plannedMeals$,
-  recipeProfiles$,
-} from "@client/features/meal-plan/queries";
+import { declinedSuggestions$, plannedMeals$ } from "@client/features/meal-plan/queries";
 import { dayKey, isPast } from "@client/features/meal-plan/weeks";
-import { recipes$, recipeTags$, tags$ } from "@client/features/recipes/queries";
+import { recipeProfiles$, recipes$, recipeTags$, tags$ } from "@client/features/recipes/queries";
 import { groupTagsByRecipe } from "@client/features/recipes/recipe-tags";
 import { formatMetaTitle } from "@client/lib/meta";
 import { mealPlanned } from "@shared/meal-plan";

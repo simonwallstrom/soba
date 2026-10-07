@@ -8,7 +8,6 @@ import {
   recipeImportsOptions,
 } from "@client/features/recipes/recipe-imports";
 import type { RecipeImport } from "@client/features/recipes/recipe-imports";
-import { profileRecipe } from "@client/features/recipes/recipe-profile";
 import { queryClient } from "@client/lib/query";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "@tanstack/react-router";
@@ -86,7 +85,6 @@ export function RecipeImportWatcher({
         current?.filter((other) => other.id !== item.id),
       );
       store.commit(...importedRecipeEvents(claimed, { id: item.id, tags, userId, at: new Date() }));
-      void profileRecipe(store, item.id);
       markRecentlyImported(item.id);
       toast.add({
         title: "Recipe imported",

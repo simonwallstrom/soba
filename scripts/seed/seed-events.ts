@@ -1,4 +1,10 @@
-import { mealPlanned, recipeProfiled } from "@shared/meal-plan";
+import {
+  mealPlanned,
+  recipeProfiled,
+  recipeProfileSource,
+  recipeProfileSourceHash,
+  recipeProfileVersion,
+} from "@shared/meal-plan";
 import { recipeCreated, tagCreated } from "@shared/recipes";
 
 import { sampleRecipes } from "./sample-recipes";
@@ -77,6 +83,8 @@ export function sampleRecipeEvents(userId: string, now = new Date()) {
         recipeProfiled({
           recipeId: id,
           ...profile,
+          version: recipeProfileVersion,
+          sourceHash: recipeProfileSourceHash(recipeProfileSource(recipe)),
           profiledAt: new Date(createdAt),
         }),
       ];

@@ -16,7 +16,7 @@ Code: [`src/server/recipe-import/`](../src/server/recipe-import/). `bun run impo
 
 ## 2. Profiling recipes
 
-When a recipe is created, imported, or edited, the Worker asks Clef, Cloudflare's decision model, five fixed questions about it:
+The Worker asks Clef, Cloudflare's decision model, five fixed questions about each recipe:
 
 - **Dinner:** is it a family main course, rather than dessert, baking, breakfast, or a side?
 - **Base:** potato, rice, pasta, bread, or other
@@ -24,9 +24,25 @@ When a recipe is created, imported, or edited, the Worker asks Clef, Cloudflare'
 - **Effort:** quick, normal, or involved
 - **Treat:** is it fun food saved for a treat, like tacos, pizza, or burgers?
 
-The answers are validated and returned to the browser, which saves them as a hidden **profile** (a `v1.RecipeProfiled` event). Users never see profiles, so tags stay the household's own. Until Clef has answered, or if a request fails, a regex guess from the title and tags stands in, so new recipes can be suggested right away.
+The answers are validated and returned to the browser, which saves them as a hidden **profile** (a `v1.RecipeProfiled` event). Users never see profiles, so tags stay the household's own.
 
-Code: [`src/server/recipe-profile/clef.ts`](../src/server/recipe-profile/clef.ts) (questions), [`meal-planner/-recipe-profile.ts`](../src/client/routes/_authenticated/_app/meal-planner/-recipe-profile.ts) (fallback guess).
+### Keeping profiles current
+
+`RecipeProfiler`, mounted in the app layout, reads any recipe whose profile is missing or out of date, one at a time in the background. Each profile stores:
+
+- **`version`:** the version of the questions it answered. Bump `recipeProfileVersion` in `@shared/meal-plan` when the questions change, and every recipe is read again.
+- **`sourceHash`:** a hash of the title, description, ingredients, and steps it was read from. Editing those triggers a new read; changing only a photo, tags, or servings doesn't.
+
+This covers new and edited recipes, imports, reads that failed, and tabs closed before a read finished. To avoid reading the same recipe twice:
+
+- One tab per browser runs reads, using a Web Lock.
+- The member who saved a recipe reads it right away. Other members wait 2 minutes, in case that member's read is still on its way.
+- Except for recipes saved in this session, reads wait 10 seconds after the app opens, so profiles from other devices can sync in first.
+- A failed read isn't retried until the recipe changes or the app opens again. Hitting the rate limit pauses reads for a minute.
+
+Until a recipe has a profile, a regex guess from its title and tags stands in, so new recipes can be suggested right away.
+
+Code: [`src/server/recipe-profile/clef.ts`](../src/server/recipe-profile/clef.ts) (questions), [`features/recipes/recipe-profiler.tsx`](../src/client/features/recipes/recipe-profiler.tsx) (background reads), [`meal-planner/-recipe-profile.ts`](../src/client/routes/_authenticated/_app/meal-planner/-recipe-profile.ts) (fallback guess).
 
 ## 3. Suggesting meals
 
@@ -45,6 +61,6 @@ Code: [`meal-planner/-suggest.ts`](../src/client/routes/_authenticated/_app/meal
 
 ## Why it works this way
 
-- **Cheap and fast:** models run once per recipe, not once per suggestion.
+- **Cheap and fast:** models run once per recipe version, not once per suggestion.
 - **Instant and private:** suggestions run on the device from the synced plan, with no request per click.
 - **Explainable:** every score comes from a few readable weights, so a surprising suggestion can be traced and tuned.

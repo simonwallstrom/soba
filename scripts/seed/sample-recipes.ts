@@ -1,4 +1,4 @@
-import type { RecipeProfile } from "@shared/meal-plan";
+import type { RecipeProfileAnswers } from "@shared/meal-plan";
 import type { RecipeSection } from "@shared/recipes";
 
 // Sample recipes for trying the app, ported from the cookbase seed.
@@ -10,7 +10,7 @@ export type SampleRecipe = {
   createdAt: string;
   tags: readonly string[];
   // What a model would have read from the recipe for meal suggestions.
-  profile: Omit<RecipeProfile, "recipeId" | "profiledAt">;
+  profile: RecipeProfileAnswers;
   ingredients: readonly RecipeSection[];
   instructions: readonly RecipeSection[];
 };
