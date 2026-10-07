@@ -1,6 +1,6 @@
 import { toast } from "@client/components/ui/toast";
 import type { useHouseholdStore } from "@client/features/household/store";
-import { mealMoved, mealPlanned, mealSuggestionDeclined, mealUnplanned } from "@shared/meal-plan";
+import { mealMoved, mealPlanned, mealUnplanned } from "@shared/meal-plan";
 import type { PlannedMealRow } from "@shared/meal-plan";
 
 type HouseholdStore = ReturnType<typeof useHouseholdStore>;
@@ -10,9 +10,7 @@ export function planMeal(userId: string, date: string, recipeId: string, from?: 
   return mealPlanned({
     date,
     recipeId,
-    ...(from?.suggestionId
-      ? { suggestion: { id: from.suggestionId, alternatives: from.alternatives } }
-      : {}),
+    ...(from?.suggestionId ? { suggestion: { id: from.suggestionId } } : {}),
     plannedBy: userId,
     plannedAt: new Date(),
   });
@@ -25,16 +23,6 @@ export function unplanMeal(userId: string, date: string) {
 // Moves a day's meal to another, swapping with the meal already there.
 export function moveMeal(userId: string, from: string, to: string) {
   return mealMoved({ from, to, movedBy: userId, movedAt: new Date() });
-}
-
-// Shuffling past a suggested meal, which counts against it next time.
-export function declineMeal(userId: string, meal: PlannedMealRow) {
-  return mealSuggestionDeclined({
-    date: meal.date,
-    recipeId: meal.recipeId,
-    declinedBy: userId,
-    declinedAt: new Date(),
-  });
 }
 
 // One click removes a meal, so the toast can put it back.

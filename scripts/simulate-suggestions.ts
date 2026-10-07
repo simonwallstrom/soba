@@ -5,7 +5,6 @@
 //
 // Usage: bun run suggest:simulate [options]
 //   --weeks 8              weeks to suggest (default: 8)
-//   --favorites "A,B"      titles of sample recipes the household favorited (default: none)
 //   --seed 1               seed for the tie-break randomness, to compare runs (default: 1)
 import { dayKey, getWeek, weekdayOf } from "@client/features/meal-plan/weeks";
 import type { PlannedMealRow } from "@shared/meal-plan";
@@ -33,19 +32,8 @@ function seeded(seed: number) {
 }
 
 const weekCount = Number(option("weeks") ?? 8);
-const favoriteTitles = (option("favorites") ?? "")
-  .split(",")
-  .map((title) => title.trim())
-  .filter(Boolean);
-const unknown = favoriteTitles.filter((title) => !sampleRecipes.some((r) => r.title === title));
-if (unknown.length > 0) {
-  console.error(`Not sample recipes: ${unknown.join(", ")}`);
-  process.exit(1);
-}
-
 // Recipes are keyed by title, which is unique among the samples.
 const profiles = new Map(sampleRecipes.map((recipe) => [recipe.title, recipe.profile]));
-const favorites = new Map(favoriteTitles.map((title) => [title, 1]));
 const random = seeded(Number(option("seed") ?? 1));
 const now = new Date();
 const plan = new Map<string, PlannedMealRow>();
@@ -56,7 +44,6 @@ function eat(date: Date, title: string, suggestionId: string | null = null) {
     date: dayKey(date),
     recipeId: title,
     suggestionId,
-    alternatives: [],
     plannedBy: "simulation",
     plannedAt: date,
   });
@@ -73,10 +60,7 @@ for (let offset = 0; offset < weekCount; offset++) {
   if (!monday) break;
   // The Sunday before, so the whole week is open and everything before it has been eaten.
   const today = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() - 1);
-  const suggested = suggestWeek(
-    { offset, number, days },
-    { plan, profiles, declined: [], favorites, today, random },
-  );
+  const suggested = suggestWeek({ offset, number, days }, { plan, profiles, today, random });
   console.log(`\nWeek ${number}`);
   for (const { date, recipeId } of suggested) {
     const day = new Date(`${date}T00:00`);
@@ -86,8 +70,7 @@ for (let offset = 0; offset < weekCount; offset++) {
           Boolean,
         )
       : [];
-    const favorite = favorites.has(recipeId) ? " ★" : "";
-    console.log(`  ${weekdays[weekdayOf(day)]}  ${recipeId}${favorite}  (${traits.join(", ")})`);
+    console.log(`  ${weekdays[weekdayOf(day)]}  ${recipeId}  (${traits.join(", ")})`);
     eat(day, recipeId, `week-${number}`);
     eaten.push({ date: day, title: recipeId });
   }

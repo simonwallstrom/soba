@@ -4,23 +4,11 @@ import { Button } from "@client/components/ui/button";
 import { toast } from "@client/components/ui/toast";
 import { useMembersById } from "@client/features/household/members";
 import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
-import {
-  declineMeal,
-  moveMeal,
-  planMeal,
-  removeMeal,
-  unplanMeal,
-} from "@client/features/meal-plan/meal-events";
+import { moveMeal, planMeal, removeMeal, unplanMeal } from "@client/features/meal-plan/meal-events";
 import { MealPicker } from "@client/features/meal-plan/meal-picker";
-import { declinedSuggestions$, plannedMeals$ } from "@client/features/meal-plan/queries";
+import { plannedMeals$ } from "@client/features/meal-plan/queries";
 import { dayKey, isPast } from "@client/features/meal-plan/weeks";
-import {
-  householdFavorites$,
-  recipeProfiles$,
-  recipes$,
-  recipeTags$,
-  tags$,
-} from "@client/features/recipes/queries";
+import { recipeProfiles$, recipes$, recipeTags$, tags$ } from "@client/features/recipes/queries";
 import { guessProfile } from "@client/features/recipes/recipe-profile";
 import { groupTagsByRecipe } from "@client/features/recipes/recipe-tags";
 import { formatMetaTitle } from "@client/lib/meta";
@@ -31,9 +19,9 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { PlannedDay } from "./-components/planned-day";
 import { WeekHeader } from "./-components/week-header";
-import { clearableDays, copyMeals, getPlannerWeeks, nextAlternative } from "./-meal-plan";
+import { clearableDays, copyMeals, getPlannerWeeks } from "./-meal-plan";
 import type { PlannerWeek } from "./-meal-plan";
-import { suggestWeek } from "./-suggest";
+import { nextShuffle, shuffleOptions, suggestWeek } from "./-suggest";
 
 export const Route = createFileRoute("/_authenticated/_app/meal-planner/")({
   staticData: { breadcrumbs: [{ label: "Meal planner" }], placesOwnScroll: true },
@@ -76,9 +64,7 @@ function MealPlanner() {
   const tags = useHouseholdQuery(household.id, tags$);
   const links = useHouseholdQuery(household.id, recipeTags$);
   const rows = useHouseholdQuery(household.id, plannedMeals$);
-  const declined = useHouseholdQuery(household.id, declinedSuggestions$);
   const profileRows = useHouseholdQuery(household.id, recipeProfiles$);
-  const favoriteRows = useHouseholdQuery(household.id, householdFavorites$);
   const membersById = useMembersById();
   const listRef = useRef<HTMLDivElement>(null);
   const [today] = useState(() => new Date());
@@ -133,18 +119,14 @@ function MealPlanner() {
   // The week's open days fill in at once; shuffle any day you don't like, or undo the lot.
   function suggest(week: PlannerWeek) {
     const id = crypto.randomUUID();
-    const favorites = new Map<string, number>();
-    for (const { recipeId } of favoriteRows) {
-      favorites.set(recipeId, (favorites.get(recipeId) ?? 0) + 1);
-    }
-    const suggested = suggestWeek(week, { plan, profiles, declined, favorites, today });
+    const suggested = suggestWeek(week, { plan, profiles, today });
     if (suggested.length === 0) return;
     store.commit(
-      ...suggested.map(({ date, recipeId, alternatives }) =>
+      ...suggested.map(({ date, recipeId }) =>
         mealPlanned({
           date,
           recipeId,
-          suggestion: { id, alternatives },
+          suggestion: { id },
           plannedBy: user.id,
           plannedAt: new Date(),
         }),
@@ -170,13 +152,13 @@ function MealPlanner() {
   // The picker keeps its day after closing, so it can show it while it animates out.
   const [picker, setPicker] = useState<{ date?: Date; open: boolean }>({ open: false });
 
-  // Shuffling past a suggestion counts against it, quietly.
-  function shuffle(week: PlannerWeek, meal: PlannedMealRow) {
-    const taken = new Set(week.days.flatMap((day) => plan.get(dayKey(day))?.recipeId ?? []));
-    const recipeId = nextAlternative(meal, taken);
-    if (recipeId) {
-      store.commit(declineMeal(user.id, meal), planMeal(user.id, meal.date, recipeId, meal));
-    }
+  // Shuffling browses recipes like a suggested meal, round to where it started; it teaches the
+  // planner nothing, since people shuffle for ideas and often keep the first pick.
+  function shuffler(week: PlannerWeek, date: Date, meal: PlannedMealRow | undefined) {
+    if (!meal?.suggestionId || isPast(date, today)) return undefined;
+    const options = shuffleOptions(week, date, { plan, profiles, today });
+    const recipeId = nextShuffle(options, meal.recipeId);
+    return recipeId ? () => store.commit(planMeal(user.id, meal.date, recipeId, meal)) : undefined;
   }
 
   function copy(from: PlannerWeek, to: PlannerWeek) {
@@ -274,7 +256,7 @@ function MealPlanner() {
                           entriesById.get(meal.recipeId)?.recipe.title,
                         )
                       }
-                      onShuffle={() => meal && shuffle(week, meal)}
+                      onShuffle={shuffler(week, date, meal)}
                       wasDroppedOn={droppedOn.includes(dayKey(date))}
                     />
                   );

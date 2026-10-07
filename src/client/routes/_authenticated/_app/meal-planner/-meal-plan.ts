@@ -38,15 +38,6 @@ export function getPlannerWeeks(today: Date, plan: MealPlan) {
   return { weeks, currentWeekIndex: weeksBefore };
 }
 
-// The next recipe to shuffle to, skipping ones planned elsewhere in the week.
-export function nextAlternative(meal: PlannedMealRow, taken: ReadonlySet<string>) {
-  const { alternatives } = meal;
-  const index = alternatives.indexOf(meal.recipeId);
-  return [...alternatives.slice(index + 1), ...alternatives.slice(0, index)].find(
-    (recipeId) => !taken.has(recipeId),
-  );
-}
-
 // A week's meals for the same weekdays of another, on its open days that haven't passed.
 export function copyMeals(from: PlannerWeek, to: PlannerWeek, plan: MealPlan, today: Date) {
   return from.days.flatMap((date, index) => {

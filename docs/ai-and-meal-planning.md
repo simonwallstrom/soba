@@ -53,18 +53,20 @@ Code: [`src/shared/recipe-profile.ts`](../src/shared/recipe-profile.ts) (schema 
 **Suggest meals** fills the week's open days. It scores every dinner recipe for every open day and fills the day with the strongest pick first, so taco Friday is planned before a Wednesday that would happily take the tacos. Scores come from:
 
 - **Habits:** recipes the household often eats on a weekday score higher on that weekday (taco Friday). A habit has to start with dinners the household picked themselves, at least twice on that weekday. Accepted suggestions keep it going but can't start one, or the planner would learn from itself and repeat the same week forever.
-- **Favorites:** each member who favorited a recipe adds to its score, up to two members. A favorite beats the small nudges below, but not having had it in the last week or two.
 - **Recency:** a recipe from the last 7 days is almost never suggested again, one from 1–3 weeks back less so the longer ago it was, and one not eaten for a while gets a small boost.
 - **Variety:** a second dish on the same base or protein that week is penalized, a third almost never wins. One fish dinner on a weeknight gets a boost.
 - **Effort:** involved dishes are kept off Monday to Thursday, unless they're that day's habit: better a quick dish from last week. Quick dishes get a small boost on weeknights, and involved ones on weekends.
 - **Treats:** one a week at most, on the days the household has them. Until it shows its treat days, weekends are for treats.
-- **Shuffles:** shuffling past a suggestion counts against that recipe next time, most on the same weekday. Removing a meal doesn't count: it usually means the day is taken, not that the recipe is unwanted.
 
-Habits and shuffles fade, with half-lives of 12 and 8 weeks, so the planner follows a household that changes its ways. A little randomness breaks near-ties, so a new household doesn't get the first recipes in its list every week, and suggesting again can give a different week.
+Habits fade, with a half-life of 12 weeks, so the planner follows a household that changes its ways.
 
-**Shuffle** swaps a day for one of up to five similar alternatives: the same base, and a treat stays a treat.
+Nothing else teaches it, on purpose. People shuffle for ideas and often keep the first pick, so a shuffle isn't a rejection. Removing a meal usually means the day is taken. And favorites are pins for quick access in the sidebar, not a taste: pinning what you're cooking this week shouldn't bring it back next week. A household that never wants a recipe suggested deletes it.
 
-Code: [`meal-planner/-suggest.ts`](../src/client/routes/_authenticated/_app/meal-planner/-suggest.ts), with tests beside it. `bun run suggest:simulate` plays a household that accepts every suggested week, starting from the sample recipes, and prints the weeks and a summary: recipes used, weeknight effort, treat days, and repeats. Run it after changing the weights, with a few `--seed` values and `--favorites`.
+A little randomness breaks near-ties, so a new household doesn't get the first recipes in its list every week, and suggesting again can give a different week.
+
+**Shuffle** steps a suggested meal through every dinner like it, best fit first and round to where it started: another pasta for a pasta, another treat for a treat whatever its base, and for the catch-all "other" base, the same protein. Recipes planned within a week of the day are skipped. The options are worked out on each click, so recipes added since show up.
+
+Code: [`meal-planner/-suggest.ts`](../src/client/routes/_authenticated/_app/meal-planner/-suggest.ts), with tests beside it. `bun run suggest:simulate` plays a household that accepts every suggested week, starting from the sample recipes, and prints the weeks and a summary: recipes used, weeknight effort, treat days, and repeats. Run it after changing the weights, with a few `--seed` values.
 
 ## Why it works this way
 

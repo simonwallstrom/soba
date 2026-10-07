@@ -5,7 +5,8 @@ export const MAX_HOUSEHOLD_MEMBERS = 20;
 // change an event's shape, add a new event version instead (see docs/local-first-sync.md).
 // v2: production held a v1.RecipeCreated from before the event gained a required createdBy.
 // v3: v1.RecipeProfiled gained a required version and sourceHash.
-const SYNC_HISTORY_VERSION = 3;
+// v4: v1.MealSuggestionDeclined was removed.
+const SYNC_HISTORY_VERSION = 4;
 
 const STORE_ID_PREFIX = `household-v${SYNC_HISTORY_VERSION}-`;
 

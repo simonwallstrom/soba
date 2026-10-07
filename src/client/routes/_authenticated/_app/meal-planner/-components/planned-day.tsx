@@ -43,7 +43,8 @@ export function PlannedDay({
   // Moves the meal dragged from `from` to this day.
   onMoveMeal: (from: string) => void;
   onRemove: () => void;
-  onShuffle: () => void;
+  // Steps a suggested meal to another like it; left out when there's nothing to shuffle to.
+  onShuffle: (() => void) | undefined;
   // Whether a drop just changed this day, which flashes to show where a meal landed.
   wasDroppedOn: boolean;
 }) {
@@ -75,7 +76,6 @@ export function PlannedDay({
       </h3>
       {entry && meal ? (
         <MealItem
-          canShuffle={meal.alternatives.length > 1}
           drag={drag}
           entry={entry}
           isHighlighted={wasDroppedOn}
@@ -96,7 +96,6 @@ export function PlannedDay({
 }
 
 function MealItem({
-  canShuffle,
   drag,
   entry: { author, recipe, tags },
   isHighlighted,
@@ -105,14 +104,13 @@ function MealItem({
   onRemove,
   onShuffle,
 }: {
-  canShuffle: boolean;
   drag: DayDrag;
   entry: RecipeListEntry;
   isHighlighted: boolean;
   isPast: boolean;
   meal: PlannedMealRow;
   onRemove: () => void;
-  onShuffle: () => void;
+  onShuffle: (() => void) | undefined;
 }) {
   const details = [author?.name, tags.map((tag) => tag.name).join(" ")].filter(Boolean);
   const { ref, isDragging } = useRecipeDrag(recipe, {
@@ -127,8 +125,7 @@ function MealItem({
         actions={
           !isPast && (
             <>
-              {/* Shuffling needs somewhere to go. */}
-              {canShuffle && (
+              {onShuffle && (
                 <Button
                   aria-label="Suggest another recipe"
                   onClick={onShuffle}

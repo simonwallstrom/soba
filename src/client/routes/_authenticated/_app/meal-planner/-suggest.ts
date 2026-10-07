@@ -1,16 +1,10 @@
 import { dayKey, isPast, weekdayOf } from "@client/features/meal-plan/weeks";
-import type { DeclinedSuggestion } from "@shared/meal-plan";
 import type { RecipeProfileAnswers } from "@shared/recipe-profile";
 
 import type { MealPlan, PlannerWeek } from "./-meal-plan";
 
-// How much shuffling past a suggestion counts against the recipe: on any day, and more on the
-// weekday it was shuffled on.
-const shuffleCost = { anyDay: -0.4, sameWeekday: -0.4 };
-
-// Weeks until something learned counts half. Habits change slowly; a shuffle is a passing mood.
+// Weeks until a habit counts half, so the planner follows a household that changes its ways.
 const habitHalfLife = 12;
-const shuffleHalfLife = 8;
 
 function fade(weeksAgo: number, halfLife: number) {
   return 0.5 ** (Math.max(weeksAgo, 0) / halfLife);
@@ -30,10 +24,18 @@ function weeksBetween(earlier: Date, later: Date) {
   return Math.round((mondayOf(later) - mondayOf(earlier)) / 604_800_000);
 }
 
-// What the planner has learned from the days already eaten and from shuffled suggestions. Only
-// past days count; meals planned ahead would make it learn from itself. For the same reason a
-// habit must start with meals the household picked themselves: accepted suggestions keep a
-// habit going, but can't start one, or the planner would repeat its own picks forever.
+// Whole days between two dates, rounded past daylight saving's extra or missing hour.
+function daysBetween(earlier: Date, later: Date) {
+  return Math.round((later.getTime() - earlier.getTime()) / 86_400_000);
+}
+
+// What the planner has learned from the days already eaten. Only past days count; meals planned
+// ahead would make it learn from itself. For the same reason a habit must start with meals the
+// household picked themselves: accepted suggestions keep a habit going, but can't start one, or
+// the planner would repeat its own picks forever.
+//
+// Nothing else teaches it. Shuffling is browsing, often back to where it started; removing a meal
+// usually means the day is taken; and favorites are pins for quick access, not a taste.
 type Taste = {
   // The share of a weekday's recent dinners that were this recipe, keyed `recipeId:weekday`,
   // for recipes the household picked on that weekday at least twice.
@@ -42,8 +44,6 @@ type Taste = {
   treatShare: number[];
   // The last day before the planned week that a recipe was planned, eaten or still ahead.
   lastPlanned: Map<string, Date>;
-  // What shuffles cost a recipe, keyed by `recipeId` for any day and `recipeId:weekday`.
-  shuffles: Map<string, number>;
 };
 
 function addTo<K>(map: Map<K, number>, key: K, amount: number) {
@@ -54,7 +54,6 @@ export function learn(
   week: PlannerWeek,
   plan: MealPlan,
   profiles: ReadonlyMap<string, RecipeProfileAnswers>,
-  declined: readonly DeclinedSuggestion[],
   today: Date,
 ): Taste {
   const monday = week.days[0] ?? today;
@@ -89,29 +88,17 @@ export function learn(
     const weekday = Number(key.split(":")[1]);
     if (count >= 2) habits.set(key, (eaten.get(key) ?? 0) / (dinners[weekday] ?? 1));
   }
-  const shuffles = new Map<string, number>();
-  for (const { date, recipeId } of declined) {
-    const day = parseDay(date);
-    const weight = fade(weeksBetween(day, monday), shuffleHalfLife);
-    addTo(shuffles, recipeId, shuffleCost.anyDay * weight);
-    addTo(shuffles, `${recipeId}:${weekdayOf(day)}`, shuffleCost.sameWeekday * weight);
-  }
   return {
     habits,
     treatShare: picked.map((total, weekday) => (total > 0 ? (treats[weekday] ?? 0) / total : 0)),
     lastPlanned,
-    shuffles,
   };
 }
 
 // What eating a recipe again costs, by how many whole weeks since it was last planned. Within a
-// week is almost never right, even for a favorite; three weeks on, much less of a problem.
+// week is almost never right; three weeks on, much less of a problem.
 const recentPenalties: Record<number, number> = { 0: -5, 1: -3, 2: -2, 3: -1 };
 
-// What favoriting adds, per member who favorited a recipe, up to two. Enough to beat the small
-// nudges, like fish on a weeknight, but not having had it in the last week or two, or an
-// involved weeknight.
-const favoriteBonus = 1.5;
 // Random noise added to every score, so near-ties vary between runs instead of always going to
 // the first recipe in the list. Small enough not to beat a real preference.
 const tieBreak = 0.4;
@@ -123,13 +110,10 @@ function rate(
   date: Date,
   planned: readonly RecipeProfileAnswers[],
   taste: Taste,
-  favoritedBy: number,
 ) {
   const weekday = weekdayOf(date);
   const last = taste.lastPlanned.get(recipeId);
-  const weeksSince = last
-    ? Math.floor(Math.round((date.getTime() - last.getTime()) / 86_400_000) / 7)
-    : undefined;
+  const weeksSince = last ? Math.floor(daysBetween(last, date) / 7) : undefined;
   const habit = taste.habits.get(`${recipeId}:${weekday}`) ?? 0;
   const treatShare = taste.treatShare[weekday] ?? 0;
   const isWeeknight = weekday <= 3;
@@ -140,12 +124,9 @@ function rate(
   return (
     // What the household usually eats on this weekday.
     3 * habit +
-    favoriteBonus * Math.min(favoritedBy, 2) +
     // Treats on the days the household has them, and one a week at most. Until the household
     // shows its treat days, weekends are for treats.
     (profile.isTreat ? 2.5 * treatShare - (isWeeknight ? 2 : 0.5) - 3 * treatsPlanned : 0) +
-    (taste.shuffles.get(recipeId) ?? 0) +
-    (taste.shuffles.get(`${recipeId}:${weekday}`) ?? 0) +
     // Not again so soon, unless it's a habit for the day; welcome back after a while.
     (weeksSince === undefined ? 0.3 : habit >= 0.5 ? 0 : (recentPenalties[weeksSince] ?? 0.4)) +
     // A varied week: a second dish on the same base is fine now and then, a third almost never.
@@ -169,28 +150,24 @@ function rate(
   );
 }
 
-export type SuggestedMeal = { date: string; recipeId: string; alternatives: string[] };
+export type SuggestedMeal = { date: string; recipeId: string };
 
 export type SuggestInput = {
   plan: MealPlan;
   profiles: ReadonlyMap<string, RecipeProfileAnswers>;
-  declined: readonly DeclinedSuggestion[];
-  // How many members favorited each recipe.
-  favorites: ReadonlyMap<string, number>;
   today: Date;
   // Between 0 and 1; tests pass a fixed one.
   random?: () => number;
 };
 
 // Fills a week's open days from the household's habits: what they usually eat on each weekday,
-// their favorites, what they haven't had in a while, and a varied week, quicker on weeknights.
-// Shuffles nudge it. Each day keeps a few alternatives like it to shuffle through. It never says why:
+// what they haven't had in a while, and a varied week, quicker on weeknights. It never says why:
 // good suggestions speak for themselves.
 export function suggestWeek(
   week: PlannerWeek,
-  { plan, profiles, declined, favorites, today, random = Math.random }: SuggestInput,
+  { plan, profiles, today, random = Math.random }: SuggestInput,
 ): SuggestedMeal[] {
-  const taste = learn(week, plan, profiles, declined, today);
+  const taste = learn(week, plan, profiles, today);
   const dinners = [...profiles].filter(([, profile]) => profile.isDinner);
   const thisWeek = new Map(
     week.days.flatMap((date) => {
@@ -206,47 +183,87 @@ export function suggestWeek(
     return noise.get(key) ?? 0;
   }
 
-  // Ranks the recipes for a day, given what's already planned this week.
-  function rank(date: Date) {
+  // The best recipe for a day, given what's already planned this week.
+  function best(date: Date) {
     const taken = new Set(thisWeek.values());
     const planned = [...taken].flatMap((recipeId) => profiles.get(recipeId) ?? []);
-    return (
-      dinners
-        // A recipe picked for one day isn't picked again for another.
-        .filter(([recipeId]) => !taken.has(recipeId))
-        .map(([recipeId, profile]) => ({
-          recipeId,
-          profile,
-          score:
-            rate(recipeId, profile, date, planned, taste, favorites.get(recipeId) ?? 0) +
-            jitter(`${dayKey(date)}:${recipeId}`),
-        }))
-        .toSorted((left, right) => right.score - left.score)
-    );
+    let top: { recipeId: string; score: number } | undefined;
+    // A recipe picked for one day isn't picked again for another.
+    for (const [recipeId, profile] of dinners) {
+      if (taken.has(recipeId)) continue;
+      const score =
+        rate(recipeId, profile, date, planned, taste) + jitter(`${dayKey(date)}:${recipeId}`);
+      if (!top || score > top.score) top = { recipeId, score };
+    }
+    return top;
   }
 
   // Fills the day with the strongest pick first, so taco Friday is planned before a Wednesday
   // that would happily take the tacos.
   const suggested: SuggestedMeal[] = [];
   while (open.length > 0) {
-    const best = open
-      .map((date) => ({ date, ranked: rank(date) }))
-      .reduce((left, right) =>
-        (right.ranked[0]?.score ?? -Infinity) > (left.ranked[0]?.score ?? -Infinity) ? right : left,
+    const [next] = open
+      .map((date) => ({ date, pick: best(date) }))
+      .toSorted(
+        (left, right) => (right.pick?.score ?? -Infinity) - (left.pick?.score ?? -Infinity),
       );
-    open.splice(open.indexOf(best.date), 1);
-    const [pick] = best.ranked;
-    if (!pick) continue;
-    // Shuffling keeps what the day is for: another pasta for a pasta, another treat for a treat.
-    const alternatives = best.ranked
-      .filter(
-        ({ profile }) =>
-          profile.base === pick.profile.base && profile.isTreat === pick.profile.isTreat,
-      )
-      .slice(0, 5)
-      .map((option) => option.recipeId);
-    thisWeek.set(dayKey(best.date), pick.recipeId);
-    suggested.push({ date: dayKey(best.date), recipeId: pick.recipeId, alternatives });
+    if (!next) break;
+    open.splice(open.indexOf(next.date), 1);
+    if (!next.pick) continue;
+    thisWeek.set(dayKey(next.date), next.pick.recipeId);
+    suggested.push({ date: dayKey(next.date), recipeId: next.pick.recipeId });
   }
   return suggested.toSorted((left, right) => left.date.localeCompare(right.date));
+}
+
+// Whether a recipe can stand in for another when shuffling: another treat for a treat, another
+// pasta for a pasta. "Other" is a catch-all base, so those match on protein instead.
+function isLike(profile: RecipeProfileAnswers, like: RecipeProfileAnswers) {
+  if (!profile.isDinner || profile.isTreat !== like.isTreat) return false;
+  if (like.isTreat) return true;
+  return like.base === "other"
+    ? profile.base === "other" && profile.protein === like.protein
+    : profile.base === like.base;
+}
+
+// The recipes a day's meal shuffles through, best fit first and including the meal itself:
+// every dinner like it that isn't planned within a week of the day. Worked out on each shuffle,
+// so recipes added since show up and recent ones drop out. No randomness, so the order holds
+// while shuffling round.
+export function shuffleOptions(
+  week: PlannerWeek,
+  date: Date,
+  { plan, profiles, today }: Omit<SuggestInput, "random">,
+) {
+  const key = dayKey(date);
+  const current = plan.get(key)?.recipeId;
+  const like = current ? profiles.get(current) : undefined;
+  if (!current || !like) return [];
+  const taste = learn(week, plan, profiles, today);
+  const nearby = new Set(
+    [...plan]
+      .filter(([other]) => other !== key && Math.abs(daysBetween(date, parseDay(other))) < 7)
+      .map(([, meal]) => meal.recipeId),
+  );
+  const planned = week.days.flatMap((day) => {
+    const recipeId = dayKey(day) === key ? undefined : plan.get(dayKey(day))?.recipeId;
+    return (recipeId && profiles.get(recipeId)) || [];
+  });
+  return [...profiles]
+    .filter(
+      ([recipeId, profile]) =>
+        recipeId === current || (!nearby.has(recipeId) && isLike(profile, like)),
+    )
+    .map(([recipeId, profile]) => ({
+      recipeId,
+      score: rate(recipeId, profile, date, planned, taste),
+    }))
+    .toSorted((left, right) => right.score - left.score)
+    .map(({ recipeId }) => recipeId);
+}
+
+// The recipe after `current` in a shuffle, round to the start.
+export function nextShuffle(options: readonly string[], current: string) {
+  if (options.length < 2) return undefined;
+  return options[(options.indexOf(current) + 1) % options.length];
 }

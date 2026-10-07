@@ -15,9 +15,6 @@ export function recipe$(recipeId: string) {
   });
 }
 
-// Every member's favorites, which meal suggestions lean toward.
-export const householdFavorites$ = queryDb(favorites.select(), { label: "householdFavorites" });
-
 // Newest first.
 export function favorites$(userId: string) {
   return queryDb(favorites.where({ userId }).orderBy("favoritedAt", "desc"), {

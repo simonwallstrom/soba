@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test";
 
 import { dayKey, weekdayOf } from "@client/features/meal-plan/weeks";
-import type { DeclinedSuggestion, PlannedMealRow } from "@shared/meal-plan";
+import type { PlannedMealRow } from "@shared/meal-plan";
 import type { RecipeProfileAnswers } from "@shared/recipe-profile";
 
 import { getPlannerWeeks } from "./-meal-plan";
 import type { MealPlan } from "./-meal-plan";
-import { learn, suggestWeek } from "./-suggest";
+import { learn, nextShuffle, shuffleOptions, suggestWeek } from "./-suggest";
 
 // Tuesday 6 October 2026; the week planned is the next one, Monday 12 to Sunday 18.
 const today = new Date(2026, 9, 6);
@@ -40,7 +40,6 @@ function planned(date: Date, recipeId: string): [string, PlannedMealRow] {
       date: key,
       recipeId,
       suggestionId: null,
-      alternatives: [],
       plannedBy: "u1",
       plannedAt: today,
     },
@@ -61,38 +60,14 @@ function nextWeek(plan: MealPlan) {
 // No randomness, so each test sees one result.
 function suggest(
   plan: MealPlan,
-  {
-    declined = [],
-    favorites = new Map(),
-    withProfiles = profiles,
-  }: {
-    declined?: DeclinedSuggestion[];
-    favorites?: ReadonlyMap<string, number>;
-    withProfiles?: ReadonlyMap<string, RecipeProfileAnswers>;
-  } = {},
+  withProfiles: ReadonlyMap<string, RecipeProfileAnswers> = profiles,
 ) {
-  return suggestWeek(nextWeek(plan), {
-    plan,
-    profiles: withProfiles,
-    declined,
-    favorites,
-    today,
-    random: () => 0,
-  });
-}
-
-// The recipe suggested for next Monday, with no history but these shuffles.
-function mondayPick(declined: DeclinedSuggestion[]) {
-  return suggest(new Map(), { declined })[0]?.recipeId;
-}
-
-function shuffledSalmon(...dates: Date[]) {
-  return dates.map((date) => ({ date: dayKey(date), recipeId: "salmon", declinedAt: today }));
+  return suggestWeek(nextWeek(plan), { plan, profiles: withProfiles, today, random: () => 0 });
 }
 
 // How strong a habit, keyed `recipeId:weekday`, the planner learns from a plan.
 function habitAfter(plan: MealPlan, key: string) {
-  return learn(nextWeek(plan), plan, profiles, [], today).habits.get(key);
+  return learn(nextWeek(plan), plan, profiles, today).habits.get(key);
 }
 
 // Tacos on three Fridays from `start`, and other dinners on the last four Fridays.
@@ -126,39 +101,6 @@ describe("suggestWeek", () => {
     expect(suggested.map((meal) => meal.recipeId)).not.toContain("curry");
   });
 
-  test("offers alternatives like the pick to shuffle through, starting with it", () => {
-    for (const { recipeId, alternatives } of suggest(history)) {
-      const pick = profiles.get(recipeId);
-      expect(alternatives[0]).toBe(recipeId);
-      for (const alternative of alternatives) {
-        expect(profiles.get(alternative)?.base).toBe(pick?.base);
-        expect(profiles.get(alternative)?.isTreat).toBe(pick?.isTreat);
-      }
-    }
-  });
-
-  test("suggests a recipe less after it was shuffled past, less so as time goes by", () => {
-    expect(mondayPick([])).toBe("salmon");
-    // Shuffled on the last two Mondays, and on two Mondays half a year ago.
-    expect(mondayPick(shuffledSalmon(new Date(2026, 9, 5), new Date(2026, 8, 28)))).not.toBe(
-      "salmon",
-    );
-    const longAgo = shuffledSalmon(new Date(2026, 3, 6), new Date(2026, 2, 30));
-    expect(suggest(new Map(), { declined: longAgo }).map((meal) => meal.recipeId)).toContain(
-      "salmon",
-    );
-  });
-
-  test("counts a shuffle against the recipe on other weekdays too", () => {
-    const alike = new Map(["dish0", "dish1", "dish2"].map((id) => [id, dinner]));
-    const monday = (declined: DeclinedSuggestion[]) =>
-      suggest(new Map(), { declined, withProfiles: alike })[0]?.recipeId;
-    expect(monday([])).toBe("dish0");
-    // Shuffled past on a Sunday, not a Monday.
-    const sunday = { date: "2026-10-04", recipeId: "dish0", declinedAt: today };
-    expect(monday([sunday])).not.toBe("dish0");
-  });
-
   test("lets an old habit fade when the household moved on", () => {
     // Just before the other four, or almost a year earlier.
     const recent = fridayTacosHabit(new Date(2026, 7, 21));
@@ -190,15 +132,9 @@ describe("suggestWeek", () => {
       ...profiles,
       ["spaghetti", { ...dinner, base: "pasta" as const }],
     ]);
-    const suggested = suggest(plan, { withProfiles: withSpaghetti });
+    const suggested = suggest(plan, withSpaghetti);
     const pasta = suggested.filter((meal) => withSpaghetti.get(meal.recipeId)?.base === "pasta");
     expect(pasta.length).toBeLessThanOrEqual(2);
-  });
-
-  test("leans toward the household's favorites", () => {
-    expect(suggest(new Map())[0]?.recipeId).not.toBe("curry");
-    const favorites = new Map([["curry", 1]]);
-    expect(suggest(new Map(), { favorites })[0]?.recipeId).toBe("curry");
   });
 
   test("keeps involved dishes off weeknights", () => {
@@ -218,12 +154,60 @@ describe("suggestWeek", () => {
       return suggestWeek(nextWeek(new Map()), {
         plan: new Map(),
         profiles: alike,
-        declined: [],
-        favorites: new Map(),
         today,
         random: () => (value = (value + step) % 1),
       }).map((meal) => meal.recipeId);
     };
     expect(week(0.37)).not.toEqual(week(0.61));
+  });
+});
+
+describe("shuffleOptions", () => {
+  // Next Wednesday, holding a suggested meal.
+  const wednesday = new Date(2026, 9, 14);
+  const shuffleProfiles = new Map<string, RecipeProfileAnswers>([
+    ...profiles,
+    ["spaghetti", { ...dinner, base: "pasta", protein: "beef" }],
+    ["pizza", { ...dinner, base: "bread", protein: "pork", isTreat: true }],
+    ["falafel", { ...dinner, protein: "vegetarian" }],
+    ["omelette", { ...dinner, protein: "vegetarian", effort: "quick" }],
+  ]);
+
+  function optionsFor(recipeId: string, extra: [string, PlannedMealRow][] = []) {
+    const [key, meal] = planned(wednesday, recipeId);
+    const plan: MealPlan = new Map([...extra, [key, { ...meal, suggestionId: "s1" }]]);
+    return shuffleOptions(nextWeek(plan), wednesday, { plan, profiles: shuffleProfiles, today });
+  }
+
+  test("goes through every dinner on the same base, round to the meal itself", () => {
+    const options = optionsFor("carbonara");
+    expect(options.toSorted()).toEqual(["carbonara", "lasagna", "spaghetti"]);
+    let current = "carbonara";
+    const seen = Array.from({ length: options.length }, () => {
+      current = nextShuffle(options, current) ?? "";
+      return current;
+    });
+    expect(seen.at(-1)).toBe("carbonara");
+    expect(new Set(seen).size).toBe(options.length);
+  });
+
+  test("puts the best fit first: a quick dish before an involved one on a weeknight", () => {
+    const options = optionsFor("carbonara");
+    expect(options.indexOf("lasagna")).toBe(options.length - 1);
+  });
+
+  test("skips recipes planned within a week of the day", () => {
+    const fiveDaysBefore = planned(new Date(2026, 9, 9), "spaghetti");
+    const tenDaysBefore = planned(new Date(2026, 9, 4), "spaghetti");
+    expect(optionsFor("carbonara", [fiveDaysBefore])).not.toContain("spaghetti");
+    expect(optionsFor("carbonara", [tenDaysBefore])).toContain("spaghetti");
+  });
+
+  test("shuffles a treat through other treats, whatever their base", () => {
+    expect(optionsFor("tacos").toSorted()).toEqual(["pizza", "tacos"]);
+  });
+
+  test("matches the catch-all base on protein", () => {
+    expect(optionsFor("falafel").toSorted()).toEqual(["falafel", "omelette"]);
   });
 });

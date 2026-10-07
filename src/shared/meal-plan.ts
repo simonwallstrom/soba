@@ -9,38 +9,21 @@ export const plannedMeals = State.SQLite.table({
   columns: {
     date: State.SQLite.text({ primaryKey: true }),
     recipeId: State.SQLite.text(),
-    // Set on suggested meals: the suggestion that planned it, for undoing it as a whole, and the
-    // recipes shuffling steps through.
+    // Set on suggested meals: the suggestion that planned it, for undoing it as a whole.
     suggestionId: State.SQLite.text({ nullable: true }),
-    alternatives: State.SQLite.json({ schema: Schema.Array(Schema.String), default: [] }),
     plannedBy: State.SQLite.text(),
     plannedAt: State.SQLite.datetime(),
   },
 });
 export type PlannedMealRow = typeof plannedMeals.Type;
 
-// Suggestions the household shuffled past, which later suggestions learn from. Removing a meal
-// isn't one: it usually means the day is taken, not that the recipe is unwanted. Planning the
-// same recipe on that day again takes the decline back.
-export const declinedSuggestions = State.SQLite.table({
-  name: "declined_suggestions",
-  columns: {
-    date: State.SQLite.text(),
-    recipeId: State.SQLite.text(),
-    declinedAt: State.SQLite.datetime(),
-  },
-  indexes: [{ name: "declined_suggestions_date", columns: ["date", "recipeId"] }],
-});
-export type DeclinedSuggestion = typeof declinedSuggestions.Type;
-
 export const mealPlanned = Events.synced({
   name: "v1.MealPlanned",
   schema: Schema.Struct({
     date: dateSchema,
     recipeId: Schema.String,
-    suggestion: Schema.optional(
-      Schema.Struct({ id: Schema.String, alternatives: Schema.Array(Schema.String) }),
-    ),
+    // The suggestion that planned it, for undoing it as a whole.
+    suggestion: Schema.optional(Schema.Struct({ id: Schema.String })),
     plannedBy: Schema.String,
     plannedAt: Schema.Date,
   }),
@@ -63,23 +46,12 @@ export const mealMoved = Events.synced({
   }),
 });
 
-export const mealSuggestionDeclined = Events.synced({
-  name: "v1.MealSuggestionDeclined",
-  schema: Schema.Struct({
-    date: dateSchema,
-    recipeId: Schema.String,
-    declinedBy: Schema.String,
-    declinedAt: Schema.Date,
-  }),
-});
-
 export const mealPlanEvents = {
   mealPlanned,
   mealUnplanned,
   mealMoved,
-  mealSuggestionDeclined,
 };
-export const mealPlanTables = { plannedMeals, declinedSuggestions };
+export const mealPlanTables = { plannedMeals };
 
 export const mealPlanMaterializers = State.SQLite.materializers(mealPlanEvents, {
   "v1.MealPlanned": ({ date, recipeId, suggestion, plannedBy, plannedAt }) => [
@@ -88,12 +60,10 @@ export const mealPlanMaterializers = State.SQLite.materializers(mealPlanEvents, 
         date,
         recipeId,
         suggestionId: suggestion?.id ?? null,
-        alternatives: suggestion?.alternatives ?? [],
         plannedBy,
         plannedAt,
       })
       .onConflict("date", "replace"),
-    declinedSuggestions.delete().where({ date, recipeId }),
   ],
   "v1.MealUnplanned": ({ date }) => plannedMeals.delete().where({ date }),
   "v1.MealMoved": ({ from, to }, { query }) => {
@@ -106,7 +76,4 @@ export const mealPlanMaterializers = State.SQLite.materializers(mealPlanEvents, 
       plannedMeals.insert({ ...moving, date: to }).onConflict("date", "replace"),
     ];
   },
-  // Older events also carry a `kind`, which is ignored.
-  "v1.MealSuggestionDeclined": ({ date, recipeId, declinedAt }) =>
-    declinedSuggestions.insert({ date, recipeId, declinedAt }),
 });
