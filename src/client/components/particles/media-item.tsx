@@ -2,7 +2,7 @@ import { ImagePlaceholder, ImageThumbnail } from "@client/components/ui/image-th
 import { Link } from "@tanstack/react-router";
 import type { LinkComponentProps } from "@tanstack/react-router";
 import { cn } from "cn";
-import type { ReactNode } from "react";
+import type { ReactNode, RefCallback } from "react";
 
 export type MediaView = "list" | "grid";
 
@@ -30,14 +30,22 @@ type MediaItemProps = {
   actions?: ReactNode;
   // Briefly marks an item that just arrived.
   isHighlighted?: boolean | undefined;
+  // Set when the item itself is dragged, like onto a meal plan, rather than its link.
+  isDraggable?: boolean | undefined;
+  className?: string | undefined;
+  ref?: RefCallback<HTMLElement> | undefined;
 };
 
 const itemStyles = "group relative rounded-2xl p-3";
 const linkedItemStyles =
   "hover:bg-black/5 has-data-popup-open:bg-black/5 dark:hover:bg-white/6 dark:has-data-popup-open:bg-white/6";
 
-function itemClassName({ isHighlighted, link }: Pick<MediaItemProps, "isHighlighted" | "link">) {
-  return cn(itemStyles, link && linkedItemStyles, isHighlighted && "highlight-fade");
+function itemClassName({
+  className,
+  isHighlighted,
+  link,
+}: Pick<MediaItemProps, "className" | "isHighlighted" | "link">) {
+  return cn(itemStyles, link && linkedItemStyles, isHighlighted && "highlight-fade", className);
 }
 const actionsStyles =
   "relative z-10 -mr-1.5 flex shrink-0 text-olive-500 transition-colors group-focus-within:text-olive-700 group-hover:text-olive-700 dark:group-focus-within:text-olive-300 dark:group-hover:text-olive-300";
@@ -45,16 +53,23 @@ const actionsStyles =
 export function MediaListItem({
   actions,
   badge,
+  className,
   details,
+  isDraggable,
   isHighlighted,
+  ref,
   title,
   ...props
 }: MediaItemProps) {
   return (
     <div
-      className={cn(itemClassName({ isHighlighted, link: props.link }), "flex items-center gap-3")}
+      className={cn(
+        itemClassName({ className, isHighlighted, link: props.link }),
+        "flex items-center gap-3",
+      )}
+      ref={ref}
     >
-      {props.link && <MediaLink link={props.link} title={title} />}
+      {props.link && <MediaLink isDraggable={isDraggable} link={props.link} title={title} />}
       <MediaImage className="size-13 shrink-0 [&_svg]:size-5" height={104} width={104} {...props} />
       <div className="pointer-events-none flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex min-w-0 items-center gap-1.5">
@@ -71,14 +86,20 @@ export function MediaListItem({
 export function MediaGridItem({
   actions,
   badge,
+  className,
   details,
+  isDraggable,
   isHighlighted,
+  ref,
   title,
   ...props
 }: MediaItemProps) {
   return (
-    <article className={cn(itemClassName({ isHighlighted, link: props.link }), "min-w-0")}>
-      {props.link && <MediaLink link={props.link} title={title} />}
+    <article
+      className={cn(itemClassName({ className, isHighlighted, link: props.link }), "min-w-0")}
+      ref={ref}
+    >
+      {props.link && <MediaLink isDraggable={isDraggable} link={props.link} title={title} />}
       <MediaImage
         className="aspect-5/4 w-full [&_svg]:size-8"
         height={960}
@@ -101,15 +122,18 @@ export function MediaGridItem({
   );
 }
 
-// The whole item opens the link; the actions sit above it.
+// The whole item opens the link; the actions sit above it. A draggable item's link stays put, so
+// dragging from it drags the item.
 function MediaLink({
+  isDraggable,
   link,
   title,
-}: { link: NonNullable<MediaItemProps["link"]> } & Pick<MediaItemProps, "title">) {
+}: { link: NonNullable<MediaItemProps["link"]> } & Pick<MediaItemProps, "isDraggable" | "title">) {
   return (
     <Link
       aria-label={`Open ${title}`}
       className="absolute inset-0 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-1 active:bg-black/5 dark:active:bg-white/4"
+      draggable={isDraggable ? false : undefined}
       {...link}
     />
   );

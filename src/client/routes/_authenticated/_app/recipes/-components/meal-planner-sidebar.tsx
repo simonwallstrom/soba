@@ -1,3 +1,8 @@
+import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
+import {
+  dropTargetForElements,
+  monitorForElements,
+} from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { AppAside } from "@client/components/particles/app-aside";
 import { Button } from "@client/components/ui/button";
 import {
@@ -9,15 +14,19 @@ import {
 } from "@client/components/ui/icons";
 import { ImagePlaceholder, ImageThumbnail } from "@client/components/ui/image-thumbnail";
 import { ScrollArea } from "@client/components/ui/scroll-area";
+import { toast } from "@client/components/ui/toast";
 import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
 import { planMeal, removeMeal } from "@client/features/meal-plan/meal-events";
 import { MealPicker } from "@client/features/meal-plan/meal-picker";
 import { plannedMeals$ } from "@client/features/meal-plan/queries";
 import { dayKey, getWeek, isPast } from "@client/features/meal-plan/weeks";
+import { isRecipeDragData } from "@client/features/recipes/recipe-drag";
 import type { RecipeListEntry } from "@client/features/recipes/recipe-list";
+import type { PlannedMealRow } from "@shared/meal-plan";
 import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
-import { useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
+import type { ReactNode } from "react";
 
 const dayFormat = new Intl.DateTimeFormat("en-GB", {
   weekday: "short",
@@ -52,6 +61,30 @@ export function MealPlannerSidebar({
   const week = getWeek(
     new Date(today.getFullYear(), today.getMonth(), today.getDate() + weekOffset * 7),
   );
+  // The day a recipe was just dropped on, which flashes to show where it landed.
+  const [droppedOn, setDroppedOn] = useState<string>();
+
+  function changeWeek(change: number) {
+    setWeekOffset((offset) => offset + change);
+    setDroppedOn(undefined);
+  }
+
+  // Dropping on a planned day replaces its meal, and the toast can put it back.
+  function dropRecipe(date: string, recipeId: string) {
+    const previous = plan.get(date);
+    if (previous?.recipeId === recipeId) return;
+    store.commit(planMeal(userId, date, recipeId));
+    setDroppedOn(date);
+    if (!previous) return;
+    const replaced = entriesById.get(previous.recipeId)?.recipe.title;
+    toast.add({
+      title: replaced ? `Replaced ${replaced}` : "Replaced the meal",
+      actionProps: {
+        children: "Undo",
+        onClick: () => store.commit(planMeal(userId, date, previous.recipeId, previous)),
+      },
+    });
+  }
 
   return (
     <AppAside>
@@ -68,7 +101,7 @@ export function MealPlannerSidebar({
             <div>
               <Button
                 aria-label="Previous week"
-                onClick={() => setWeekOffset((offset) => offset - 1)}
+                onClick={() => changeWeek(-1)}
                 size="icon"
                 variant="ghost"
               >
@@ -76,7 +109,7 @@ export function MealPlannerSidebar({
               </Button>
               <Button
                 aria-label="Next week"
-                onClick={() => setWeekOffset((offset) => offset + 1)}
+                onClick={() => changeWeek(1)}
                 size="icon"
                 variant="ghost"
               >
@@ -94,39 +127,19 @@ export function MealPlannerSidebar({
             {week.days.map((day) => {
               const meal = plan.get(dayKey(day));
               const entry = meal && entriesById.get(meal.recipeId);
-              const isDayPast = isPast(day, today);
-              const isToday = day.toDateString() === today.toDateString();
               return (
-                <div className="flex flex-col gap-2" key={day.toISOString()}>
-                  <time
-                    aria-current={isToday ? "date" : undefined}
-                    className={cn(
-                      "font-medium",
-                      isToday
-                        ? "text-olive-950 dark:text-olive-50"
-                        : isDayPast
-                          ? "text-olive-500"
-                          : "text-olive-600 dark:text-olive-400",
-                    )}
-                    dateTime={dayKey(day)}
-                  >
-                    {isToday ? `Today, ${dayFormat.format(day)}` : dayFormat.format(day)}
-                  </time>
-                  {meal && entry ? (
-                    <PlannedMeal
-                      entry={entry}
-                      onRemove={
-                        isDayPast
-                          ? undefined
-                          : () => removeMeal(store, userId, meal, entry.recipe.title)
-                      }
-                    />
-                  ) : isDayPast ? (
-                    <p className="text-olive-400 dark:text-olive-600">Nothing planned</p>
-                  ) : (
-                    <EmptyMealSlot onChoose={() => setPicker({ date: day, open: true })} />
-                  )}
-                </div>
+                <PlannerDay
+                  date={day}
+                  entry={entry}
+                  isPastDay={isPast(day, today)}
+                  isToday={day.toDateString() === today.toDateString()}
+                  key={day.toISOString()}
+                  meal={meal}
+                  onChoose={() => setPicker({ date: day, open: true })}
+                  onDropRecipe={(recipeId) => dropRecipe(dayKey(day), recipeId)}
+                  onRemove={(planned, title) => removeMeal(store, userId, planned, title)}
+                  wasDroppedOn={droppedOn === dayKey(day)}
+                />
               );
             })}
           </div>
@@ -145,16 +158,137 @@ export function MealPlannerSidebar({
   );
 }
 
+// While a recipe is dragged, every day shows whether it takes it, and the one under the pointer
+// shows what dropping does.
+type DropState = "idle" | "available" | "over" | "unavailable";
+
+function isRecipe({ source }: { source: { data: Record<string | symbol, unknown> } }) {
+  return isRecipeDragData(source.data);
+}
+
+function useRecipeDrop(canDrop: boolean, onDropRecipe: (recipeId: string) => void) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [state, setState] = useState<DropState>("idle");
+  const dropRecipe = useEffectEvent(onDropRecipe);
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return undefined;
+    const monitor = monitorForElements({
+      canMonitor: isRecipe,
+      onDragStart: () => setState(canDrop ? "available" : "unavailable"),
+      onDrop: () => setState("idle"),
+    });
+    if (!canDrop) return monitor;
+    return combine(
+      monitor,
+      dropTargetForElements({
+        element,
+        canDrop: isRecipe,
+        onDragEnter: () => setState("over"),
+        onDragLeave: () => setState("available"),
+        onDrop: ({ source }) => {
+          if (isRecipeDragData(source.data)) dropRecipe(source.data.recipeId);
+        },
+      }),
+    );
+  }, [canDrop]);
+  return { ref, state };
+}
+
+function PlannerDay({
+  date,
+  entry,
+  isPastDay,
+  isToday,
+  meal,
+  onChoose,
+  onDropRecipe,
+  onRemove,
+  wasDroppedOn,
+}: {
+  date: Date;
+  entry: RecipeListEntry | undefined;
+  isPastDay: boolean;
+  isToday: boolean;
+  meal: PlannedMealRow | undefined;
+  onChoose: () => void;
+  onDropRecipe: (recipeId: string) => void;
+  onRemove: (meal: PlannedMealRow, title: string) => void;
+  wasDroppedOn: boolean;
+}) {
+  // Days before today are history.
+  const { ref, state } = useRecipeDrop(!isPastDay, onDropRecipe);
+  let content: ReactNode;
+  if (meal && entry) {
+    content = (
+      <PlannedMeal
+        entry={entry}
+        isHighlighted={wasDroppedOn}
+        // The key replays the highlight when another recipe lands on the same day.
+        key={meal.recipeId}
+        onRemove={isPastDay ? undefined : () => onRemove(meal, entry.recipe.title)}
+        state={state}
+      />
+    );
+  } else if (isPastDay) {
+    content = <p className="text-olive-400 dark:text-olive-600">Nothing planned</p>;
+  } else {
+    content = <EmptyMealSlot onChoose={onChoose} state={state} />;
+  }
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-2 transition-opacity",
+        state === "unavailable" && "opacity-40",
+      )}
+      ref={ref}
+    >
+      <time
+        aria-current={isToday ? "date" : undefined}
+        className={cn(
+          "font-medium",
+          isToday
+            ? "text-olive-950 dark:text-olive-50"
+            : isPastDay
+              ? "text-olive-500"
+              : "text-olive-600 dark:text-olive-400",
+        )}
+        dateTime={dayKey(date)}
+      >
+        {isToday ? `Today, ${dayFormat.format(date)}` : dayFormat.format(date)}
+      </time>
+      {content}
+    </div>
+  );
+}
+
 // Past meals can't be removed, so they go without `onRemove`.
 function PlannedMeal({
   entry: { recipe, tags },
+  isHighlighted,
   onRemove,
+  state,
 }: {
   entry: RecipeListEntry;
+  isHighlighted: boolean;
   onRemove: (() => void) | undefined;
+  state: DropState;
 }) {
   return (
-    <div className="group relative -mx-2 flex items-center gap-2 rounded-xl bg-olive-100 p-2 hover:bg-olive-200/70 dark:bg-olive-900/50 dark:hover:bg-olive-900">
+    <div
+      className={cn(
+        "group relative -mx-2 flex items-center gap-2 rounded-xl bg-olive-100 p-2 hover:bg-olive-200/70 dark:bg-olive-900/50 dark:hover:bg-olive-900",
+        isHighlighted && "highlight-fade",
+      )}
+    >
+      {state === "available" && (
+        <div className="pointer-events-none absolute inset-0 z-20 rounded-xl border-[1.5px] border-dashed border-olive-500 dark:border-olive-400" />
+      )}
+      {state === "over" && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center rounded-xl bg-olive-100/85 font-medium text-olive-800 ring-2 ring-olive-500 dark:bg-olive-900/85 dark:text-olive-100">
+          Replace
+        </div>
+      )}
       <Link
         aria-label={`Open ${recipe.title}`}
         className="absolute inset-0 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-1"
@@ -204,15 +338,29 @@ function PlannedMeal({
   );
 }
 
-function EmptyMealSlot({ onChoose }: { onChoose: () => void }) {
+function EmptyMealSlot({ onChoose, state }: { onChoose: () => void; state: DropState }) {
   return (
     <button
-      className="flex h-15 items-center justify-center gap-1.5 rounded-xl border border-dashed p-2 text-sm text-olive-500 hover:bg-black/5 hover:text-olive-700 focus-visible:outline-2 focus-visible:outline-offset-1 dark:bg-olive-900/50 dark:hover:bg-white/6 dark:hover:text-olive-300 [&_svg]:size-4"
+      className={cn(
+        "-mx-2 flex h-15 items-center justify-center gap-1.5 rounded-xl border border-dashed p-2 text-sm text-olive-500 transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 dark:bg-olive-900/50 [&_svg]:size-4",
+        state === "idle" &&
+          "hover:bg-black/5 hover:text-olive-700 dark:hover:bg-white/6 dark:hover:text-olive-300",
+        state === "available" &&
+          "border-[1.5px] border-olive-500 bg-olive-100/60 text-olive-700 dark:border-olive-400 dark:bg-olive-900 dark:text-olive-200",
+        state === "over" &&
+          "border-[1.5px] border-solid border-olive-600 bg-olive-200/70 text-olive-900 dark:border-olive-300 dark:bg-olive-800 dark:text-olive-50",
+      )}
       onClick={onChoose}
       type="button"
     >
-      <Add01Icon />
-      Add meal
+      {state === "idle" ? (
+        <>
+          <Add01Icon />
+          Add meal
+        </>
+      ) : (
+        "Drop to plan"
+      )}
     </button>
   );
 }

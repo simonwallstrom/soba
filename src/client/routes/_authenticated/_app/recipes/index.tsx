@@ -196,6 +196,7 @@ function Recipes() {
           </div>
         ) : (
           <RecipeList
+            canDrag={settings.isMealPlannerOpen}
             // Sorting by a date shows that date.
             date={sort === "name" ? undefined : sort}
             entries={entries}

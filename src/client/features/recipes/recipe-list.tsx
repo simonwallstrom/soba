@@ -6,6 +6,8 @@ import type { Recipe, RecipeDetail, RecipeView, Tag } from "@shared/recipes";
 import { Fragment } from "react";
 import type { ReactNode } from "react";
 
+import { useRecipeDrag } from "./recipe-drag";
+
 // A recipe with what its list item shows. The author is missing until members load.
 export type RecipeListEntry = {
   recipe: Recipe;
@@ -23,6 +25,7 @@ type DetailsProps = {
 };
 
 export function RecipeList({
+  canDrag = false,
   entries,
   highlightedIds,
   newIds,
@@ -30,6 +33,8 @@ export function RecipeList({
   view,
   ...detailsProps
 }: Omit<DetailsProps, "entry"> & {
+  // Whether recipes can be dragged out of the list, like onto a meal plan beside it.
+  canDrag?: boolean;
   entries: readonly RecipeListEntry[];
   // Recipes that just arrived, such as imports.
   highlightedIds?: ReadonlySet<string>;
@@ -38,24 +43,52 @@ export function RecipeList({
   renderActions: (entry: RecipeListEntry) => ReactNode;
   view: RecipeView;
 }) {
-  const Item = view === "grid" ? MediaGridItem : MediaListItem;
   const Details = view === "grid" ? RecipeGridDetails : RecipeListDetails;
   return (
     <MediaItems view={view}>
       {entries.map((entry) => (
-        <Item
+        <RecipeItem
           actions={renderActions(entry)}
           badge={newIds?.has(entry.recipe.id) && <Badge variant="primary">New</Badge>}
+          canDrag={canDrag}
           details={<Details entry={entry} {...detailsProps} />}
-          imageUrl={entry.recipe.imageUrl}
           isHighlighted={highlightedIds?.has(entry.recipe.id)}
           key={entry.recipe.id}
-          link={{ to: "/recipes/$recipeId", params: { recipeId: entry.recipe.id } }}
-          placeholderIcon={<ServingFoodIcon />}
-          title={entry.recipe.title}
+          recipe={entry.recipe}
+          view={view}
         />
       ))}
     </MediaItems>
+  );
+}
+
+function RecipeItem({
+  canDrag,
+  recipe,
+  view,
+  ...props
+}: {
+  actions: ReactNode;
+  badge: ReactNode;
+  canDrag: boolean;
+  details: ReactNode;
+  isHighlighted: boolean | undefined;
+  recipe: Recipe;
+  view: RecipeView;
+}) {
+  const Item = view === "grid" ? MediaGridItem : MediaListItem;
+  const { ref, isDragging } = useRecipeDrag(recipe, canDrag);
+  return (
+    <Item
+      {...props}
+      className={isDragging ? "opacity-40" : undefined}
+      imageUrl={recipe.imageUrl}
+      isDraggable={canDrag}
+      link={{ to: "/recipes/$recipeId", params: { recipeId: recipe.id } }}
+      placeholderIcon={<ServingFoodIcon />}
+      ref={ref}
+      title={recipe.title}
+    />
   );
 }
 
