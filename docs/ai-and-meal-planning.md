@@ -49,11 +49,14 @@ Code: [`src/server/recipe-profile/clef.ts`](../src/server/recipe-profile/clef.ts
 **Suggest meals** fills the week's open days. For each day, `suggestWeek` scores every dinner recipe and picks the highest:
 
 - **Habits:** recipes the household often eats on a weekday score higher on that weekday (taco Friday). Only past days count, so the planner never learns from its own suggestions.
+- **Favorites:** each member who favorited a recipe adds to its score, up to two members. A favorite beats the small nudges below, but not having had it last week.
 - **Recency:** a recipe from last week is penalized, less so from two or three weeks back, and one not eaten for a while gets a small boost.
 - **Variety:** a second dish on the same base or protein that week is penalized, a third almost never wins. One fish dinner on a weeknight gets a boost.
-- **Effort:** quick dishes are favored on weeknights and involved ones on weekends.
+- **Effort:** involved dishes are kept off Monday to Thursday, unless they're that day's habit. Quick dishes get a small boost on weeknights, and involved ones on weekends.
 - **Treats:** a treat scores well only on weekdays when the household usually has one.
 - **Feedback:** shuffling a suggestion counts slightly against that recipe on that weekday next time, and removing it counts more.
+
+A little randomness breaks near-ties, so a new household doesn't get the first recipes in its list every week, and suggesting again can give a different week.
 
 **Shuffle** swaps a day for one of up to five similar alternatives: the same base, and a treat stays a treat.
 

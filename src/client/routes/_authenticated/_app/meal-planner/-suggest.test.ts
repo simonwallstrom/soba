@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { dayKey } from "@client/features/meal-plan/weeks";
+import { dayKey, weekdayOf } from "@client/features/meal-plan/weeks";
 import type { DeclinedSuggestion, PlannedMealRow } from "@shared/meal-plan";
 
 import { getPlannerWeeks } from "./-meal-plan";
@@ -58,8 +58,27 @@ function nextWeek(plan: MealPlan) {
   return week;
 }
 
-function suggest(plan: MealPlan, declined: DeclinedSuggestion[] = []) {
-  return suggestWeek(nextWeek(plan), plan, profiles, declined, today);
+// No randomness, so each test sees one result.
+function suggest(
+  plan: MealPlan,
+  {
+    declined = [],
+    favorites = new Map(),
+    withProfiles = profiles,
+  }: {
+    declined?: DeclinedSuggestion[];
+    favorites?: ReadonlyMap<string, number>;
+    withProfiles?: ReadonlyMap<string, Profile>;
+  } = {},
+) {
+  return suggestWeek(nextWeek(plan), {
+    plan,
+    profiles: withProfiles,
+    declined,
+    favorites,
+    today,
+    random: () => 0,
+  });
 }
 
 describe("suggestWeek", () => {
@@ -100,7 +119,9 @@ describe("suggestWeek", () => {
       kind: "removed" as const,
       declinedAt: today,
     }));
-    const friday = suggest(history, removed).find((meal) => meal.date === "2026-10-16");
+    const friday = suggest(history, { declined: removed }).find(
+      (meal) => meal.date === "2026-10-16",
+    );
     expect(friday?.recipeId).not.toBe("tacos");
   });
 
@@ -114,8 +135,40 @@ describe("suggestWeek", () => {
       ...profiles,
       ["spaghetti", { ...dinner, base: "pasta" as const }],
     ]);
-    const suggested = suggestWeek(nextWeek(plan), plan, withSpaghetti, [], today);
+    const suggested = suggest(plan, { withProfiles: withSpaghetti });
     const pasta = suggested.filter((meal) => withSpaghetti.get(meal.recipeId)?.base === "pasta");
     expect(pasta.length).toBeLessThanOrEqual(2);
+  });
+
+  test("leans toward the household's favorites", () => {
+    expect(suggest(new Map())[0]?.recipeId).not.toBe("curry");
+    const favorites = new Map([["curry", 1]]);
+    expect(suggest(new Map(), { favorites })[0]?.recipeId).toBe("curry");
+  });
+
+  test("keeps involved dishes off weeknights", () => {
+    const weeknights = suggest(new Map()).filter(
+      (meal) => weekdayOf(new Date(`${meal.date}T00:00`)) <= 3,
+    );
+    expect(weeknights).toHaveLength(4);
+    for (const { recipeId } of weeknights) {
+      expect(profiles.get(recipeId)?.effort).not.toBe("involved");
+    }
+  });
+
+  test("breaks ties at random, so suggesting again can give another week", () => {
+    const alike = new Map(Array.from({ length: 10 }, (_, index) => [`dish${index}`, dinner]));
+    const week = (step: number) => {
+      let value = 0;
+      return suggestWeek(nextWeek(new Map()), {
+        plan: new Map(),
+        profiles: alike,
+        declined: [],
+        favorites: new Map(),
+        today,
+        random: () => (value = (value + step) % 1),
+      }).map((meal) => meal.recipeId);
+    };
+    expect(week(0.37)).not.toEqual(week(0.61));
   });
 });

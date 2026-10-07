@@ -14,7 +14,13 @@ import {
 import { MealPicker } from "@client/features/meal-plan/meal-picker";
 import { declinedSuggestions$, plannedMeals$ } from "@client/features/meal-plan/queries";
 import { dayKey, isPast } from "@client/features/meal-plan/weeks";
-import { recipeProfiles$, recipes$, recipeTags$, tags$ } from "@client/features/recipes/queries";
+import {
+  householdFavorites$,
+  recipeProfiles$,
+  recipes$,
+  recipeTags$,
+  tags$,
+} from "@client/features/recipes/queries";
 import { groupTagsByRecipe } from "@client/features/recipes/recipe-tags";
 import { formatMetaTitle } from "@client/lib/meta";
 import { mealPlanned } from "@shared/meal-plan";
@@ -72,6 +78,7 @@ function MealPlanner() {
   const rows = useHouseholdQuery(household.id, plannedMeals$);
   const declined = useHouseholdQuery(household.id, declinedSuggestions$);
   const profileRows = useHouseholdQuery(household.id, recipeProfiles$);
+  const favoriteRows = useHouseholdQuery(household.id, householdFavorites$);
   const membersById = useMembersById();
   const listRef = useRef<HTMLDivElement>(null);
   const [today] = useState(() => new Date());
@@ -126,7 +133,11 @@ function MealPlanner() {
   // The week's open days fill in at once; shuffle any day you don't like, or undo the lot.
   function suggest(week: PlannerWeek) {
     const id = crypto.randomUUID();
-    const suggested = suggestWeek(week, plan, profiles, declined, today);
+    const favorites = new Map<string, number>();
+    for (const { recipeId } of favoriteRows) {
+      favorites.set(recipeId, (favorites.get(recipeId) ?? 0) + 1);
+    }
+    const suggested = suggestWeek(week, { plan, profiles, declined, favorites, today });
     if (suggested.length === 0) return;
     store.commit(
       ...suggested.map(({ date, recipeId, alternatives }) =>

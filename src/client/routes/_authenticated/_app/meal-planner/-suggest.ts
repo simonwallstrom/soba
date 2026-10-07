@@ -81,6 +81,13 @@ function learn(
 // worth avoiding, three weeks back much less.
 const recentPenalties: Record<number, number> = { 1: -3, 2: -2, 3: -1 };
 
+// What favoriting adds, per member who favorited a recipe, up to two. Enough to beat the small
+// nudges, like fish on a weeknight, but not having had it last week or an involved weeknight.
+const favoriteBonus = 1.5;
+// Random noise added to every score, so near-ties vary between runs instead of always going to
+// the first recipe in the list. Small enough not to beat a real preference.
+const tieBreak = 0.4;
+
 // Scores a recipe for a day: higher is a better fit.
 function rate(
   recipeId: string,
@@ -88,6 +95,7 @@ function rate(
   weekday: number,
   planned: readonly Profile[],
   taste: Taste,
+  favoritedBy: number,
 ) {
   const habit = taste.habits.get(`${recipeId}:${weekday}`) ?? 0;
   const treatShare = taste.treatShare[weekday] ?? 0;
@@ -99,6 +107,7 @@ function rate(
   return (
     // What the household usually eats on this weekday.
     3 * habit +
+    favoriteBonus * Math.min(favoritedBy, 2) +
     (profile.isTreat ? 2.5 * treatShare - 1 : 0) +
     (taste.declines.get(`${recipeId}:${weekday}`) ?? 0) +
     // Not again so soon, unless it's a habit for the day; welcome back after a while.
@@ -108,10 +117,13 @@ function rate(
     -0.8 * sameProtein ** 2 +
     (sameBase === 0 && profile.base !== "other" ? 0.4 : 0) +
     (profile.protein === "fish" && isWeeknight && !hasFish ? 1 : 0) +
-    // Quicker on weeknights, more time on weekends.
+    // Quicker on weeknights, more time on weekends. Nobody makes lasagna from scratch on a
+    // Tuesday, unless that's what Tuesdays are for.
     (isWeeknight
       ? profile.effort === "involved"
-        ? -0.8
+        ? habit >= 0.5
+          ? 0
+          : -3
         : profile.effort === "quick"
           ? 0.3
           : 0
@@ -123,16 +135,24 @@ function rate(
 
 export type SuggestedMeal = { date: string; recipeId: string; alternatives: string[] };
 
+export type SuggestInput = {
+  plan: MealPlan;
+  profiles: ReadonlyMap<string, Profile>;
+  declined: readonly DeclinedSuggestion[];
+  // How many members favorited each recipe.
+  favorites: ReadonlyMap<string, number>;
+  today: Date;
+  // Between 0 and 1; tests pass a fixed one.
+  random?: () => number;
+};
+
 // Fills a week's open days from the household's habits: what they usually eat on each weekday,
-// what they haven't had in a while, and a varied week, quicker on weeknights. Declined
-// suggestions nudge it. Each day keeps a few alternatives like it to shuffle through. It never says why:
+// their favorites, what they haven't had in a while, and a varied week, quicker on weeknights.
+// Declined suggestions nudge it. Each day keeps a few alternatives like it to shuffle through. It never says why:
 // good suggestions speak for themselves.
 export function suggestWeek(
   week: PlannerWeek,
-  plan: MealPlan,
-  profiles: ReadonlyMap<string, Profile>,
-  declined: readonly DeclinedSuggestion[],
-  today: Date,
+  { plan, profiles, declined, favorites, today, random = Math.random }: SuggestInput,
 ): SuggestedMeal[] {
   const taste = learn(week, plan, profiles, declined, today);
   const dinners = [...profiles].filter(([, profile]) => profile.isDinner);
@@ -155,7 +175,9 @@ export function suggestWeek(
       .map(([recipeId, profile]) => ({
         recipeId,
         profile,
-        score: rate(recipeId, profile, weekdayOf(date), planned, taste),
+        score:
+          rate(recipeId, profile, weekdayOf(date), planned, taste, favorites.get(recipeId) ?? 0) +
+          tieBreak * random(),
       }))
       .toSorted((left, right) => right.score - left.score);
     const [pick] = ranked;
