@@ -1,3 +1,4 @@
+import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { AppHeaderActions } from "@client/components/particles/app-header-actions";
 import { Button } from "@client/components/ui/button";
 import { toast } from "@client/components/ui/toast";
@@ -5,6 +6,7 @@ import { useMembersById } from "@client/features/household/members";
 import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
 import {
   declineMeal,
+  moveMeal,
   planMeal,
   removeMeal,
   unplanMeal,
@@ -111,6 +113,19 @@ function MealPlanner() {
         : undefined,
     [currentWeekIndex],
   );
+  // Dragging a meal near the content's edges scrolls it, to reach other weeks.
+  useEffect(() => {
+    const root = listRef.current && getScrollRoot(listRef.current);
+    return root ? autoScrollForElements({ element: root }) : undefined;
+  }, []);
+  // The days a drop just changed, which flash to show where meals landed.
+  const [droppedOn, setDroppedOn] = useState<readonly string[]>([]);
+
+  // Moving onto a planned day swaps the two meals, so both days change.
+  function dropMeal(from: string, to: string) {
+    store.commit(moveMeal(user.id, from, to));
+    setDroppedOn(plan.has(to) ? [from, to] : [to]);
+  }
 
   // The week's open days fill in at once; shuffle any day you don't like, or undo the lot.
   function suggest(week: PlannerWeek) {
@@ -245,6 +260,7 @@ function MealPlanner() {
                       key={date.toISOString()}
                       meal={meal}
                       onChoose={() => setPicker({ date, open: true })}
+                      onMoveMeal={(from) => dropMeal(from, dayKey(date))}
                       onRemove={() =>
                         meal &&
                         removeMeal(
@@ -255,6 +271,7 @@ function MealPlanner() {
                         )
                       }
                       onShuffle={() => meal && shuffle(week, meal)}
+                      wasDroppedOn={droppedOn.includes(dayKey(date))}
                     />
                   );
                 })}

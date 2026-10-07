@@ -1,8 +1,3 @@
-import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
-import {
-  dropTargetForElements,
-  monitorForElements,
-} from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { AppAside } from "@client/components/particles/app-aside";
 import { Button } from "@client/components/ui/button";
 import {
@@ -16,7 +11,9 @@ import { ImagePlaceholder, ImageThumbnail } from "@client/components/ui/image-th
 import { ScrollArea } from "@client/components/ui/scroll-area";
 import { toast } from "@client/components/ui/toast";
 import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
-import { isMealDragData, mealDragData } from "@client/features/meal-plan/meal-drag";
+import { useDayDrop } from "@client/features/meal-plan/day-drop";
+import type { DayDrag } from "@client/features/meal-plan/day-drop";
+import { mealDragData } from "@client/features/meal-plan/meal-drag";
 import { moveMeal, planMeal, removeMeal } from "@client/features/meal-plan/meal-events";
 import { MealPicker } from "@client/features/meal-plan/meal-picker";
 import { plannedMeals$ } from "@client/features/meal-plan/queries";
@@ -26,7 +23,7 @@ import type { RecipeListEntry } from "@client/features/recipes/recipe-list";
 import type { PlannedMealRow } from "@shared/meal-plan";
 import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 
 const dayFormat = new Intl.DateTimeFormat("en-GB", {
@@ -166,62 +163,9 @@ export function MealPlannerSidebar({
   );
 }
 
-// While a recipe or meal is dragged, every day shows whether it takes it, and the one under the
-// pointer shows what dropping does. A meal's own day stays as it is.
-type DropState = "idle" | "available" | "over" | "unavailable";
-type Drag = { state: DropState; kind: "recipe" | "meal" };
-
-type DragSource = { source: { data: Record<string | symbol, unknown> } };
-
-function isPlannable({ source }: DragSource) {
-  return isRecipeDragData(source.data) || isMealDragData(source.data);
-}
-
-function useDayDrop({
-  canDrop,
-  date,
-  onDropRecipe,
-  onMoveMeal,
-}: {
-  canDrop: boolean;
-  date: string;
-  onDropRecipe: (recipeId: string) => void;
-  onMoveMeal: (from: string) => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [drag, setDrag] = useState<Drag>({ state: "idle", kind: "recipe" });
-  const dropRecipe = useEffectEvent(onDropRecipe);
-  const moveDroppedMeal = useEffectEvent(onMoveMeal);
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) return undefined;
-    const isOwnMeal = ({ source }: DragSource) =>
-      isMealDragData(source.data) && source.data.date === date;
-    const monitor = monitorForElements({
-      canMonitor: isPlannable,
-      onDragStart: (args) => {
-        const kind = isMealDragData(args.source.data) ? "meal" : "recipe";
-        const state = !canDrop ? "unavailable" : isOwnMeal(args) ? "idle" : "available";
-        setDrag({ state, kind });
-      },
-      onDrop: () => setDrag((current) => ({ ...current, state: "idle" })),
-    });
-    if (!canDrop) return monitor;
-    return combine(
-      monitor,
-      dropTargetForElements({
-        element,
-        canDrop: (args) => isPlannable(args) && !isOwnMeal(args),
-        onDragEnter: () => setDrag((current) => ({ ...current, state: "over" })),
-        onDragLeave: () => setDrag((current) => ({ ...current, state: "available" })),
-        onDrop: ({ source }) => {
-          if (isRecipeDragData(source.data)) dropRecipe(source.data.recipeId);
-          if (isMealDragData(source.data)) moveDroppedMeal(source.data.date);
-        },
-      }),
-    );
-  }, [canDrop, date]);
-  return { ref, drag };
+// Plans recipes dragged from the list.
+function recipeIdOf(data: Record<string | symbol, unknown>) {
+  return isRecipeDragData(data) ? data.recipeId : undefined;
 }
 
 function PlannerDay({
@@ -253,6 +197,7 @@ function PlannerDay({
     date: dayKey(date),
     onDropRecipe,
     onMoveMeal,
+    recipeIdOf,
   });
   let content: ReactNode;
   if (meal && entry) {
@@ -273,13 +218,7 @@ function PlannerDay({
     content = <EmptyMealSlot drag={drag} onChoose={onChoose} />;
   }
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-2 transition-opacity",
-        drag.state === "unavailable" && "opacity-40",
-      )}
-      ref={ref}
-    >
+    <div className="flex flex-col gap-2" ref={ref}>
       <time
         aria-current={isToday ? "date" : undefined}
         className={cn(
@@ -307,7 +246,7 @@ function PlannedMeal({
   meal,
   onRemove,
 }: {
-  drag: Drag;
+  drag: DayDrag;
   entry: RecipeListEntry;
   isHighlighted: boolean;
   meal: PlannedMealRow;
@@ -327,10 +266,7 @@ function PlannedMeal({
       )}
       ref={ref}
     >
-      {drag.state === "available" && (
-        <div className="pointer-events-none absolute inset-0 z-20 rounded-xl border-[1.5px] border-dashed border-olive-500 dark:border-olive-400" />
-      )}
-      {drag.state === "over" && (
+      {drag.isOver && (
         <div className="absolute inset-0 z-20 flex items-center justify-center rounded-xl bg-olive-100/85 font-medium text-olive-800 ring-2 ring-olive-500 dark:bg-olive-900/85 dark:text-olive-100">
           {drag.kind === "meal" ? "Swap" : "Replace"}
         </div>
@@ -376,22 +312,25 @@ function PlannedMeal({
   );
 }
 
-function EmptyMealSlot({ drag: { kind, state }, onChoose }: { drag: Drag; onChoose: () => void }) {
+function EmptyMealSlot({
+  drag: { isOver, kind },
+  onChoose,
+}: {
+  drag: DayDrag;
+  onChoose: () => void;
+}) {
   return (
     <button
       className={cn(
         "-mx-2 flex h-15 items-center justify-center gap-1.5 rounded-xl border border-dashed p-2 text-sm text-olive-500 transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 dark:bg-olive-900/50 [&_svg]:size-4",
-        state === "idle" &&
-          "hover:bg-black/5 hover:text-olive-700 dark:hover:bg-white/6 dark:hover:text-olive-300",
-        state === "available" &&
-          "border-[1.5px] border-olive-500 bg-olive-100/60 text-olive-700 dark:border-olive-400 dark:bg-olive-900 dark:text-olive-200",
-        state === "over" &&
-          "border-[1.5px] border-solid border-olive-600 bg-olive-200/70 text-olive-900 dark:border-olive-300 dark:bg-olive-800 dark:text-olive-50",
+        isOver
+          ? "border-[1.5px] border-solid border-olive-600 bg-olive-200/70 text-olive-900 dark:border-olive-300 dark:bg-olive-800 dark:text-olive-50"
+          : "hover:bg-black/5 hover:text-olive-700 dark:hover:bg-white/6 dark:hover:text-olive-300",
       )}
       onClick={onChoose}
       type="button"
     >
-      {state === "idle" ? (
+      {!isOver ? (
         <>
           <Add01Icon />
           Add meal
