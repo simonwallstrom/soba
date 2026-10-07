@@ -4,7 +4,7 @@ import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/el
 import { ServingFoodIcon } from "@client/components/ui/icons";
 import { ImagePlaceholder, ImageThumbnail } from "@client/components/ui/image-thumbnail";
 import type { Recipe } from "@shared/recipes";
-import { useCallback, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 
@@ -20,17 +20,30 @@ export function isRecipeDragData(data: Record<string | symbol, unknown>): data i
   return data[recipeDragKey] === true;
 }
 
-// Makes a recipe's item draggable while `enabled`: pass `ref` to the item, and dim it while
-// `isDragging`.
-export function useRecipeDrag(recipe: Recipe, enabled: boolean) {
+function recipeDragData(recipeId: string): RecipeDragData {
+  return { [recipeDragKey]: true, recipeId };
+}
+
+// Makes an item showing a recipe draggable while `enabled`: pass `ref` to the item, and dim it
+// while `isDragging`. It carries `data`, the recipe itself unless the item is something else,
+// like a planned meal.
+export function useRecipeDrag(
+  recipe: Recipe,
+  { data, enabled }: { data?: Record<string | symbol, unknown>; enabled: boolean },
+) {
   const [isDragging, setIsDragging] = useState(false);
+  // Read when a drag starts, so new data doesn't register the item again.
+  const dataRef = useRef(data);
+  useLayoutEffect(() => {
+    dataRef.current = data;
+  });
   const ref = useCallback(
     (element: HTMLElement | null) => {
       if (!element || !enabled) return undefined;
       return draggable({
         element,
         canDrag: () => window.matchMedia(dragMedia).matches,
-        getInitialData: (): RecipeDragData => ({ [recipeDragKey]: true, recipeId: recipe.id }),
+        getInitialData: () => dataRef.current ?? recipeDragData(recipe.id),
         onGenerateDragPreview: ({ nativeSetDragImage }) =>
           setCustomNativeDragPreview({
             nativeSetDragImage,

@@ -77,7 +77,7 @@ function RecipeItem({
   view: RecipeView;
 }) {
   const Item = view === "grid" ? MediaGridItem : MediaListItem;
-  const { ref, isDragging } = useRecipeDrag(recipe, canDrag);
+  const { ref, isDragging } = useRecipeDrag(recipe, { enabled: canDrag });
   return (
     <Item
       {...props}

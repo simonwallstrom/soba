@@ -81,6 +81,18 @@ export const mealUnplanned = Events.synced({
   schema: Schema.Struct({ date: dateSchema, unplannedBy: Schema.String, unplannedAt: Schema.Date }),
 });
 
+// Moves a day's meal to another day. A meal already there swaps to the first day, so nothing is
+// lost, and both keep who planned them and the suggestion they came from.
+export const mealMoved = Events.synced({
+  name: "v1.MealMoved",
+  schema: Schema.Struct({
+    from: dateSchema,
+    to: dateSchema,
+    movedBy: Schema.String,
+    movedAt: Schema.Date,
+  }),
+});
+
 export const mealSuggestionDeclined = Events.synced({
   name: "v1.MealSuggestionDeclined",
   schema: Schema.Struct({
@@ -124,6 +136,7 @@ export function recipeProfileSource(recipe: {
 export const mealPlanEvents = {
   mealPlanned,
   mealUnplanned,
+  mealMoved,
   mealSuggestionDeclined,
   recipeProfiled,
 };
@@ -144,6 +157,16 @@ export const mealPlanMaterializers = State.SQLite.materializers(mealPlanEvents, 
     declinedSuggestions.delete().where({ date, recipeId }),
   ],
   "v1.MealUnplanned": ({ date }) => plannedMeals.delete().where({ date }),
+  "v1.MealMoved": ({ from, to }, { query }) => {
+    const moving = query(plannedMeals.select().where({ date: from }).first());
+    if (!moving || from === to) return [];
+    const swapping = query(plannedMeals.select().where({ date: to }).first());
+    return [
+      plannedMeals.delete().where({ date: from }),
+      ...(swapping ? [plannedMeals.insert({ ...swapping, date: from })] : []),
+      plannedMeals.insert({ ...moving, date: to }).onConflict("date", "replace"),
+    ];
+  },
   "v1.MealSuggestionDeclined": ({ date, recipeId, kind, declinedAt }) =>
     declinedSuggestions.insert({ date, recipeId, kind, declinedAt }),
   "v1.RecipeProfiled": ({ recipeId, profiledAt, ...profile }) =>
