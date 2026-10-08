@@ -5,10 +5,9 @@ import {
   Empty,
   EmptyDescription,
   EmptyHeader,
-  EmptyIcon,
+  EmptyIllustration,
   EmptyTitle,
 } from "@client/components/ui/empty";
-import { CookBookIcon } from "@client/components/ui/icons";
 import { useMembersById } from "@client/features/household/members";
 import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
 import { AddToMealPlanDialog } from "@client/features/meal-plan/add-to-meal-plan";
@@ -42,7 +41,8 @@ import { ActiveRecipeFilters, RecipesFilter } from "./-components/recipes-filter
 import { RecipesSearch } from "./-components/recipes-search";
 import { RecipesHeaderActions, RecipesToolbar } from "./-components/recipes-toolbar";
 import { filterRecipes, parseRecipeListSearch, pinFirst } from "./-recipe-list";
-import type { RecipeFilterField } from "./-recipe-list";
+import { recipeFilterFields } from "./-recipe-list";
+import type { RecipeFilterField, RecipeListFilters } from "./-recipe-list";
 
 export const Route = createFileRoute("/_authenticated/_app/recipes/")({
   validateSearch: parseRecipeListSearch,
@@ -160,7 +160,8 @@ function Recipes() {
         )}
       </AppToolbar>
       {/* Items pad their content, so an empty box takes that padding to line up with the header. */}
-      <div className={isEmpty ? "p-5 lg:p-6" : "p-2 lg:p-3"}>
+      {/* Fills the page, so an empty state centers in it. */}
+      <div className="flex min-h-full flex-col p-2 lg:p-3">
         {imports.length > 0 && (
           <PendingImports
             imports={imports}
@@ -172,9 +173,12 @@ function Recipes() {
         {recipes.length === 0 ? (
           isEmpty && (
             <Empty>
-              <EmptyIcon>
-                <CookBookIcon />
-              </EmptyIcon>
+              <EmptyIllustration
+                className="w-44"
+                height="178"
+                src="/images/empty-chopsticks.avif"
+                width="360"
+              />
               <EmptyHeader>
                 <EmptyTitle>No recipes yet</EmptyTitle>
                 <EmptyDescription>
@@ -188,12 +192,21 @@ function Recipes() {
           )
         ) : entries.length === 0 ? (
           // Filtering is quick to undo, so no matches gets a lighter message than an empty household.
-          <div className="flex min-h-48 flex-col items-center justify-center gap-2 text-center">
-            <p className="font-medium">No matching recipes</p>
-            <Button onClick={clearFilters} size="sm" variant="ghost">
-              Clear filters
+          <Empty>
+            <EmptyIllustration
+              className="w-32"
+              height="178"
+              src="/images/empty-chopsticks.avif"
+              width="360"
+            />
+            <EmptyHeader>
+              <EmptyTitle>No matching recipes</EmptyTitle>
+              <EmptyDescription>{noMatchesDescription(search)}</EmptyDescription>
+            </EmptyHeader>
+            <Button onClick={clearFilters}>
+              {hasFilters(search) ? "Clear filters" : "Clear search"}
             </Button>
-          </div>
+          </Empty>
         ) : (
           <RecipeList
             canDrag={settings.isMealPlannerOpen}
@@ -238,4 +251,15 @@ function Recipes() {
       />
     </>
   );
+}
+
+function hasFilters(search: RecipeListFilters) {
+  return recipeFilterFields.some((field) => (search[field]?.length ?? 0) > 0);
+}
+
+// Says what is hiding the recipes, so it's clear what clearing will bring back.
+function noMatchesDescription(search: RecipeListFilters) {
+  if (!search.q) return "No recipes match these filters.";
+  if (!hasFilters(search)) return `Nothing matches “${search.q}”.`;
+  return `Nothing matches “${search.q}” with these filters.`;
 }

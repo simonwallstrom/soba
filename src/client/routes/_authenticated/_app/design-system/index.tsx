@@ -27,7 +27,7 @@ import {
   Empty,
   EmptyDescription,
   EmptyHeader,
-  EmptyIcon,
+  EmptyIllustration,
   EmptyTitle,
 } from "@client/components/ui/empty";
 import * as Icons from "@client/components/ui/icons";
@@ -321,9 +321,12 @@ function DesignSystem() {
 
         <Section title="Empty">
           <Empty>
-            <EmptyIcon>
-              <Icons.CookBookIcon />
-            </EmptyIcon>
+            <EmptyIllustration
+              className="w-44"
+              height="178"
+              src="/images/empty-chopsticks.avif"
+              width="360"
+            />
             <EmptyHeader>
               <EmptyTitle>No recipes yet</EmptyTitle>
               <EmptyDescription>Add the dishes your family cooks most.</EmptyDescription>

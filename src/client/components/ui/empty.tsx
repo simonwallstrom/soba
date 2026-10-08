@@ -1,12 +1,13 @@
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 
-// A dashed box saying there is nothing here yet, with what to do about it as children.
+// Says there is nothing here, with what to do about it as children. Fills and centers in the
+// space it's given, so give its parent a height to center it on the page.
 export function Empty({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-black/15 px-6 py-16 text-center sm:py-24 dark:border-white/15",
+        "flex flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center",
         className,
       )}
       data-slot="empty"
@@ -15,15 +16,14 @@ export function Empty({ className, ...props }: ComponentProps<"div">) {
   );
 }
 
-export function EmptyIcon({ className, ...props }: ComponentProps<"div">) {
+// A watercolor spot illustration, in the style of the start page. Callers set its width.
+export function EmptyIllustration({ className, ...props }: ComponentProps<"img">) {
   return (
-    <div
-      aria-hidden="true"
-      className={cn(
-        "flex size-10 items-center justify-center rounded-lg bg-olive-200/70 text-olive-600 dark:bg-olive-800 dark:text-olive-300 [&_svg]:size-5",
-        className,
-      )}
-      data-slot="empty-icon"
+    <img
+      alt=""
+      className={cn("mb-2 h-auto dark:opacity-60", className)}
+      data-slot="empty-illustration"
+      decoding="async"
       {...props}
     />
   );
