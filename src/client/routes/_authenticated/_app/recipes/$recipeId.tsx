@@ -125,12 +125,22 @@ function RecipeDetail() {
         </header>
 
         <RecipeContent
+          decimalSeparator={decimalSeparator(household.language)}
           ingredients={recipe.ingredients}
           instructions={recipe.instructions}
+          key={recipe.id}
+          recipeId={recipe.id}
           servings={recipe.servings}
         />
       </article>
     </>
+  );
+}
+
+function decimalSeparator(language: string) {
+  return (
+    new Intl.NumberFormat(language).formatToParts(1.5).find(({ type }) => type === "decimal")
+      ?.value ?? "."
   );
 }
 

@@ -81,3 +81,10 @@ export const inlineButtonStyles = [
   "focus-visible:outline-2 focus-visible:-outline-offset-1",
   "disabled:pointer-events-none disabled:opacity-50",
 ];
+
+// Text that acts, such as "Reset" or "Uncheck all", on a <button> or <a>. Underlined so it reads as
+// clickable, and thicker on hover. Navigation links in running metadata only underline on hover.
+export const textButtonStyles = [
+  "font-medium text-olive-950 underline decoration-1 underline-offset-2 hover:decoration-2 dark:text-white",
+  "focus-visible:outline-2 focus-visible:outline-offset-2",
+];
