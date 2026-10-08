@@ -25,6 +25,7 @@ import { Route as AuthenticatedAppRecipesIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedAppRecipesRecipeIdRouteImport } from './routes/_authenticated/_app/recipes/$recipeId'
 import { Route as AuthenticatedAppRecipesNewRouteImport } from './routes/_authenticated/_app/recipes/new'
 import { Route as AuthenticatedAppSettingsIndexRouteImport } from './routes/_authenticated/_app/settings/index'
+import { Route as AuthenticatedAppShoppingListIndexRouteImport } from './routes/_authenticated/_app/shopping-list/index'
 import { Route as AuthenticatedAppRecipesRecipeIdEditRouteImport } from './routes/_authenticated/_app/recipes/$recipeId_.edit'
 
 const IndexRoute = IndexRouteImport.update({
@@ -111,6 +112,12 @@ const AuthenticatedAppSettingsIndexRoute =
     path: '/settings/',
     getParentRoute: () => AuthenticatedAppLayoutRoute,
   } as any)
+const AuthenticatedAppShoppingListIndexRoute =
+  AuthenticatedAppShoppingListIndexRouteImport.update({
+    id: '/shopping-list/',
+    path: '/shopping-list/',
+    getParentRoute: () => AuthenticatedAppLayoutRoute,
+  } as any)
 const AuthenticatedAppRecipesRecipeIdEditRoute =
   AuthenticatedAppRecipesRecipeIdEditRouteImport.update({
     id: '/recipes/$recipeId_/edit',
@@ -132,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/meal-planner/': typeof AuthenticatedAppMealPlannerIndexRoute
   '/recipes/': typeof AuthenticatedAppRecipesIndexRoute
   '/settings/': typeof AuthenticatedAppSettingsIndexRoute
+  '/shopping-list/': typeof AuthenticatedAppShoppingListIndexRoute
   '/recipes/$recipeId/edit': typeof AuthenticatedAppRecipesRecipeIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -148,6 +156,7 @@ export interface FileRoutesByTo {
   '/meal-planner': typeof AuthenticatedAppMealPlannerIndexRoute
   '/recipes': typeof AuthenticatedAppRecipesIndexRoute
   '/settings': typeof AuthenticatedAppSettingsIndexRoute
+  '/shopping-list': typeof AuthenticatedAppShoppingListIndexRoute
   '/recipes/$recipeId/edit': typeof AuthenticatedAppRecipesRecipeIdEditRoute
 }
 export interface FileRoutesById {
@@ -168,6 +177,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/meal-planner/': typeof AuthenticatedAppMealPlannerIndexRoute
   '/_authenticated/_app/recipes/': typeof AuthenticatedAppRecipesIndexRoute
   '/_authenticated/_app/settings/': typeof AuthenticatedAppSettingsIndexRoute
+  '/_authenticated/_app/shopping-list/': typeof AuthenticatedAppShoppingListIndexRoute
   '/_authenticated/_app/recipes/$recipeId_/edit': typeof AuthenticatedAppRecipesRecipeIdEditRoute
 }
 export interface FileRouteTypes {
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/meal-planner/'
     | '/recipes/'
     | '/settings/'
+    | '/shopping-list/'
     | '/recipes/$recipeId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
     | '/meal-planner'
     | '/recipes'
     | '/settings'
+    | '/shopping-list'
     | '/recipes/$recipeId/edit'
   id:
     | '__root__'
@@ -221,6 +233,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/meal-planner/'
     | '/_authenticated/_app/recipes/'
     | '/_authenticated/_app/settings/'
+    | '/_authenticated/_app/shopping-list/'
     | '/_authenticated/_app/recipes/$recipeId_/edit'
   fileRoutesById: FileRoutesById
 }
@@ -344,6 +357,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedAppLayoutRoute
     }
+    '/_authenticated/_app/shopping-list/': {
+      id: '/_authenticated/_app/shopping-list/'
+      path: '/shopping-list'
+      fullPath: '/shopping-list/'
+      preLoaderRoute: typeof AuthenticatedAppShoppingListIndexRouteImport
+      parentRoute: typeof AuthenticatedAppLayoutRoute
+    }
     '/_authenticated/_app/recipes/$recipeId_/edit': {
       id: '/_authenticated/_app/recipes/$recipeId_/edit'
       path: '/recipes/$recipeId/edit'
@@ -362,6 +382,7 @@ interface AuthenticatedAppLayoutRouteChildren {
   AuthenticatedAppMealPlannerIndexRoute: typeof AuthenticatedAppMealPlannerIndexRoute
   AuthenticatedAppRecipesIndexRoute: typeof AuthenticatedAppRecipesIndexRoute
   AuthenticatedAppSettingsIndexRoute: typeof AuthenticatedAppSettingsIndexRoute
+  AuthenticatedAppShoppingListIndexRoute: typeof AuthenticatedAppShoppingListIndexRoute
   AuthenticatedAppRecipesRecipeIdEditRoute: typeof AuthenticatedAppRecipesRecipeIdEditRoute
 }
 
@@ -376,6 +397,8 @@ const AuthenticatedAppLayoutRouteChildren: AuthenticatedAppLayoutRouteChildren =
       AuthenticatedAppMealPlannerIndexRoute,
     AuthenticatedAppRecipesIndexRoute: AuthenticatedAppRecipesIndexRoute,
     AuthenticatedAppSettingsIndexRoute: AuthenticatedAppSettingsIndexRoute,
+    AuthenticatedAppShoppingListIndexRoute:
+      AuthenticatedAppShoppingListIndexRoute,
     AuthenticatedAppRecipesRecipeIdEditRoute:
       AuthenticatedAppRecipesRecipeIdEditRoute,
   }
