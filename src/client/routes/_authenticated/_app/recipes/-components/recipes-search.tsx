@@ -1,12 +1,11 @@
 import { Button } from "@client/components/ui/button";
 import { Cancel01Icon, Search01Icon } from "@client/components/ui/icons";
-import { textEntryStyles } from "@client/components/ui/styles";
+import { Input } from "@client/components/ui/input";
 import { useRecipeSearchField } from "@client/features/recipes/search-request";
 import { cn } from "cn";
 import type { KeyboardEvent } from "react";
 
-// A borderless field that leads the list bar, as tall as its parent so all of it takes a click.
-// The app's search shortcuts focus it.
+// The field beside the header's title. The app's search shortcuts focus it.
 export function RecipesSearch({
   className,
   onChange,
@@ -33,14 +32,11 @@ export function RecipesSearch({
   return (
     <search className={cn("group/search relative flex items-center", className)}>
       {/* Takes the text color while the field has focus. */}
-      <Search01Icon className="pointer-events-none absolute left-0 text-olive-500 group-focus-within/search:text-inherit" />
-      <input
+      <Search01Icon className="pointer-events-none absolute left-2.5 text-olive-500 group-focus-within/search:text-inherit" />
+      <Input
         aria-keyshortcuts="/ Meta+K Control+K"
         aria-label="Search recipes"
-        className={cn(
-          textEntryStyles,
-          "h-full w-full min-w-0 bg-transparent pr-7 pl-6 outline-none [&::-webkit-search-cancel-button]:appearance-none",
-        )}
+        className="pr-8 pl-8 [&::-webkit-search-cancel-button]:appearance-none"
         enterKeyHint="search"
         onChange={(event) => onChange(event.currentTarget.value)}
         onKeyDown={handleKeyDown}
@@ -52,7 +48,7 @@ export function RecipesSearch({
       {value !== "" && (
         <Button
           aria-label="Clear search"
-          className="absolute right-0 size-6"
+          className="absolute right-1 size-6"
           onClick={() => onChange("")}
           size="icon-sm"
           variant="ghost"

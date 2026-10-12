@@ -22,10 +22,9 @@ function ShoppingList() {
       <div className="flex min-h-full flex-col p-2 lg:p-3">
         <Empty>
           <EmptyIllustration
-            className="w-44"
-            height="178"
-            src="/images/empty-chopsticks.avif"
-            width="360"
+            height="512"
+            src="/images/empty-shopping-market-bag.avif"
+            width="512"
           />
           <EmptyHeader>
             <EmptyTitle>Shopping list is coming soon</EmptyTitle>

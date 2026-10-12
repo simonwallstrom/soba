@@ -8,12 +8,18 @@ import {
   popupLabelStyles,
   popupSeparatorStyles,
   popupStyles,
+  textEntryStyles,
 } from "@client/components/ui/styles";
 import { cn } from "cn";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 export function DropdownMenu(props: MenuPrimitive.Root.Props) {
   return <MenuPrimitive.Root {...props} />;
+}
+
+// Makes the menu or submenu it wraps searchable. Give that menu's content a `search` field.
+export function DropdownMenuFilter(props: MenuPrimitive.FilterProvider.Props) {
+  return <MenuPrimitive.FilterProvider {...props} />;
 }
 
 export function DropdownMenuTrigger(props: MenuPrimitive.Trigger.Props) {
@@ -25,11 +31,18 @@ export function DropdownMenuContent({
   alignOffset,
   children,
   className,
+  empty,
+  search,
   side = "bottom",
   sideOffset = 4,
   ...props
 }: MenuPrimitive.Popup.Props &
-  Pick<MenuPrimitive.Positioner.Props, "align" | "alignOffset" | "side" | "sideOffset">) {
+  Pick<MenuPrimitive.Positioner.Props, "align" | "alignOffset" | "side" | "sideOffset"> & {
+    // Shown when the search matches nothing.
+    empty?: ReactNode;
+    // A `DropdownMenuInput`, for a menu inside a `DropdownMenuFilter`.
+    search?: ReactNode;
+  }) {
   return (
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner
@@ -45,10 +58,39 @@ export function DropdownMenuContent({
           data-slot="dropdown-menu-content"
           {...props}
         >
-          <div className="max-h-(--available-height) w-full overflow-y-auto p-1">{children}</div>
+          {search ? (
+            // The search stays put while the items scroll under it.
+            <div className="flex max-h-[min(var(--available-height),24rem)] w-full flex-col">
+              {search}
+              <MenuPrimitive.Empty className="px-2.5 py-6 text-center text-olive-500 empty:p-0">
+                {empty}
+              </MenuPrimitive.Empty>
+              {/* Filtered-out items and groups stay in the list, hidden. */}
+              <MenuPrimitive.List className="min-h-0 overflow-y-auto overscroll-contain p-1 not-has-[>:not([hidden])]:p-0">
+                {children}
+              </MenuPrimitive.List>
+            </div>
+          ) : (
+            <div className="max-h-(--available-height) w-full overflow-y-auto p-1">{children}</div>
+          )}
         </MenuPrimitive.Popup>
       </MenuPrimitive.Positioner>
     </MenuPrimitive.Portal>
+  );
+}
+
+// A borderless search field for the top of a filterable menu.
+export function DropdownMenuInput({ className, ...props }: MenuPrimitive.Input.Props) {
+  return (
+    <MenuPrimitive.Input
+      className={cn(
+        textEntryStyles,
+        "h-9 w-full min-w-0 shrink-0 border-b-[0.5px] border-black/15 bg-transparent px-3 outline-none dark:border-white/15",
+        className,
+      )}
+      data-slot="dropdown-menu-input"
+      {...props}
+    />
   );
 }
 

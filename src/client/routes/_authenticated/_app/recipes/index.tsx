@@ -1,5 +1,4 @@
 import { AppHeaderActions } from "@client/components/particles/app-header-actions";
-import { AppToolbar } from "@client/components/particles/app-toolbar";
 import { Button, buttonVariants } from "@client/components/ui/button";
 import {
   Empty,
@@ -38,8 +37,8 @@ import { PendingImports } from "./-components/pending-imports";
 import { RecipeImportDialog } from "./-components/recipe-import-dialog";
 import type { ImportSource } from "./-components/recipe-import-dialog";
 import { ActiveRecipeFilters, RecipesFilter } from "./-components/recipes-filters";
+import { RecipesDisplayMenu, RecipesHeaderActions } from "./-components/recipes-header-actions";
 import { RecipesSearch } from "./-components/recipes-search";
-import { RecipesHeaderActions, RecipesToolbar } from "./-components/recipes-toolbar";
 import { filterRecipes, parseRecipeListSearch, pinFirst } from "./-recipe-list";
 import { recipeFilterFields } from "./-recipe-list";
 import type { RecipeFilterField, RecipeListFilters } from "./-recipe-list";
@@ -126,6 +125,27 @@ function Recipes() {
       <AppHeaderActions>
         <RecipesHeaderActions
           isMealPlannerOpen={settings.isMealPlannerOpen}
+          // With no recipes yet, there is nothing to search or sort.
+          listControls={
+            recipes.length > 0 && (
+              <>
+                <RecipesSearch
+                  className="mr-auto min-w-0 flex-1 max-sm:mr-2 sm:ml-3 sm:max-w-72 lg:ml-4"
+                  onChange={(q) => changeSearch({ q })}
+                  value={search.q ?? ""}
+                />
+                <RecipesFilter {...filterProps} />
+                <RecipesDisplayMenu
+                  onSortChange={(nextSort) => updateSettings({ sort: nextSort })}
+                  onViewChange={(view) => updateSettings({ view })}
+                  onVisibleDetailsChange={(visibleDetails) => updateSettings({ visibleDetails })}
+                  sort={sort}
+                  view={settings.view}
+                  visibleDetails={settings.visibleDetails}
+                />
+              </>
+            )
+          }
           onImport={setImportSource}
           onMealPlannerOpenChange={(isMealPlannerOpen) => updateSettings({ isMealPlannerOpen })}
         />
@@ -137,31 +157,10 @@ function Recipes() {
         source={importSource}
         tagNames={tagNames}
       />
-      {/* With no recipes yet, there is nothing to search or sort. */}
-      <AppToolbar>
-        {recipes.length > 0 && (
-          <RecipesToolbar
-            activeFilters={<ActiveRecipeFilters {...filterProps} onClear={clearFilters} />}
-            filter={<RecipesFilter {...filterProps} />}
-            onSortChange={(nextSort) => updateSettings({ sort: nextSort })}
-            onViewChange={(view) => updateSettings({ view })}
-            onVisibleDetailsChange={(visibleDetails) => updateSettings({ visibleDetails })}
-            search={
-              <RecipesSearch
-                className="min-w-0 flex-1 self-stretch"
-                onChange={(q) => changeSearch({ q })}
-                value={search.q ?? ""}
-              />
-            }
-            sort={sort}
-            view={settings.view}
-            visibleDetails={settings.visibleDetails}
-          />
-        )}
-      </AppToolbar>
       {/* Items pad their content, so an empty box takes that padding to line up with the header. */}
       {/* Fills the page, so an empty state centers in it. */}
       <div className="flex min-h-full flex-col p-2 lg:p-3">
+        {recipes.length > 0 && <ActiveRecipeFilters {...filterProps} onClear={clearFilters} />}
         {imports.length > 0 && (
           <PendingImports
             imports={imports}
@@ -173,12 +172,7 @@ function Recipes() {
         {recipes.length === 0 ? (
           isEmpty && (
             <Empty>
-              <EmptyIllustration
-                className="w-44"
-                height="178"
-                src="/images/empty-chopsticks.avif"
-                width="360"
-              />
+              <EmptyIllustration height="512" src="/images/empty-recipes-plate.avif" width="512" />
               <EmptyHeader>
                 <EmptyTitle>No recipes yet</EmptyTitle>
                 <EmptyDescription>
@@ -194,10 +188,9 @@ function Recipes() {
           // Filtering is quick to undo, so no matches gets a lighter message than an empty household.
           <Empty>
             <EmptyIllustration
-              className="w-32"
-              height="178"
-              src="/images/empty-chopsticks.avif"
-              width="360"
+              height="512"
+              src="/images/empty-recipes-no-results-bowl.avif"
+              width="512"
             />
             <EmptyHeader>
               <EmptyTitle>No matching recipes</EmptyTitle>

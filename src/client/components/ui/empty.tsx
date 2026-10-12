@@ -16,12 +16,13 @@ export function Empty({ className, ...props }: ComponentProps<"div">) {
   );
 }
 
-// A watercolor spot illustration, in the style of the start page. Callers set its width.
+// A watercolor spot illustration, in the style of the start page. Every empty state shows it at
+// the same size.
 export function EmptyIllustration({ className, ...props }: ComponentProps<"img">) {
   return (
     <img
       alt=""
-      className={cn("mb-2 h-auto dark:opacity-60", className)}
+      className={cn("mb-2 h-auto w-40 dark:opacity-60", className)}
       data-slot="empty-illustration"
       decoding="async"
       {...props}
@@ -41,7 +42,7 @@ export function EmptyHeader({ className, ...props }: ComponentProps<"div">) {
 }
 
 export function EmptyTitle({ className, ...props }: ComponentProps<"p">) {
-  return <p className={cn("font-medium", className)} data-slot="empty-title" {...props} />;
+  return <p className={cn("text-lg", className)} data-slot="empty-title" {...props} />;
 }
 
 export function EmptyDescription({ className, ...props }: ComponentProps<"p">) {

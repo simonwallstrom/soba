@@ -321,12 +321,7 @@ function DesignSystem() {
 
         <Section title="Empty">
           <Empty>
-            <EmptyIllustration
-              className="w-44"
-              height="178"
-              src="/images/empty-chopsticks.avif"
-              width="360"
-            />
+            <EmptyIllustration height="512" src="/images/empty-recipes-plate.avif" width="512" />
             <EmptyHeader>
               <EmptyTitle>No recipes yet</EmptyTitle>
               <EmptyDescription>Add the dishes your family cooks most.</EmptyDescription>
