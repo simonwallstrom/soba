@@ -5,7 +5,7 @@ import type { Tag } from "@shared/recipes";
 import { topTags } from "./recipe-tags";
 
 function makeTag(id: string, name: string): Tag {
-  return { id, name, createdAt: new Date(0), deletedAt: null };
+  return { id, name, createdAt: new Date(0) };
 }
 
 const pasta = makeTag("pasta", "Pasta");

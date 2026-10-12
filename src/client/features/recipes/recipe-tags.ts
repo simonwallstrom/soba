@@ -6,6 +6,13 @@ export function compareNames(left: string, right: string) {
   return collator.compare(left, right);
 }
 
+// Which tags each recipe has, as pairs.
+export function recipeTagLinks(recipes: readonly { id: string; tagIds: readonly string[] }[]) {
+  return recipes.flatMap((recipe) =>
+    recipe.tagIds.map((tagId) => ({ recipeId: recipe.id, tagId })),
+  );
+}
+
 // Each recipe's live tags, sorted by name. Links to deleted tags are dropped.
 export function groupTagsByRecipe(
   tags: readonly Tag[],

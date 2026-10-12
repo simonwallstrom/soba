@@ -1,13 +1,13 @@
 import { api } from "@client/lib/api";
 
-/** Closes the household store, then asks the server to clear this browser's site storage. */
+/**
+ * Asks the server to clear what this browser stored, such as the cached session. The household's
+ * recipes are only held in memory, so the reload that follows drops them.
+ */
 export async function resetLocalData() {
-  // Loaded lazily so public pages do not download LiveStore.
-  const { storeRegistry } = await import("@client/lib/livestore/adapter");
-  await storeRegistry.dispose();
   try {
     await api["local-data"].clear.$post();
   } catch {
-    // Offline: the local copy stays until the next reset, but sync access is already gone.
+    // Offline: the stored session stays until the next reset, but the server already denies it.
   }
 }

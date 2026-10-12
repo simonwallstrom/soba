@@ -11,7 +11,7 @@ import type { PlannedMealRow } from "@shared/meal-plan";
 
 import { suggestWeek } from "../src/client/routes/_authenticated/_app/meal-planner/-suggest";
 import { sampleRecipes } from "./seed/sample-recipes";
-import { sampleDinnerHistory } from "./seed/seed-events";
+import { sampleDinnerHistory } from "./seed/seed-data";
 
 const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 

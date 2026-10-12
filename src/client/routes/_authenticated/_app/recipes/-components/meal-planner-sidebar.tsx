@@ -10,13 +10,16 @@ import {
 import { ImagePlaceholder, ImageThumbnail } from "@client/components/ui/image-thumbnail";
 import { ScrollArea } from "@client/components/ui/scroll-area";
 import { toast } from "@client/components/ui/toast";
-import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
 import { useDayDrop } from "@client/features/meal-plan/day-drop";
 import type { DayDrag } from "@client/features/meal-plan/day-drop";
 import { mealDragData } from "@client/features/meal-plan/meal-drag";
-import { moveMeal, planMeal, removeMeal } from "@client/features/meal-plan/meal-events";
 import { MealPicker } from "@client/features/meal-plan/meal-picker";
-import { plannedMeals$ } from "@client/features/meal-plan/queries";
+import {
+  moveMeal,
+  planMeal,
+  removeMeal,
+  usePlannedMeals,
+} from "@client/features/meal-plan/meal-plan-data";
 import { dayKey, getWeek, isPast } from "@client/features/meal-plan/weeks";
 import { isRecipeDragData, useRecipeDrag } from "@client/features/recipes/recipe-drag";
 import type { RecipeListEntry } from "@client/features/recipes/recipe-list";
@@ -35,17 +38,14 @@ const dayFormat = new Intl.DateTimeFormat("en-GB", {
 // One week at a time, from this one. Days before today show what was eaten but can't change.
 export function MealPlannerSidebar({
   entries,
-  householdId,
   onClose,
   userId,
 }: {
   entries: readonly RecipeListEntry[];
-  householdId: string;
   onClose: () => void;
   userId: string;
 }) {
-  const store = useHouseholdStore(householdId);
-  const rows = useHouseholdQuery(householdId, plannedMeals$);
+  const rows = usePlannedMeals();
   const [today] = useState(() => new Date());
   // Weeks from this one.
   const [weekOffset, setWeekOffset] = useState(0);
@@ -71,7 +71,7 @@ export function MealPlannerSidebar({
   function dropRecipe(date: string, recipeId: string) {
     const previous = plan.get(date);
     if (previous?.recipeId === recipeId) return;
-    store.commit(planMeal(userId, date, recipeId));
+    planMeal(userId, date, recipeId);
     setDroppedOn([date]);
     if (!previous) return;
     const replaced = entriesById.get(previous.recipeId)?.recipe.title;
@@ -79,14 +79,14 @@ export function MealPlannerSidebar({
       title: replaced ? `Replaced ${replaced}` : "Replaced the meal",
       actionProps: {
         children: "Undo",
-        onClick: () => store.commit(planMeal(userId, date, previous.recipeId, previous)),
+        onClick: () => planMeal(userId, date, previous.recipeId, previous),
       },
     });
   }
 
   // Moving onto a planned day swaps the two meals, so both days change.
   function dropMeal(from: string, to: string) {
-    store.commit(moveMeal(userId, from, to));
+    moveMeal(from, to);
     setDroppedOn(plan.has(to) ? [from, to] : [to]);
   }
 
@@ -142,7 +142,7 @@ export function MealPlannerSidebar({
                   onChoose={() => setPicker({ date: day, open: true })}
                   onDropRecipe={(recipeId) => dropRecipe(dayKey(day), recipeId)}
                   onMoveMeal={(from) => dropMeal(from, dayKey(day))}
-                  onRemove={(planned, title) => removeMeal(store, userId, planned, title)}
+                  onRemove={(planned, title) => removeMeal(userId, planned, title)}
                   wasDroppedOn={droppedOn.includes(dayKey(day))}
                 />
               );
@@ -154,7 +154,7 @@ export function MealPlannerSidebar({
           entries={entries}
           onOpenChange={(open) => setPicker((current) => ({ ...current, open }))}
           onPick={(recipeId) => {
-            if (picker.date) store.commit(planMeal(userId, dayKey(picker.date), recipeId));
+            if (picker.date) planMeal(userId, dayKey(picker.date), recipeId);
           }}
           open={picker.open}
         />

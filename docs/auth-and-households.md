@@ -1,6 +1,6 @@
 # Auth and households
 
-Everyone signs in with Google through [Better Auth](https://www.better-auth.com/). Each user belongs to at most one household, which shares one recipe collection and meal plan. Users, sessions, households, members, and invites live in D1 (`src/server/db/schema.ts`).
+Everyone signs in with Google through [Better Auth](https://www.better-auth.com/). Each user belongs to at most one household, which shares one recipe collection and meal plan. Everything lives in D1 (`src/server/db/schema.ts`); see [Household data](./data.md) for recipes and the meal plan.
 
 ## Who can sign up
 
@@ -27,7 +27,6 @@ Routes are in `src/server/household/routes.ts` and queries in `src/server/househ
 - Sessions last 30 days and refresh daily.
 - A signed cookie cache holds session data for 5 minutes, so most requests skip D1.
 - `requireSession` and `requireHousehold` middleware authorize API routes. Every protected request is checked on the server; the client's session is only a UI cache.
-- Sync connections skip the cookie cache and check D1 directly, because a socket can outlive the cache. See [Local-first sync](./local-first-sync.md#access).
 - `/api/*` rejects cross-origin requests (CSRF), and auth and invite routes are rate-limited by IP.
 
 ## Sessions on the client
@@ -43,7 +42,7 @@ The client reads `/api/me` through a shared TanStack Query cache (`src/client/li
 
 When the session changes to another user or household, or to none, the client clears everything local before moving on:
 
-- **Sign-out:** signs out with Better Auth, disposes the household store, clears local storage through `/api/local-data/clear`, and tells other tabs, which do the same.
+- **Sign-out:** signs out with Better Auth, clears local storage through `/api/local-data/clear`, and tells other tabs. Each tab then reloads, which drops the household data it held in memory.
 - **Removed from a household:** the next session check notices the household is gone. `/_authenticated` resets local data and sends the user to onboarding.
 
-Keep this teardown intact when changing auth or household flows: a stale local copy would show a household's recipes to someone no longer in it.
+Keep this teardown intact when changing auth or household flows: a tab that kept its copy would show a household's recipes to someone no longer in it. The server checks membership on every request either way.

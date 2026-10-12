@@ -1,13 +1,10 @@
-import { useHouseholdStore } from "@client/features/household/store";
-import { recipeProfiles$, recipes$ } from "@client/features/recipes/queries";
+import { recipeData } from "@client/features/recipes/recipe-data";
 import { profileRecipe, recipesToProfile } from "@client/features/recipes/recipe-profile";
-import type { Store } from "@livestore/livestore";
 import { recipeProfileSource, recipeProfileSourceHash } from "@shared/recipe-profile";
-import type { recipeSchema } from "@shared/recipes";
 import { useEffect } from "react";
 
-// Sync pulls in the background, so other members' profiles may still be on their way when the
-// app opens. Recipes this member saves meanwhile don't wait.
+// Another member's browser may be reading the same recipes when the app opens, so reads hold
+// off a little. Recipes this member saves meanwhile don't wait.
 const startDelayMs = 10_000;
 // The API allows each member a few dozen reads a minute.
 const rateLimitPauseMs = 60_000;
@@ -15,7 +12,7 @@ const rateLimitPauseMs = 60_000;
 // One tab per browser reads recipes; the others queue behind it.
 const lockName = "soba-recipe-profiles";
 
-function createProfiler(store: Store<typeof recipeSchema>, userId: string) {
+function createProfiler(userId: string) {
   const startedAt = Date.now();
   const abort = new AbortController();
   // Recipes whose read failed this session, by the source hash that failed, so a broken one
@@ -37,7 +34,7 @@ function createProfiler(store: Store<typeof recipeSchema>, userId: string) {
     while (!abort.signal.aborted) {
       const now = Date.now();
       if (now < pausedUntil) return wakeAt(pausedUntil);
-      const pending = recipesToProfile(store, userId)
+      const pending = recipesToProfile(userId)
         .filter(
           ({ recipe }) =>
             failed.get(recipe.id) !== recipeProfileSourceHash(recipeProfileSource(recipe)),
@@ -56,7 +53,7 @@ function createProfiler(store: Store<typeof recipeSchema>, userId: string) {
         if (Number.isFinite(soonest)) wakeAt(soonest);
         return;
       }
-      const result = await profileRecipe(store, next.recipe);
+      const result = await profileRecipe(next.recipe);
       if (result === "failed") {
         failed.set(next.recipe.id, recipeProfileSourceHash(recipeProfileSource(next.recipe)));
       } else if (result === "rate-limited") {
@@ -98,21 +95,17 @@ function createProfiler(store: Store<typeof recipeSchema>, userId: string) {
 // recipe is: new and edited recipes, ones whose read failed or never finished, and all of them
 // when the questions change. A member's own saves are read right away; others' after a grace
 // period, in case the member who saved them is still reading them.
-export function RecipeProfiler({ householdId, userId }: { householdId: string; userId: string }) {
-  const store = useHouseholdStore(householdId);
-
+export function RecipeProfiler({ userId }: { userId: string }) {
   useEffect(() => {
-    const profiler = createProfiler(store, userId);
-    // Any change to recipes or profiles may leave one to read.
-    const unsubscribeRecipes = store.subscribe(recipes$, () => void profiler.run());
-    const unsubscribeProfiles = store.subscribe(recipeProfiles$, () => void profiler.run());
+    const profiler = createProfiler(userId);
+    // Any change to recipes or their profiles may leave one to read.
+    const unsubscribe = recipeData.subscribe(() => void profiler.run());
     void profiler.run();
     return () => {
-      unsubscribeRecipes();
-      unsubscribeProfiles();
+      unsubscribe();
       profiler.stop();
     };
-  }, [store, userId]);
+  }, [userId]);
 
   return null;
 }

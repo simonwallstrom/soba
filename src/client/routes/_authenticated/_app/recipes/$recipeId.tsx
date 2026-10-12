@@ -3,14 +3,16 @@ import { Button } from "@client/components/ui/button";
 import { ServingFoodIcon, StarIcon } from "@client/components/ui/icons";
 import { ImagePlaceholder } from "@client/components/ui/image-thumbnail";
 import { useMembersById } from "@client/features/household/members";
-import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
 import { AddToMealPlanDialog } from "@client/features/meal-plan/add-to-meal-plan";
-import { useFavorites } from "@client/features/recipes/favorites";
-import { recipe$, recipeTags$, tags$ } from "@client/features/recipes/queries";
 import { RecipeActionsMenu } from "@client/features/recipes/recipe-actions-menu";
-import { groupTagsByRecipe } from "@client/features/recipes/recipe-tags";
+import {
+  deleteRecipe as saveRecipeDeleted,
+  useFavorites,
+  useRecipe as useRecipeById,
+  useTags,
+} from "@client/features/recipes/recipe-data";
+import { compareNames } from "@client/features/recipes/recipe-tags";
 import { formatMetaTitle } from "@client/lib/meta";
-import { recipeDeleted } from "@shared/recipes";
 import type { Recipe } from "@shared/recipes";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -27,9 +29,8 @@ export const Route = createFileRoute("/_authenticated/_app/recipes/$recipeId")({
 });
 
 function useRecipe(): Recipe | undefined {
-  const { household } = Route.useRouteContext();
   const { recipeId } = Route.useParams();
-  return useHouseholdQuery(household.id, recipe$(recipeId));
+  return useRecipeById(recipeId);
 }
 
 function RecipeTitle(): string {
@@ -39,25 +40,25 @@ function RecipeTitle(): string {
 function RecipeDetail() {
   const { household, user } = Route.useRouteContext();
   const navigate = useNavigate();
-  const store = useHouseholdStore(household.id);
   const recipe = useRecipe();
-  const tags = useHouseholdQuery(household.id, tags$);
-  const links = useHouseholdQuery(household.id, recipeTags$);
+  const tags = useTags();
   const membersById = useMembersById();
-  const { favoriteIds, toggleFavorite } = useFavorites(household.id, user.id);
+  const { favoriteIds, toggleFavorite } = useFavorites();
   const [isPlanning, setIsPlanning] = useState(false);
 
   // A wrong link, or a recipe deleted while open, perhaps on another device.
   if (!recipe) return <RecipeNotFound />;
 
-  const recipeTags = groupTagsByRecipe(tags, links).get(recipe.id) ?? [];
+  const recipeTags = tags
+    .filter((tag) => recipe.tagIds.includes(tag.id))
+    .toSorted((left, right) => compareNames(left.name, right.name));
   const author = membersById?.get(recipe.createdBy);
   const isFavorite = favoriteIds.has(recipe.id);
 
   // Leaves first, so the page does not flash as not found. Replaces it, so back skips it.
   async function deleteRecipe(id: string) {
     await navigate({ to: "/recipes", replace: true });
-    store.commit(recipeDeleted({ id, deletedBy: user.id, deletedAt: new Date() }));
+    void saveRecipeDeleted(id);
   }
 
   return (
@@ -83,7 +84,6 @@ function RecipeDetail() {
         />
       </AppHeaderActions>
       <AddToMealPlanDialog
-        householdId={household.id}
         onOpenChange={setIsPlanning}
         open={isPlanning}
         recipe={recipe}

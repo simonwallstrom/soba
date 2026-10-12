@@ -1,11 +1,8 @@
-import { mealPlanned } from "@shared/meal-plan";
 import {
-  recipeProfiled,
   recipeProfileSource,
   recipeProfileSourceHash,
   recipeProfileVersion,
 } from "@shared/recipe-profile";
-import { recipeCreated, tagCreated } from "@shared/recipes";
 
 import { sampleRecipes } from "./sample-recipes";
 
@@ -37,7 +34,7 @@ const sampleDinners: readonly (readonly (string | null)[])[] = [
   ],
 ];
 
-// The local calendar date, as meal plan events store it.
+// The local calendar date, as the meal plan stores it.
 function dayKey(date: Date) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -71,44 +68,35 @@ export function sampleDinnerHistory(now: Date) {
   );
 }
 
-// The events that add every sample recipe, its tags and profile, and a month of dinners, all
-// added by one user.
-export function sampleRecipeEvents(userId: string, now = new Date()) {
+// Every sample recipe with its tags and profile, and a month of dinners, all added by one user.
+export function sampleHouseholdData(userId: string, now = new Date()) {
   const tagIds = new Map(
     [...new Set(sampleRecipes.flatMap((recipe) => recipe.tags))].map((name) => [
       name,
       crypto.randomUUID(),
     ]),
   );
-  const recipeIds = new Map(sampleRecipes.map((recipe) => [recipe.title, crypto.randomUUID()]));
+  const recipes = sampleRecipes.map(({ tags, createdAt, profile, imageUrl, ...recipe }) => ({
+    ...recipe,
+    id: crypto.randomUUID(),
+    imageUrl: imageUrl ?? null,
+    tagIds: tags.flatMap((name) => tagIds.get(name) ?? []),
+    profile: {
+      ...profile,
+      version: recipeProfileVersion,
+      sourceHash: recipeProfileSourceHash(recipeProfileSource(recipe)),
+    },
+    createdBy: userId,
+    createdAt: new Date(createdAt),
+  }));
+  const recipeIds = new Map(recipes.map((recipe) => [recipe.title, recipe.id]));
 
-  return [
-    ...[...tagIds].map(([name, id]) => tagCreated({ id, name, createdAt: now })),
-    ...sampleRecipes.flatMap(({ tags, createdAt, servings, profile, ...recipe }) => {
-      const id = recipeIds.get(recipe.title) ?? crypto.randomUUID();
-      return [
-        recipeCreated({
-          ...recipe,
-          id,
-          ...(servings === null ? {} : { servings }),
-          tagIds: tags.flatMap((name) => tagIds.get(name) ?? []),
-          createdBy: userId,
-          createdAt: new Date(createdAt),
-        }),
-        recipeProfiled({
-          recipeId: id,
-          ...profile,
-          version: recipeProfileVersion,
-          sourceHash: recipeProfileSourceHash(recipeProfileSource(recipe)),
-          profiledAt: new Date(createdAt),
-        }),
-      ];
-    }),
-    ...sampleDinnerHistory(now).flatMap(({ date, title }) => {
+  return {
+    tags: [...tagIds].map(([name, id]) => ({ id, name, createdAt: now })),
+    recipes,
+    meals: sampleDinnerHistory(now).flatMap(({ date, title }) => {
       const recipeId = recipeIds.get(title);
-      return recipeId
-        ? [mealPlanned({ date: dayKey(date), recipeId, plannedBy: userId, plannedAt: now })]
-        : [];
+      return recipeId ? [{ date: dayKey(date), recipeId, plannedBy: userId, plannedAt: now }] : [];
     }),
-  ];
+  };
 }

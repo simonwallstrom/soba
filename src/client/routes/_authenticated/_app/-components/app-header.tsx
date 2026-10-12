@@ -72,7 +72,7 @@ export function AppHeader({ actionsRef }: { actionsRef: Ref<HTMLDivElement> }) {
 
 function BreadcrumbLabel({ label: Label }: { label: Breadcrumb["label"] }) {
   if (typeof Label === "string") return Label;
-  // Component labels may wait for the household store; the rest of the header renders meanwhile.
+  // Component labels may wait for the recipes; the rest of the header renders meanwhile.
   return (
     <Suspense>
       <Label />

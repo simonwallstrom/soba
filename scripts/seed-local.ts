@@ -1,19 +1,12 @@
 // Resets your household's local recipes, tags, and meal plan to the samples, all added by you, and
 // sets the household to Swedish and metric to match them. Your account, household, and members
-// in D1 stay as they are. Usage: bun run db:seed [email]
-//
-// Recipes live in the household's sync backend (a Durable Object), so this rewrites its event
-// log and gives it a new identity. Open tabs notice the change, clear their local copy, and
-// sync the samples on reload.
+// stay as they are. Usage: bun run db:seed [email]
 import { Database } from "bun:sqlite";
 import { join } from "node:path";
 
-import { Schema } from "@livestore/livestore";
-import { householdStoreId } from "@shared/household";
-import { recipeSchema } from "@shared/recipes";
 import { Glob } from "bun";
 
-import { sampleRecipeEvents } from "./seed/seed-events";
+import { sampleHouseholdData } from "./seed/seed-data";
 
 // Where `bun run dev` keeps local Worker state; see db:migrate:local.
 const stateDir = ".cloudflare/state/v3";
@@ -23,7 +16,7 @@ function fail(message: string): never {
   process.exit(1);
 }
 
-// Each local D1 database and Durable Object is one SQLite file beside a metadata file.
+// Each local D1 database is one SQLite file beside a metadata file.
 function sqliteFiles(dir: string) {
   return [...new Glob("*.sqlite").scanSync(join(stateDir, dir))]
     .filter((file) => file !== "metadata.sqlite")
@@ -36,7 +29,7 @@ function hasTable(db: Database, name: string) {
   );
 }
 
-// The Durable Object caches its event log while running, so it must not be written underneath it.
+// The dev server holds the database open, so it must not be written underneath it.
 const isDevServerRunning = await fetch("http://localhost:5173", {
   signal: AbortSignal.timeout(1000),
 }).then(
@@ -45,14 +38,16 @@ const isDevServerRunning = await fetch("http://localhost:5173", {
 );
 if (isDevServerRunning) fail("Stop `bun run dev` first, then run this again.");
 
-const authDbFile = sqliteFiles("d1/miniflare-D1DatabaseObject").find((file) =>
-  hasTable(new Database(file), "user"),
+const dbFile = sqliteFiles("d1/miniflare-D1DatabaseObject").find((file) =>
+  hasTable(new Database(file), "recipe"),
 );
-if (!authDbFile) fail("No local database found. Run `bun run db:migrate:local` and sign in first.");
-const authDb = new Database(authDbFile);
+if (!dbFile) fail("No local database found. Run `bun run db:migrate:local` and sign in first.");
+const db = new Database(dbFile);
+// Deleting a recipe takes its tags, profile, and planned meals with it.
+db.run("PRAGMA foreign_keys = ON");
 
 const email = process.argv[2];
-const users = authDb
+const users = db
   .query<{ id: string; name: string; email: string }, []>("SELECT id, name, email FROM user")
   .all();
 const user = email ? users.find((candidate) => candidate.email === email) : users[0];
@@ -61,60 +56,74 @@ if (!email && users.length > 1) {
   fail(`Several local users exist; pass one: ${users.map((other) => other.email).join(", ")}`);
 }
 
-const household = authDb
+const household = db
   .query<{ id: string; name: string }, [string]>(
     "SELECT household.id, household.name FROM household_member JOIN household ON household.id = household_member.household_id WHERE household_member.user_id = ?",
   )
   .get(user.id);
 if (!household) fail(`${user.email} has no household yet. Create one in the app first.`);
 
-const storeId = householdStoreId(household.id);
-const syncDbFile = sqliteFiles("do/soba-SyncBackendDO").find(
-  (file) =>
-    new Database(file).query<{ name: string }, []>("SELECT name FROM __miniflare_do_name").get()
-      ?.name === storeId,
-);
-if (!syncDbFile)
-  fail(`Open the app once so ${household.name} has local sync data, then run this again.`);
-const syncDb = new Database(syncDbFile);
+const { tags, recipes, meals } = sampleHouseholdData(user.id);
 
-// The table names carry sync-cf's storage version, which LiveStore upgrades may change.
-const tableNames = syncDb
-  .query<{ name: string }, []>("SELECT name FROM sqlite_master WHERE type = 'table'")
-  .all()
-  .map((table) => table.name);
-const contextTable = tableNames.find((name) => /^context_\d+$/u.test(name));
-const eventlogTable = tableNames.find((name) => /^eventlog_\d+_household_/u.test(name));
-if (!contextTable || !eventlogTable) fail(`Unexpected sync tables: ${tableNames.join(", ")}`);
-
-const events = sampleRecipeEvents(user.id);
-const now = new Date().toISOString();
-
-syncDb.transaction(() => {
-  syncDb.run(`DELETE FROM "${eventlogTable}"`);
-  const insert = syncDb.prepare(
-    `INSERT INTO "${eventlogTable}" (seqNum, parentSeqNum, name, args, createdAt, clientId, sessionId) VALUES (?, ?, ?, ?, ?, 'seed', 'seed')`,
-  );
-  for (const [index, event] of events.entries()) {
-    const definition = recipeSchema.eventsDefsMap.get(event.name);
-    if (!definition) fail(`Unknown event ${event.name}`);
-    const args = JSON.stringify(Schema.encodeSync(definition.schema)(event.args));
-    insert.run(index + 1, index, event.name, args, now);
+db.transaction(() => {
+  db.run("DELETE FROM recipe WHERE household_id = ?", [household.id]);
+  db.run("DELETE FROM tag WHERE household_id = ?", [household.id]);
+  for (const tag of tags) {
+    db.run("INSERT INTO tag (id, household_id, name, created_at) VALUES (?, ?, ?, ?)", [
+      tag.id,
+      household.id,
+      tag.name,
+      tag.createdAt.getTime(),
+    ]);
   }
-  // A new backend ID tells clients the history was replaced, so they drop their local copy.
-  syncDb.run(
-    `INSERT OR REPLACE INTO "${contextTable}" (storeId, currentHead, backendId) VALUES (?, ?, ?)`,
-    [storeId, events.length, crypto.randomUUID()],
-  );
+  for (const recipe of recipes) {
+    db.run(
+      "INSERT INTO recipe (id, household_id, title, description, servings, image_url, ingredients, instructions, created_by, updated_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        recipe.id,
+        household.id,
+        recipe.title,
+        recipe.description,
+        recipe.servings,
+        recipe.imageUrl,
+        JSON.stringify(recipe.ingredients),
+        JSON.stringify(recipe.instructions),
+        recipe.createdBy,
+        recipe.createdBy,
+        recipe.createdAt.getTime(),
+        recipe.createdAt.getTime(),
+      ],
+    );
+    for (const tagId of recipe.tagIds) {
+      db.run("INSERT INTO recipe_tag (recipe_id, tag_id) VALUES (?, ?)", [recipe.id, tagId]);
+    }
+    const { profile } = recipe;
+    db.run(
+      "INSERT INTO recipe_profile (recipe_id, is_dinner, base, protein, effort, is_treat, version, source_hash, profiled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        recipe.id,
+        profile.isDinner,
+        profile.base,
+        profile.protein,
+        profile.effort,
+        profile.isTreat,
+        profile.version,
+        profile.sourceHash,
+        recipe.createdAt.getTime(),
+      ],
+    );
+  }
+  for (const meal of meals) {
+    db.run(
+      "INSERT INTO planned_meal (household_id, date, recipe_id, planned_by, planned_at) VALUES (?, ?, ?, ?, ?)",
+      [household.id, meal.date, meal.recipeId, meal.plannedBy, meal.plannedAt.getTime()],
+    );
+  }
+  // The samples are Swedish, so imports should be too.
+  db.run("UPDATE household SET language = 'sv', units = 'metric' WHERE id = ?", [household.id]);
 })();
 
-// The samples are Swedish, so imports should be too.
-authDb.run("UPDATE household SET language = 'sv', units = 'metric' WHERE id = ?", [household.id]);
-
-const count = (name: string) => events.filter((event) => event.name === name).length;
 console.log(
-  `Seeded ${household.name} with ${count("v1.RecipeCreated")} recipes, ${count("v1.TagCreated")} tags, and ${count("v1.MealPlanned")} planned dinners, added by ${user.name} (${user.email}).`,
+  `Seeded ${household.name} with ${recipes.length} recipes, ${tags.length} tags, and ${meals.length} planned dinners, added by ${user.name} (${user.email}).`,
 );
-console.log(
-  "Start `bun run dev` and reload open tabs; each clears its local copy and syncs the samples.",
-);
+console.log("Start `bun run dev` and reload open tabs to see the samples.");

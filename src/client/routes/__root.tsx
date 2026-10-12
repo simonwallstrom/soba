@@ -23,11 +23,8 @@ export const Route = createRootRoute({
 function Root() {
   useEffect(
     () =>
-      watchSessionChanges(async () => {
-        const { storeRegistry } = await import("@client/lib/livestore/adapter");
-        await storeRegistry.dispose();
-        window.location.replace("/");
-      }),
+      // Signed out in another tab: reloading drops the household's data held in memory.
+      watchSessionChanges(async () => window.location.replace("/")),
     [],
   );
   return (

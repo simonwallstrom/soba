@@ -1,12 +1,10 @@
 import { Collapsible } from "@base-ui/react/collapsible";
 import { CaretUpIcon, File02Icon, SobaLogo, HashtagIcon } from "@client/components/ui/icons";
 import { ScrollArea } from "@client/components/ui/scroll-area";
-import { householdStoreReady, useHouseholdQuery } from "@client/features/household/store";
-import { useFavorites } from "@client/features/recipes/favorites";
-import { recipes$, recipeTags$, tags$ } from "@client/features/recipes/queries";
-import { topTags } from "@client/features/recipes/recipe-tags";
+import { useFavorites, useRecipes, useTags } from "@client/features/recipes/recipe-data";
+import { recipeTagLinks, topTags } from "@client/features/recipes/recipe-tags";
 import { Link } from "@tanstack/react-router";
-import { Suspense, use } from "react";
+import { Suspense } from "react";
 import type { ComponentProps, ReactNode } from "react";
 
 import { AccountMenu } from "./account-menu";
@@ -19,8 +17,8 @@ export function Sidebar({
   household,
   user,
 }: {
-  user: ComponentProps<typeof AccountMenu>["user"] & { id: string };
-  household: ComponentProps<typeof AccountMenu>["household"] & { id: string };
+  user: ComponentProps<typeof AccountMenu>["user"];
+  household: ComponentProps<typeof AccountMenu>["household"];
 }) {
   return (
     <aside className="hidden min-h-0 flex-col py-1.5 lg:flex">
@@ -45,10 +43,10 @@ export function Sidebar({
               </SidebarLink>
             ))}
           </nav>
-          {/* The sidebar renders before the household store opens; shortcuts appear once it has. */}
+          {/* The sidebar renders before the recipes load; shortcuts appear once they have. */}
           <Suspense fallback={null}>
-            <FavoriteShortcuts householdId={household.id} userId={user.id} />
-            <TagShortcuts householdId={household.id} />
+            <FavoriteShortcuts />
+            <TagShortcuts />
           </Suspense>
         </div>
       </ScrollArea>
@@ -60,10 +58,9 @@ export function Sidebar({
 }
 
 // Your favorite recipes, newest first. Favorites of deleted recipes are left out.
-function FavoriteShortcuts({ householdId, userId }: { householdId: string; userId: string }) {
-  use(householdStoreReady(householdId));
-  const recipes = useHouseholdQuery(householdId, recipes$);
-  const { recipeIds } = useFavorites(householdId, userId);
+function FavoriteShortcuts() {
+  const recipes = useRecipes();
+  const { recipeIds } = useFavorites();
   const recipesById = new Map(recipes.map((recipe) => [recipe.id, recipe]));
   const favorites = recipeIds.flatMap((id) => recipesById.get(id) ?? []);
   if (favorites.length === 0) return null;
@@ -86,12 +83,15 @@ function FavoriteShortcuts({ householdId, userId }: { householdId: string; userI
 }
 
 // The tags on the most recipes, each opening the recipe list filtered by it.
-function TagShortcuts({ householdId }: { householdId: string }) {
-  use(householdStoreReady(householdId));
-  const recipes = useHouseholdQuery(householdId, recipes$);
-  const tags = useHouseholdQuery(householdId, tags$);
-  const links = useHouseholdQuery(householdId, recipeTags$);
-  const top = topTags(tags, links, new Set(recipes.map(({ id }) => id)), tagShortcutCount);
+function TagShortcuts() {
+  const recipes = useRecipes();
+  const tags = useTags();
+  const top = topTags(
+    tags,
+    recipeTagLinks(recipes),
+    new Set(recipes.map(({ id }) => id)),
+    tagShortcutCount,
+  );
   if (top.length === 0) return null;
 
   return (

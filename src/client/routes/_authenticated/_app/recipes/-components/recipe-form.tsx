@@ -9,7 +9,7 @@ import {
 } from "@client/components/ui/dialog";
 import { Cancel01Icon, ImageUploadIcon } from "@client/components/ui/icons";
 import type { RecipeDraft } from "@client/features/recipes/recipe-draft";
-import { photoEditEvents, photoInputTypes } from "@client/features/recipes/recipe-photo";
+import { photoInputTypes, savePhotoEdit } from "@client/features/recipes/recipe-photo";
 import type { PhotoEdit } from "@client/features/recipes/recipe-photo";
 import { RecipeRowsEditor } from "@client/features/recipes/recipe-rows-editor";
 import { TagPicker } from "@client/features/recipes/tag-picker";
@@ -41,15 +41,13 @@ export function usePhotoSave() {
     setPhoto(edit);
   }
 
-  async function save(
-    meta: Parameters<typeof photoEditEvents>[1],
-    commit: (photoEvents: Awaited<ReturnType<typeof photoEditEvents>>) => void,
-  ) {
+  // `commit` gets how the photo changes: undefined keeps it, null removes it, an ID replaces it.
+  async function save(commit: (photoId: string | null | undefined) => void) {
     if (isSaving) return;
     setIsSaving(true);
     setError(null);
     try {
-      commit(await photoEditEvents(photo, meta));
+      commit(await savePhotoEdit(photo));
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : "Could not save the photo.");
     } finally {

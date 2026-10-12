@@ -11,7 +11,7 @@ export const householdOptions = queryOptions({
     if (!response.ok) throw new Error(`API returned ${response.status}`);
     return response.json();
   },
-  // Keeps the loader's prefetch fresh when the page mounts after the household store opens.
+  // Keeps the loader's prefetch fresh when the page mounts after the recipes load.
   staleTime: 30_000,
 });
 

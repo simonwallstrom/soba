@@ -16,7 +16,7 @@ type Outcome<T> = { ok: true; value: T } | { ok: false; error: string };
 const failedMessage = "Could not import the recipe. Please try again.";
 
 // Turns a page or photos into a recipe in the background, so an import survives the member
-// closing the app. The member's browser saves the result; see listImports and claimImport.
+// closing the app. It becomes a recipe when the member's app claims it; see claimImport.
 export class RecipeImportWorkflow extends WorkflowEntrypoint<Env, RecipeImportParams> {
   override async run(event: Readonly<WorkflowEvent<RecipeImportParams>>, step: WorkflowStep) {
     const { importId, settings } = event.payload;

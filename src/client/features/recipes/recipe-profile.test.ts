@@ -20,9 +20,10 @@ function entry(title: string, tagNames: readonly string[] = []) {
     updatedBy: "u1",
     createdAt: at,
     updatedAt: at,
-    deletedAt: null,
+    tagIds: [],
+    profile: null,
   };
-  const tags = tagNames.map((name) => ({ id: name, name, createdAt: at, deletedAt: null }));
+  const tags = tagNames.map((name) => ({ id: name, name, createdAt: at }));
   return { recipe, tags, author: undefined };
 }
 

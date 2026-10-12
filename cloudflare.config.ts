@@ -15,7 +15,8 @@ export default defineConfig({
       runWorkerFirst: ["/", "/api/*"],
     },
     exports: {
-      SyncBackendDO: exports.durableObject({ storage: "sqlite" }),
+      // Held each household's LiveStore event log, before recipes moved to D1.
+      SyncBackendDO: exports.durableObject({ state: "deleted" }),
       // Finishes recipe imports in the background. See src/server/recipe-import.
       RecipeImportWorkflow: exports.workflow({ name: "soba-recipe-import" }),
     },
@@ -24,7 +25,6 @@ export default defineConfig({
       DB: bindings.d1({ name: "soba-db", id: "3c45797e-8236-4864-af08-a21627c98756" }),
       // Recipe photos, keyed by household. See src/server/photos.
       PHOTOS: bindings.r2({ name: "soba-photos" }),
-      SYNC_BACKEND_DO: bindings.durableObject({ worker: "soba", exportName: "SyncBackendDO" }),
       RECIPE_IMPORT: bindings.workflow({
         name: "soba-recipe-import",
         worker: "soba",
@@ -39,7 +39,7 @@ export default defineConfig({
         namespace: "1002",
         simple: { limit: 10, period: 60 },
       }),
-      // Reads recipes for meal suggestions; see src/server/recipe-profile. Keyed by user.
+      // Reads recipes for meal suggestions; see src/server/recipes. Keyed by user.
       PROFILE_RATE_LIMITER: bindings.rateLimit({
         namespace: "1003",
         simple: { limit: 30, period: 60 },

@@ -8,16 +8,15 @@ import {
   EmptyTitle,
 } from "@client/components/ui/empty";
 import { useMembersById } from "@client/features/household/members";
-import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
 import { AddToMealPlanDialog } from "@client/features/meal-plan/add-to-meal-plan";
-import { useFavorites } from "@client/features/recipes/favorites";
-import {
-  recipeListSettings$,
-  recipes$,
-  recipeTags$,
-  tags$,
-} from "@client/features/recipes/queries";
+import { useRecipeListSettings } from "@client/features/recipes/list-settings";
 import { RecipeActionsMenu } from "@client/features/recipes/recipe-actions-menu";
+import {
+  deleteRecipe,
+  useFavorites,
+  useRecipes,
+  useTags,
+} from "@client/features/recipes/recipe-data";
 import {
   onRecipeImported,
   useRecentlyImported,
@@ -25,9 +24,12 @@ import {
 import { recipeImportsOptions } from "@client/features/recipes/recipe-imports";
 import { RecipeList } from "@client/features/recipes/recipe-list";
 import type { RecipeListEntry } from "@client/features/recipes/recipe-list";
-import { compareNames, groupTagsByRecipe } from "@client/features/recipes/recipe-tags";
+import {
+  compareNames,
+  groupTagsByRecipe,
+  recipeTagLinks,
+} from "@client/features/recipes/recipe-tags";
 import { formatMetaTitle } from "@client/lib/meta";
-import { recipeDeleted, recipeListSettings } from "@shared/recipes";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -50,25 +52,22 @@ export const Route = createFileRoute("/_authenticated/_app/recipes/")({
 });
 
 function Recipes() {
-  const { household, user } = Route.useRouteContext();
+  const { user } = Route.useRouteContext();
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
-  const store = useHouseholdStore(household.id);
-  const { favoriteIds, toggleFavorite } = useFavorites(household.id, user.id);
-  const recipes = useHouseholdQuery(household.id, recipes$);
-  const tags = useHouseholdQuery(household.id, tags$);
-  const links = useHouseholdQuery(household.id, recipeTags$);
-  const settings = useHouseholdQuery(household.id, recipeListSettings$);
+  const { favoriteIds, toggleFavorite } = useFavorites();
+  const recipes = useRecipes();
+  const tags = useTags();
+  const [settings, updateSettings] = useRecipeListSettings();
   const membersById = useMembersById();
   const [importSource, setImportSource] = useState<ImportSource | null>(null);
   const { data: imports = [] } = useQuery(recipeImportsOptions);
   const recentlyImported = useRecentlyImported();
-  const tagNames = tags.map((tag) => tag.name);
   // Imports on their way count as content, so a new household sees its first import arrive.
   const isEmpty = recipes.length === 0 && imports.length === 0;
 
   const { sort } = settings;
-  const tagsByRecipe = groupTagsByRecipe(tags, links);
+  const tagsByRecipe = groupTagsByRecipe(tags, recipeTagLinks(recipes));
   const toEntry = (recipe: RecipeListEntry["recipe"]): RecipeListEntry => ({
     recipe,
     tags: tagsByRecipe.get(recipe.id) ?? [],
@@ -106,10 +105,6 @@ function Recipes() {
 
   function clearFilters() {
     changeSearch({ q: "", tags: [], authors: [] });
-  }
-
-  function updateSettings(value: Partial<typeof settings>) {
-    store.commit(recipeListSettings.set(value));
   }
 
   const filterProps = {
@@ -155,7 +150,6 @@ function Recipes() {
           if (!open) setImportSource(null);
         }}
         source={importSource}
-        tagNames={tagNames}
       />
       {/* Items pad their content, so an empty box takes that padding to line up with the header. */}
       {/* Fills the page, so an empty state centers in it. */}
@@ -165,7 +159,6 @@ function Recipes() {
           <PendingImports
             imports={imports}
             onImportPhoto={() => setImportSource("photos")}
-            tagNames={tagNames}
             view={settings.view}
           />
         )}
@@ -212,11 +205,7 @@ function Recipes() {
               <RecipeActionsMenu
                 isFavorite={favoriteIds.has(recipe.id)}
                 onAddToMealPlan={() => setPlanning({ open: true, recipe })}
-                onDelete={() =>
-                  store.commit(
-                    recipeDeleted({ id: recipe.id, deletedBy: user.id, deletedAt: new Date() }),
-                  )
-                }
+                onDelete={() => void deleteRecipe(recipe.id)}
                 onToggleFavorite={() => toggleFavorite(recipe.id)}
                 recipeId={recipe.id}
                 recipeTitle={recipe.title}
@@ -230,13 +219,11 @@ function Recipes() {
       {settings.isMealPlannerOpen && (
         <MealPlannerSidebar
           entries={plannerEntries}
-          householdId={household.id}
           onClose={() => updateSettings({ isMealPlannerOpen: false })}
           userId={user.id}
         />
       )}
       <AddToMealPlanDialog
-        householdId={household.id}
         onOpenChange={(open) => setPlanning((current) => ({ ...current, open }))}
         open={planning.open}
         recipe={planning.recipe}

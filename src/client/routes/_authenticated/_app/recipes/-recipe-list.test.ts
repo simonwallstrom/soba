@@ -19,13 +19,14 @@ function recipe(id: string, title: string, overrides: Partial<Recipe> = {}): Rec
     updatedBy: "anna",
     createdAt: date,
     updatedAt: date,
-    deletedAt: null,
+    tagIds: [],
+    profile: null,
     ...overrides,
   };
 }
 
 function tag(id: string): Tag {
-  return { id, name: id, createdAt: new Date(), deletedAt: null };
+  return { id, name: id, createdAt: new Date() };
 }
 
 describe("filterRecipes", () => {

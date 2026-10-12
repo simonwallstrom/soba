@@ -5,7 +5,6 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  optimizeDeps: { exclude: ["@livestore/wa-sqlite"] },
   environments: {
     soba: {
       // Discover cookie imports before the Worker starts to avoid an optimizer reload race.

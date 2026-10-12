@@ -37,12 +37,10 @@ function title(item: RecipeImport) {
 export function PendingImports({
   imports,
   onImportPhoto,
-  tagNames,
   view,
 }: {
   imports: readonly RecipeImport[];
   onImportPhoto: () => void;
-  tagNames: string[];
   view: RecipeView;
 }) {
   const Item = view === "grid" ? MediaGridItem : MediaListItem;
@@ -50,9 +48,7 @@ export function PendingImports({
     <MediaItems view={view}>
       {imports.map((item) => (
         <Item
-          actions={
-            <PendingImportActions item={item} onImportPhoto={onImportPhoto} tagNames={tagNames} />
-          }
+          actions={<PendingImportActions item={item} onImportPhoto={onImportPhoto} />}
           details={
             <span
               className={cn(
@@ -76,11 +72,9 @@ export function PendingImports({
 function PendingImportActions({
   item,
   onImportPhoto,
-  tagNames,
 }: {
   item: RecipeImport;
   onImportPhoto: () => void;
-  tagNames: string[];
 }) {
   const [isBusy, setIsBusy] = useState(false);
 
@@ -119,11 +113,7 @@ function PendingImportActions({
           Try a photo
         </Button>
       )}
-      <Button
-        disabled={isBusy}
-        onClick={() => void run(() => retryImport(item.id, tagNames))}
-        size="sm"
-      >
+      <Button disabled={isBusy} onClick={() => void run(() => retryImport(item.id))} size="sm">
         Retry
       </Button>
       {dismiss}

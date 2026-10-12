@@ -1,6 +1,6 @@
 # Soba
 
-Recipe organizer for families. A React SPA with local-first sync, served by a Cloudflare Worker and configured in `cloudflare.config.ts` with the [cf CLI](https://github.com/cloudflare/cf) (beta).
+Recipe organizer for families. A React SPA served by a Cloudflare Worker, with its data in D1, and configured in `cloudflare.config.ts` with the [cf CLI](https://github.com/cloudflare/cf) (beta).
 
 ## Prerequisites
 
@@ -24,7 +24,7 @@ Fill in `.dev.vars` before starting: Google OAuth credentials, a random `BETTER_
 
 ### Resetting the database
 
-Until launch, schema changes replace `drizzle/migrations/0000_*.sql` instead of adding migrations. Delete `.cloudflare/state/v3/d1` and `.cloudflare/state/v3/do`, run `bun run db:generate` and `bun run db:migrate:local`, then clear the site data in your browser.
+Until launch, schema changes replace `drizzle/migrations/0000_*.sql` instead of adding migrations. Delete `.cloudflare/state/v3/d1`, run `bun run db:generate` and `bun run db:migrate:local`, then clear the site data in your browser.
 
 ## Commands
 
@@ -58,15 +58,15 @@ Setup, one time:
 
 ## Tech stack
 
-- **App:** React, TanStack Router and Query, Tailwind CSS, LiveStore
+- **App:** React, TanStack Router and Query, Tailwind CSS
 - **API:** Hono RPC, Better Auth with Google, Valibot
-- **Platform:** Vite, Cloudflare Workers, D1, Durable Objects, Workflows
+- **Platform:** Vite, Cloudflare Workers, D1, R2, Workflows
 - **AI:** Claude Sonnet and Workers AI's Clef, through AI Gateway
 - **Tooling:** Bun, TypeScript, Oxlint, Oxfmt, Lefthook, React Compiler
 
 ## Docs
 
-- [Local-first sync](./docs/local-first-sync.md): how household data syncs, and the rules for changing events
+- [Household data](./docs/data.md): where recipes and the meal plan live, the API, and how the app reads and saves them
 - [Auth and households](./docs/auth-and-households.md): sign-up, invites, roles, and the client session cache
 - [AI and meal planning](./docs/ai-and-meal-planning.md): how recipes are imported and profiled, and how meal suggestions are scored
 - [Conventions](./docs/conventions.md): code organization, routes, and tooling

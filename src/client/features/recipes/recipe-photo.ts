@@ -1,5 +1,3 @@
-import { recipePhotoChanged } from "@shared/recipes";
-
 // What the photo picker accepts. Uploads are re-encoded smaller whatever was picked.
 export const photoInputTypes = ["image/jpeg", "image/png", "image/webp"];
 
@@ -51,12 +49,9 @@ async function uploadPhoto(file: File): Promise<string> {
   throw new Error("Could not upload the photo. Please try again.");
 }
 
-// Uploads a newly chosen photo and returns the event that puts it on the recipe, if any.
-export async function photoEditEvents(
-  edit: PhotoEdit,
-  { id, updatedBy, updatedAt }: { id: string; updatedBy: string; updatedAt: Date },
-) {
-  if (edit === null) return [];
-  const photoId = edit === "removed" ? undefined : await uploadPhoto(edit.file);
-  return [recipePhotoChanged({ id, ...(photoId && { photoId }), updatedBy, updatedAt })];
+// Uploads a newly chosen photo. Resolves to how saving changes the recipe's photo: undefined
+// keeps it, null removes it, and an ID replaces it.
+export async function savePhotoEdit(edit: PhotoEdit) {
+  if (edit === null) return undefined;
+  return edit === "removed" ? null : uploadPhoto(edit.file);
 }

@@ -1,7 +1,16 @@
 import type { HouseholdLanguage, HouseholdUnits } from "@shared/household";
 import type { ImportedRecipe } from "@shared/recipe-import";
+import type { RecipeBase, RecipeEffort, RecipeProtein } from "@shared/recipe-profile";
+import type { RecipeSection } from "@shared/recipes";
 import { sql } from "drizzle-orm";
-import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import {
+  index,
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 
 const timestamp = (name: string) => integer(name, { mode: "timestamp_ms" });
 const createdAt = () =>
@@ -126,8 +135,8 @@ export const householdInvites = sqliteTable(
   (table) => [uniqueIndex("household_invite_token_unique").on(table.token)],
 );
 
-// Recipe imports a Workflow is still working on, or that failed. The importer's browser saves a
-// finished import as a recipe, then deletes its row. The ID becomes the recipe's ID.
+// Recipe imports a Workflow is still working on, or that failed. A finished import becomes a
+// recipe when the importer's app claims it, which deletes its row. The ID becomes the recipe's ID.
 export const recipeImports = sqliteTable(
   "recipe_import",
   {
@@ -157,4 +166,115 @@ export const recipeImports = sqliteTable(
     updatedAt: updatedAt(),
   },
   (table) => [index("recipe_import_user_id_idx").on(table.userId)],
+);
+
+// A household's recipes. Deleting one takes its tags, favorites, profile, and planned meals too.
+export const recipes = sqliteTable(
+  "recipe",
+  {
+    id: text().primaryKey(),
+    householdId: text("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    title: text().notNull(),
+    description: text(),
+    servings: integer(),
+    // An uploaded photo's URL (see recipePhotoUrl), or any image elsewhere.
+    imageUrl: text("image_url"),
+    // The page an imported recipe came from.
+    sourceUrl: text("source_url"),
+    ingredients: text({ mode: "json" }).$type<RecipeSection[]>().notNull(),
+    instructions: text({ mode: "json" }).$type<RecipeSection[]>().notNull(),
+    // User IDs without a foreign key: a recipe outlives the member who wrote it.
+    createdBy: text("created_by").notNull(),
+    updatedBy: text("updated_by").notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [index("recipe_household_id_idx").on(table.householdId)],
+);
+
+// Tags belong to the household, so renaming one updates every recipe that uses it.
+export const tags = sqliteTable(
+  "tag",
+  {
+    id: text().primaryKey(),
+    householdId: text("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    name: text().notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => [index("tag_household_id_idx").on(table.householdId)],
+);
+
+export const recipeTags = sqliteTable(
+  "recipe_tag",
+  {
+    recipeId: text("recipe_id")
+      .notNull()
+      .references(() => recipes.id, { onDelete: "cascade" }),
+    tagId: text("tag_id")
+      .notNull()
+      .references(() => tags.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.recipeId, table.tagId] }),
+    index("recipe_tag_tag_id_idx").on(table.tagId),
+  ],
+);
+
+// Each member's own favorites.
+export const favorites = sqliteTable(
+  "favorite",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    recipeId: text("recipe_id")
+      .notNull()
+      .references(() => recipes.id, { onDelete: "cascade" }),
+    favoritedAt: timestamp("favorited_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.recipeId] }),
+    index("favorite_recipe_id_idx").on(table.recipeId),
+  ],
+);
+
+// What meal suggestions know about a recipe; see @shared/recipe-profile.
+export const recipeProfiles = sqliteTable("recipe_profile", {
+  recipeId: text("recipe_id")
+    .primaryKey()
+    .references(() => recipes.id, { onDelete: "cascade" }),
+  isDinner: integer("is_dinner", { mode: "boolean" }).notNull(),
+  base: text().$type<RecipeBase>().notNull(),
+  protein: text().$type<RecipeProtein>().notNull(),
+  effort: text().$type<RecipeEffort>().notNull(),
+  isTreat: integer("is_treat", { mode: "boolean" }).notNull(),
+  version: integer().notNull(),
+  sourceHash: text("source_hash").notNull(),
+  profiledAt: timestamp("profiled_at").notNull(),
+});
+
+// One dinner a day for each household, on local calendar dates like "2026-10-12".
+export const plannedMeals = sqliteTable(
+  "planned_meal",
+  {
+    householdId: text("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    date: text().notNull(),
+    recipeId: text("recipe_id")
+      .notNull()
+      .references(() => recipes.id, { onDelete: "cascade" }),
+    // Set on suggested meals: the suggestion that planned it, for undoing it as a whole.
+    suggestionId: text("suggestion_id"),
+    plannedBy: text("planned_by").notNull(),
+    plannedAt: timestamp("planned_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.householdId, table.date] }),
+    index("planned_meal_recipe_id_idx").on(table.recipeId),
+  ],
 );

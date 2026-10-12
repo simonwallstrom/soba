@@ -3,16 +3,21 @@ import { AppHeaderActions } from "@client/components/particles/app-header-action
 import { Button } from "@client/components/ui/button";
 import { toast } from "@client/components/ui/toast";
 import { useMembersById } from "@client/features/household/members";
-import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
-import { moveMeal, planMeal, removeMeal, unplanMeal } from "@client/features/meal-plan/meal-events";
 import { MealPicker } from "@client/features/meal-plan/meal-picker";
-import { plannedMeals$ } from "@client/features/meal-plan/queries";
+import {
+  mealPlanData,
+  moveMeal,
+  planMeal,
+  planMeals,
+  removeMeal,
+  unplanMeals,
+  usePlannedMeals,
+} from "@client/features/meal-plan/meal-plan-data";
 import { dayKey, isPast } from "@client/features/meal-plan/weeks";
-import { recipeProfiles$, recipes$, recipeTags$, tags$ } from "@client/features/recipes/queries";
+import { useRecipes, useTags } from "@client/features/recipes/recipe-data";
 import { guessProfile } from "@client/features/recipes/recipe-profile";
-import { groupTagsByRecipe } from "@client/features/recipes/recipe-tags";
+import { groupTagsByRecipe, recipeTagLinks } from "@client/features/recipes/recipe-tags";
 import { formatMetaTitle } from "@client/lib/meta";
-import { mealPlanned } from "@shared/meal-plan";
 import type { PlannedMealRow } from "@shared/meal-plan";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -58,17 +63,14 @@ function watchWeek(
 }
 
 function MealPlanner() {
-  const { household, user } = Route.useRouteContext();
-  const store = useHouseholdStore(household.id);
-  const recipes = useHouseholdQuery(household.id, recipes$);
-  const tags = useHouseholdQuery(household.id, tags$);
-  const links = useHouseholdQuery(household.id, recipeTags$);
-  const rows = useHouseholdQuery(household.id, plannedMeals$);
-  const profileRows = useHouseholdQuery(household.id, recipeProfiles$);
+  const { user } = Route.useRouteContext();
+  const recipes = useRecipes();
+  const tags = useTags();
+  const rows = usePlannedMeals();
   const membersById = useMembersById();
   const listRef = useRef<HTMLDivElement>(null);
   const [today] = useState(() => new Date());
-  const tagsByRecipe = groupTagsByRecipe(tags, links);
+  const tagsByRecipe = groupTagsByRecipe(tags, recipeTagLinks(recipes));
   const entries = recipes.map((recipe) => ({
     recipe,
     tags: tagsByRecipe.get(recipe.id) ?? [],
@@ -80,12 +82,8 @@ function MealPlanner() {
     rows.filter((row) => entriesById.has(row.recipeId)).map((row) => [row.date, row]),
   );
   // Recipes a model hasn't read yet are guessed from their title and tags.
-  const storedProfiles = new Map(profileRows.map((row) => [row.recipeId, row]));
   const profiles = new Map(
-    entries.map((entry) => [
-      entry.recipe.id,
-      storedProfiles.get(entry.recipe.id) ?? guessProfile(entry),
-    ]),
+    entries.map((entry) => [entry.recipe.id, entry.recipe.profile ?? guessProfile(entry)]),
   );
   // Past weeks can't change, so the weeks are worked out once.
   const [{ weeks, currentWeekIndex }] = useState(() => getPlannerWeeks(today, plan));
@@ -112,7 +110,7 @@ function MealPlanner() {
 
   // Moving onto a planned day swaps the two meals, so both days change.
   function dropMeal(from: string, to: string) {
-    store.commit(moveMeal(user.id, from, to));
+    moveMeal(from, to);
     setDroppedOn(plan.has(to) ? [from, to] : [to]);
   }
 
@@ -121,16 +119,9 @@ function MealPlanner() {
     const id = crypto.randomUUID();
     const suggested = suggestWeek(week, { plan, profiles, today });
     if (suggested.length === 0) return;
-    store.commit(
-      ...suggested.map(({ date, recipeId }) =>
-        mealPlanned({
-          date,
-          recipeId,
-          suggestion: { id },
-          plannedBy: user.id,
-          plannedAt: new Date(),
-        }),
-      ),
+    planMeals(
+      user.id,
+      suggested.map(({ date, recipeId }) => ({ date, recipeId, suggestionId: id })),
     );
     toast.add({
       title: `Suggested ${suggested.length} ${suggested.length === 1 ? "meal" : "meals"} for week ${week.number}`,
@@ -138,13 +129,12 @@ function MealPlanner() {
       actionProps: {
         children: "Undo",
         // Takes back the days still holding this suggestion, leaving ones changed since.
-        onClick: () => {
-          const days = store
-            .query(plannedMeals$)
-            .filter((row) => row.suggestionId === id)
-            .map((row) => unplanMeal(user.id, row.date));
-          if (days.length > 0) store.commit(...days);
-        },
+        onClick: () =>
+          unplanMeals(
+            (mealPlanData.read() ?? [])
+              .filter((row) => row.suggestionId === id)
+              .map((row) => row.date),
+          ),
       },
     });
   }
@@ -158,14 +148,12 @@ function MealPlanner() {
     if (!meal?.suggestionId || isPast(date, today)) return undefined;
     const options = shuffleOptions(week, date, { plan, profiles, today });
     const recipeId = nextShuffle(options, meal.recipeId);
-    return recipeId ? () => store.commit(planMeal(user.id, meal.date, recipeId, meal)) : undefined;
+    return recipeId ? () => planMeal(user.id, meal.date, recipeId, meal) : undefined;
   }
 
   function copy(from: PlannerWeek, to: PlannerWeek) {
     const copies = copyMeals(from, to, plan, today);
-    if (copies.length > 0) {
-      store.commit(...copies.map(({ date, recipeId }) => planMeal(user.id, date, recipeId)));
-    }
+    planMeals(user.id, copies);
     toast.add({
       title:
         copies.length > 0
@@ -185,8 +173,7 @@ function MealPlanner() {
   }
 
   function clear(week: PlannerWeek) {
-    const days = clearableDays(week, plan, today);
-    if (days.length > 0) store.commit(...days.map((date) => unplanMeal(user.id, date)));
+    unplanMeals(clearableDays(week, plan, today));
   }
 
   return (
@@ -211,7 +198,7 @@ function MealPlanner() {
         entries={entries}
         onOpenChange={(open) => setPicker((current) => ({ ...current, open }))}
         onPick={(recipeId) => {
-          if (picker.date) store.commit(planMeal(user.id, dayKey(picker.date), recipeId));
+          if (picker.date) planMeal(user.id, dayKey(picker.date), recipeId);
         }}
         open={picker.open}
       />
@@ -249,12 +236,7 @@ function MealPlanner() {
                       onMoveMeal={(from) => dropMeal(from, dayKey(date))}
                       onRemove={() =>
                         meal &&
-                        removeMeal(
-                          store,
-                          user.id,
-                          meal,
-                          entriesById.get(meal.recipeId)?.recipe.title,
-                        )
+                        removeMeal(user.id, meal, entriesById.get(meal.recipeId)?.recipe.title)
                       }
                       onShuffle={shuffler(week, date, meal)}
                       wasDroppedOn={droppedOn.includes(dayKey(date))}

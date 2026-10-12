@@ -3,7 +3,7 @@ export function weekdayOf(date: Date) {
   return (date.getDay() + 6) % 7;
 }
 
-// The local calendar date, as meal plan events store it.
+// The local calendar date, as the meal plan stores it.
 export function dayKey(date: Date) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");

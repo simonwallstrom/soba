@@ -1,4 +1,3 @@
-import { makeWorker } from "@livestore/sync-cf/cf-worker";
 import { getSessionCookie } from "better-auth/cookies";
 import { Hono } from "hono";
 import { csrf } from "hono/csrf";
@@ -6,23 +5,14 @@ import { csrf } from "hono/csrf";
 import { getSession, handleAuth } from "./auth/auth";
 import { rateLimit } from "./auth/middleware";
 import { isAllowlisted } from "./auth/policy";
-import { assertStoreAccess } from "./auth/store-access";
 import { getMembership } from "./household/household";
 import { householdRoutes, inviteRoutes } from "./household/routes";
+import { mealPlanRoutes } from "./meal-plan/routes";
 import { photoRoutes } from "./photos/routes";
 import { recipeImportRoutes } from "./recipe-import/routes";
-import { recipeProfileRoutes } from "./recipe-profile/routes";
+import { recipeRoutes } from "./recipes/routes";
 
 export { RecipeImportWorkflow } from "./recipe-import/workflow";
-export { SyncBackendDO } from "./sync";
-
-// sync-cf bundles older Cloudflare types than Wrangler generates; bridge that type boundary here.
-// oxlint-disable-next-line typescript/no-unsafe-type-assertion
-const createSyncWorker = makeWorker as unknown as (options: {
-  syncBackendBinding: "SYNC_BACKEND_DO";
-}) => { fetch: (request: Request, env: Env, context: unknown) => Promise<Response> };
-
-const syncWorker = createSyncWorker({ syncBackendBinding: "SYNC_BACKEND_DO" });
 
 const app = new Hono<{ Bindings: Env }>()
   .use("/api/*", csrf({ origin: (origin, c) => origin === new URL(c.env.BETTER_AUTH_URL).origin }))
@@ -55,7 +45,7 @@ const app = new Hono<{ Bindings: Env }>()
         !household && isAllowlisted(session.user.email, c.env.AUTH_ALLOWED_EMAILS),
     });
   })
-  // Deletes this browser's local recipe database and cached session after logout or removal.
+  // Deletes what this browser stored, such as the cached session, after logout or removal.
   .post("/api/local-data/clear", (c) => {
     c.header("Clear-Site-Data", '"storage"');
     return c.body(null, 204);
@@ -64,17 +54,8 @@ const app = new Hono<{ Bindings: Env }>()
   .route("/api/invites", inviteRoutes)
   .route("/api/photos", photoRoutes)
   .route("/api/recipe-import", recipeImportRoutes)
-  .route("/api/recipe-profile", recipeProfileRoutes)
-  .all("/api/sync", async (c) => {
-    const storeId = new URL(c.req.url).searchParams.get("storeId");
-    if (!storeId) return c.text("Missing store ID", 400);
-    try {
-      await assertStoreAccess(storeId, c.req.header("cookie"));
-    } catch {
-      return c.text("Unauthorized", 401);
-    }
-    return syncWorker.fetch(c.req.raw, c.env, c.executionCtx);
-  })
+  .route("/api/recipes", recipeRoutes)
+  .route("/api/meal-plan", mealPlanRoutes)
   .on(["GET", "POST"], "/api/auth/*", (c) => handleAuth(c.req.raw));
 
 export type AppType = typeof app;

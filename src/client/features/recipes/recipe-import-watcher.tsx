@@ -1,9 +1,7 @@
 import { toast } from "@client/components/ui/toast";
-import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
-import { tags$ } from "@client/features/recipes/queries";
+import { recipeData } from "@client/features/recipes/recipe-data";
 import {
   claimImport,
-  importedRecipeEvents,
   importHost,
   recipeImportsOptions,
 } from "@client/features/recipes/recipe-imports";
@@ -56,18 +54,10 @@ export function useRecentlyImported() {
   );
 }
 
-// Saves this member's finished imports wherever they are in the app, and says so with a toast.
-// Imports finish on the server, so one started before a reload or on another device is saved
-// the next time any of the member's tabs is open.
-export function RecipeImportWatcher({
-  householdId,
-  userId,
-}: {
-  householdId: string;
-  userId: string;
-}) {
-  const store = useHouseholdStore(householdId);
-  const tags = useHouseholdQuery(householdId, tags$);
+// Saves this member's finished imports as recipes wherever they are in the app, and says so with
+// a toast. Imports finish on the server, so one started before a reload or on another device is
+// saved the next time any of the member's tabs is open.
+export function RecipeImportWatcher() {
   const navigate = useNavigate();
   const pathname = useLocation({ select: (location) => location.pathname });
   const { data: imports } = useQuery(recipeImportsOptions);
@@ -77,18 +67,18 @@ export function RecipeImportWatcher({
   const save = useEffectEvent(async (item: RecipeImport) => {
     const claimed = await claimImport(item.id).catch(() => null);
     if (claimed) {
-      // Drops the pending item in the same render the recipe appears in, instead of after the
-      // refetch below, so the two never show side by side. A poll already under way could
-      // still bring the item back, so it is canceled first.
+      // Drops the pending item once the recipe is in the list, instead of after the refetch
+      // below, so the recipe takes its place. A poll already under way could still bring the
+      // item back, so it is canceled first.
+      await recipeData.refetch();
       await queryClient.cancelQueries({ queryKey: recipeImportsOptions.queryKey });
       queryClient.setQueryData(recipeImportsOptions.queryKey, (current) =>
         current?.filter((other) => other.id !== item.id),
       );
-      store.commit(...importedRecipeEvents(claimed, { id: item.id, tags, userId, at: new Date() }));
       markRecentlyImported(item.id);
       toast.add({
         title: "Recipe imported",
-        description: claimed.recipe.title,
+        description: claimed.title,
         timeout: toastTimeout,
         actionProps: {
           children: "Open",

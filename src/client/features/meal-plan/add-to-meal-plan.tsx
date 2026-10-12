@@ -17,11 +17,9 @@ import {
 } from "@client/components/ui/combobox";
 import { Dialog, DialogClose } from "@client/components/ui/dialog";
 import { toast } from "@client/components/ui/toast";
-import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
-import { planMeal, unplanMeal } from "@client/features/meal-plan/meal-events";
-import { plannedMeals$ } from "@client/features/meal-plan/queries";
+import { planMeal, unplanMeals, usePlannedMeals } from "@client/features/meal-plan/meal-plan-data";
 import { dayKey, getWeek } from "@client/features/meal-plan/weeks";
-import { recipes$ } from "@client/features/recipes/queries";
+import { useRecipes } from "@client/features/recipes/recipe-data";
 import type { PlannedMealRow } from "@shared/meal-plan";
 import { useState } from "react";
 
@@ -57,13 +55,11 @@ function weekLabel(offset: number, number: number) {
 // Picking a planned day replaces that meal, and the toast can take it back. It keeps showing
 // its recipe while it closes, so the caller holds on to `recipe` after `open` drops.
 export function AddToMealPlanDialog({
-  householdId,
   onOpenChange,
   open,
   recipe,
   userId,
 }: {
-  householdId: string;
   onOpenChange: (open: boolean) => void;
   open: boolean;
   recipe: { id: string; title: string } | undefined;
@@ -73,12 +69,7 @@ export function AddToMealPlanDialog({
     <Dialog onOpenChange={onOpenChange} open={open}>
       <CommandPaletteContent aria-label={`Add ${recipe?.title ?? "recipe"} to the meal plan`}>
         {recipe && (
-          <DaySearch
-            householdId={householdId}
-            onPlanned={() => onOpenChange(false)}
-            recipe={recipe}
-            userId={userId}
-          />
+          <DaySearch onPlanned={() => onOpenChange(false)} recipe={recipe} userId={userId} />
         )}
       </CommandPaletteContent>
     </Dialog>
@@ -86,19 +77,16 @@ export function AddToMealPlanDialog({
 }
 
 function DaySearch({
-  householdId,
   onPlanned,
   recipe,
   userId,
 }: {
-  householdId: string;
   onPlanned: () => void;
   recipe: { id: string; title: string };
   userId: string;
 }) {
-  const store = useHouseholdStore(householdId);
-  const rows = useHouseholdQuery(householdId, plannedMeals$);
-  const recipes = useHouseholdQuery(householdId, recipes$);
+  const rows = usePlannedMeals();
+  const recipes = useRecipes();
   const [query, setQuery] = useState("");
   const [highlighted, setHighlighted] = useState<string>();
   const titles = new Map(recipes.map((entry) => [entry.id, entry.title]));
@@ -130,7 +118,7 @@ function DaySearch({
 
   function planOn(day: PlanDay) {
     const { key, date, planned: previous } = day;
-    store.commit(planMeal(userId, key, recipe.id));
+    planMeal(userId, key, recipe.id);
     onPlanned();
     toast.add({
       title: `Planned for ${toastDayFormat.format(date)}`,
@@ -138,9 +126,7 @@ function DaySearch({
       actionProps: {
         children: "Undo",
         onClick: () =>
-          store.commit(
-            previous ? planMeal(userId, key, previous.recipeId, previous) : unplanMeal(userId, key),
-          ),
+          previous ? planMeal(userId, key, previous.recipeId, previous) : unplanMeals([key]),
       },
     });
   }

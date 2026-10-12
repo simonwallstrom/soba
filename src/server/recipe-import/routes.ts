@@ -16,14 +16,12 @@ import {
   getImport,
   insertImport,
   listImports,
+  listTagNames,
   updateImport,
 } from "./imports";
 import { parseRecipeUrl } from "./page";
 
 const maxPhotos = 3;
-
-// The household's tag names, sent by the client because tags live in the synced recipe store.
-const tagNamesSchema = v.pipe(v.array(v.pipe(v.string(), v.maxLength(100))), v.maxLength(500));
 
 // Each import calls a paid model, so every member gets a modest allowance.
 const limitImports = createMiddleware<HouseholdEnv>(async (c, next) => {
@@ -33,7 +31,7 @@ const limitImports = createMiddleware<HouseholdEnv>(async (c, next) => {
 });
 
 // Starts imports that a Workflow finishes in the background, lists the member's unfinished
-// ones, and hands each finished recipe to one of the member's browsers to save.
+// ones, and saves each finished one as a recipe when the member's app claims it.
 export const recipeImportRoutes = new Hono<HouseholdEnv>()
   .use(requireSession, requireHousehold)
   .get("/", async (c) => {
@@ -43,17 +41,14 @@ export const recipeImportRoutes = new Hono<HouseholdEnv>()
   .post(
     "/url",
     limitImports,
-    validateJson(
-      v.object({ url: v.pipe(v.string(), v.maxLength(2000)), tagNames: tagNamesSchema }),
-    ),
+    validateJson(v.object({ url: v.pipe(v.string(), v.maxLength(2000)) })),
     async (c) => {
-      const { url: value, tagNames } = c.req.valid("json");
-      const url = parseRecipeUrl(value);
+      const url = parseRecipeUrl(c.req.valid("json").url);
       if (!url) return c.json({ error: "Enter a link that starts with https://" }, 400);
-      return start(c, { kind: "page", sourceUrl: url.toString() }, tagNames);
+      return start(c, { kind: "page", sourceUrl: url.toString() });
     },
   )
-  // A form with up to three "photo" files, in page order, and the household's "tag" names.
+  // A form with up to three "photo" files, in page order.
   .post("/photos", limitImports, async (c) => {
     let form: FormData;
     try {
@@ -74,47 +69,32 @@ export const recipeImportRoutes = new Hono<HouseholdEnv>()
       if (!type) return c.json({ error: "Choose JPEG, PNG or WebP photos" }, 415);
       photos.push({ bytes, type });
     }
-    const tagNames = v.safeParse(
-      tagNamesSchema,
-      form.getAll("tag").filter((entry) => typeof entry === "string"),
-    );
-    if (!tagNames.success) return c.json({ error: "Invalid request" }, 400);
 
     const owner = { householdId: c.get("membership").id, uploadedBy: c.get("user").id };
     const sourcePhotoIds = await Promise.all(
       photos.map(({ bytes, type }) => savePhoto(c.env.PHOTOS, owner, bytes, type)),
     );
     // The first photo stands in for the recipe while it is written.
-    return start(
-      c,
-      { kind: "photos", sourcePhotoIds, photoId: sourcePhotoIds[0] ?? null },
-      tagNames.output,
-    );
+    return start(c, { kind: "photos", sourcePhotoIds, photoId: sourcePhotoIds[0] ?? null });
   })
-  // Deleting the import as it is handed over means only one browser ever saves it.
+  // Saves a finished import as a recipe. Only one of the member's browsers gets it.
   .post("/:id/claim", async (c) => {
     const claimed = await claimImport(c.req.param("id"), c.get("user").id);
     if (!claimed) return c.json({ error: "Import not found" }, 404);
     return c.json(claimed, 200);
   })
-  .post(
-    "/:id/retry",
-    limitImports,
-    validateJson(v.object({ tagNames: tagNamesSchema })),
-    async (c) => {
-      const row = await getImport(c.req.param("id"));
-      if (!row || row.userId !== c.get("user").id)
-        return c.json({ error: "Import not found" }, 404);
-      if (row.status !== "failed") return c.json({ error: "This import is still running" }, 409);
-      const runId = crypto.randomUUID();
-      await updateImport(row.id, { status: "reading", error: null, runId });
-      await c.env.RECIPE_IMPORT.create({
-        id: runId,
-        params: { importId: row.id, settings: settings(c, c.req.valid("json").tagNames) },
-      });
-      return c.json({ ok: true }, 200);
-    },
-  )
+  .post("/:id/retry", limitImports, async (c) => {
+    const row = await getImport(c.req.param("id"));
+    if (!row || row.userId !== c.get("user").id) return c.json({ error: "Import not found" }, 404);
+    if (row.status !== "failed") return c.json({ error: "This import is still running" }, 409);
+    const runId = crypto.randomUUID();
+    await updateImport(row.id, { status: "reading", error: null, runId });
+    await c.env.RECIPE_IMPORT.create({
+      id: runId,
+      params: { importId: row.id, settings: await settings(c) },
+    });
+    return c.json({ ok: true }, 200);
+  })
   // Cancels an import that is still running, or dismisses one that failed.
   .delete("/:id", async (c) => {
     const row = await deleteImport(c.req.param("id"), c.get("user").id);
@@ -137,9 +117,9 @@ export const recipeImportRoutes = new Hono<HouseholdEnv>()
 
 type ImportContext = Context<HouseholdEnv>;
 
-function settings(c: ImportContext, tagNames: string[]): ImportSettings {
-  const { language, units } = c.get("membership");
-  return { language, units, tagNames };
+async function settings(c: ImportContext): Promise<ImportSettings> {
+  const { id, language, units } = c.get("membership");
+  return { language, units, tagNames: await listTagNames(id) };
 }
 
 async function start(
@@ -147,7 +127,6 @@ async function start(
   source:
     | { kind: "page"; sourceUrl: string }
     | { kind: "photos"; sourcePhotoIds: string[]; photoId: string | null },
-  tagNames: string[],
 ) {
   const id = crypto.randomUUID();
   const runId = crypto.randomUUID();
@@ -162,7 +141,7 @@ async function start(
   try {
     await c.env.RECIPE_IMPORT.create({
       id: runId,
-      params: { importId: id, settings: settings(c, tagNames) },
+      params: { importId: id, settings: await settings(c) },
     });
   } catch (error) {
     console.error("Could not start a recipe import", error);

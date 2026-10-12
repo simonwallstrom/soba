@@ -1,12 +1,11 @@
 import { AppHeaderActions } from "@client/components/particles/app-header-actions";
 import { Button, buttonVariants } from "@client/components/ui/button";
 import { useMembersById } from "@client/features/household/members";
-import { useHouseholdQuery, useHouseholdStore } from "@client/features/household/store";
-import { tags$ } from "@client/features/recipes/queries";
+import { createRecipe, useTags } from "@client/features/recipes/recipe-data";
 import {
   createRecipeDraft,
+  draftFields,
   hasDraftContent,
-  recipeDraftEvents,
 } from "@client/features/recipes/recipe-draft";
 import { formatMetaTitle } from "@client/lib/meta";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -22,11 +21,10 @@ export const Route = createFileRoute("/_authenticated/_app/recipes/new")({
 });
 
 function NewRecipe() {
-  const { household, user } = Route.useRouteContext();
+  const { user } = Route.useRouteContext();
   const navigate = useNavigate();
-  const store = useHouseholdStore(household.id);
   const author = useMembersById()?.get(user.id);
-  const tags = useHouseholdQuery(household.id, tags$);
+  const tags = useTags();
   const [createdAt] = useState(() => new Date());
   const [draft, setDraft] = useState(createRecipeDraft);
   const photoSave = usePhotoSave();
@@ -35,12 +33,8 @@ function NewRecipe() {
 
   async function save() {
     const id = crypto.randomUUID();
-    const at = new Date();
-    await photoSave.save({ id, updatedBy: user.id, updatedAt: at }, (photoEvents) => {
-      store.commit(
-        ...recipeDraftEvents(draft, { id, createdBy: user.id, createdAt: at }),
-        ...photoEvents,
-      );
+    await photoSave.save((photoId) => {
+      void createRecipe(draftFields(draft), { id, userId: user.id, photoId: photoId ?? undefined });
       isSaved.current = true;
       // Replaces this page, so going back returns to the list rather than an empty form.
       void navigate({ to: "/recipes/$recipeId", params: { recipeId: id }, replace: true });

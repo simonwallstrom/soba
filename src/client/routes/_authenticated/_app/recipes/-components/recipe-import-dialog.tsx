@@ -24,11 +24,9 @@ export type ImportSource = "url" | "photos";
 export function RecipeImportDialog({
   onOpenChange,
   source,
-  tagNames,
 }: {
   onOpenChange: (open: boolean) => void;
   source: ImportSource | null;
-  tagNames: string[];
 }) {
   const [url, setUrl] = useState("");
   const [photos, setPhotos] = useState<File[]>([]);
@@ -49,7 +47,7 @@ export function RecipeImportDialog({
     setError("");
     setIsStarting(true);
     try {
-      await (source === "url" ? startUrlImport(url, tagNames) : startPhotoImport(photos, tagNames));
+      await (source === "url" ? startUrlImport(url) : startPhotoImport(photos));
       close();
     } catch (startError) {
       setError(

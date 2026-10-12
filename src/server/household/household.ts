@@ -3,6 +3,7 @@ import type { HouseholdLanguage, HouseholdUnits } from "@shared/household";
 import { and, count, eq, ne } from "drizzle-orm";
 
 import { getDatabase } from "../db/client";
+import { isUniqueViolation } from "../db/errors";
 import { householdInvites, householdMembers, households, users } from "../db/schema";
 
 export type HouseholdSettings = { language: HouseholdLanguage; units: HouseholdUnits };
@@ -12,12 +13,6 @@ export type Membership = HouseholdSettings & {
   name: string;
   role: "owner" | "member";
 };
-
-// D1 reports constraint failures as error messages, sometimes wrapped by Drizzle.
-function isUniqueViolation(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
-  return error.message.includes("UNIQUE constraint failed") || isUniqueViolation(error.cause);
-}
 
 export async function getMembership(userId: string): Promise<Membership | null> {
   const [membership] = await getDatabase()
