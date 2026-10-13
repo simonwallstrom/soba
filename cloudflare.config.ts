@@ -17,8 +17,6 @@ export default defineConfig({
       runWorkerFirst: ["/", "/api/*"],
     },
     exports: {
-      // Held each household's LiveStore event log, before recipes moved to D1.
-      SyncBackendDO: exports.durableObject({ state: "deleted" }),
       // Finishes recipe imports in the background. See src/server/recipe-import.
       RecipeImportWorkflow: exports.workflow({ name: "soba-recipe-import" }),
     },
