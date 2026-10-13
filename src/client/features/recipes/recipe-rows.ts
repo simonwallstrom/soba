@@ -28,6 +28,29 @@ export function groupRows(rows: readonly RecipeRow[]): RecipeRowGroup[] {
   return groups;
 }
 
+// Starts a section at a line: an empty line becomes the heading, and a line with text gets a
+// heading above it, so it and the lines below fall under the new section. Without a line, or on
+// a heading, the section goes last. Returns the rows and the heading, to focus.
+export function addSection(rows: readonly RecipeRow[], atId?: string | null) {
+  const index = rows.findIndex((row) => row.id === atId && row.kind === "item");
+  const row = rows[index];
+  if (!row) {
+    const heading = createRow("heading");
+    return { rows: [...rows, heading, createRow("item")], heading };
+  }
+  if (row.text.trim() !== "") {
+    const heading = createRow("heading");
+    return { rows: rows.toSpliced(index, 0, heading), heading };
+  }
+  const heading: RecipeRow = { ...row, kind: "heading", text: "" };
+  // A section needs a line to write in.
+  const hasItem = rows[index + 1]?.kind === "item";
+  return {
+    rows: rows.toSpliced(index, 1, heading, ...(hasItem ? [] : [createRow("item")])),
+    heading,
+  };
+}
+
 // Blank items are dropped; an unnamed section with nothing in it disappears.
 export function rowsToSections(rows: readonly RecipeRow[]): RecipeSection[] {
   return groupRows(rows).flatMap(({ heading, items }) => {

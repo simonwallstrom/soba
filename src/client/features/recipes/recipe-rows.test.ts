@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  addSection,
   createRow,
   groupRows,
   parsePastedLines,
@@ -94,5 +95,48 @@ describe("parsePastedLines", () => {
     expect(shape(parsePastedLines("Salt: to taste"))).toEqual([
       { kind: "item", text: "Salt: to taste" },
     ]);
+  });
+});
+
+describe("addSection", () => {
+  const salt = createRow("item", "Salt");
+  const empty = createRow("item");
+  const miso = createRow("item", "Miso");
+
+  test("puts a heading above the line the cursor is on, when it has text", () => {
+    const added = addSection([salt, miso], miso.id);
+    expect(shape(added.rows)).toEqual([
+      { kind: "item", text: "Salt" },
+      { kind: "heading", text: "" },
+      { kind: "item", text: "Miso" },
+    ]);
+    expect(added.rows[1]).toBe(added.heading);
+  });
+
+  test("turns an empty line into the heading, with a line to write in below", () => {
+    expect(shape(addSection([salt, empty, miso], empty.id).rows)).toEqual([
+      { kind: "item", text: "Salt" },
+      { kind: "heading", text: "" },
+      { kind: "item", text: "Miso" },
+    ]);
+    const last = addSection([salt, empty], empty.id);
+    expect(shape(last.rows)).toEqual([
+      { kind: "item", text: "Salt" },
+      { kind: "heading", text: "" },
+      { kind: "item", text: "" },
+    ]);
+    expect(last.heading.id).toBe(empty.id);
+  });
+
+  test("goes last without a line, or from a heading", () => {
+    const sauce = createRow("heading", "Sauce");
+    const expected: ReturnType<typeof shape> = [
+      { kind: "heading", text: "Sauce" },
+      { kind: "item", text: "Miso" },
+      { kind: "heading", text: "" },
+      { kind: "item", text: "" },
+    ];
+    expect(shape(addSection([sauce, miso]).rows)).toEqual(expected);
+    expect(shape(addSection([sauce, miso], sauce.id).rows)).toEqual(expected);
   });
 });

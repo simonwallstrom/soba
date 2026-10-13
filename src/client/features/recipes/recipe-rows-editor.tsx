@@ -1,7 +1,12 @@
 import { Button } from "@client/components/ui/button";
 import { Add01Icon } from "@client/components/ui/icons";
 import { choiceStyles, textEntryStyles } from "@client/components/ui/styles";
-import { createRow, groupRows, parsePastedLines } from "@client/features/recipes/recipe-rows";
+import {
+  addSection,
+  createRow,
+  groupRows,
+  parsePastedLines,
+} from "@client/features/recipes/recipe-rows";
 import type { RecipeRow } from "@client/features/recipes/recipe-rows";
 import { cn } from "cn";
 import { useRef } from "react";
@@ -11,12 +16,13 @@ import { flushSync } from "react-dom";
 type Kind = "ingredients" | "instructions";
 
 const placeholders = {
-  ingredients: "Add an ingredient…",
-  instructions: "Describe a step…",
+  ingredients: "Add an ingredient, or # for a section…",
+  instructions: "Describe a step, or # for a section…",
 } satisfies Record<Kind, string>;
 
 // Ingredients or instructions as one text field per line, styled like the recipe page.
-// Enter adds a line, Backspace at the start joins lines, and a heading starts a section.
+// Enter adds a line, Backspace at the start joins lines, and a heading starts a section: typing
+// "# " makes one of a line, and "Add section" starts one at the line the cursor is on.
 export function RecipeRowsEditor({
   kind,
   labelledBy,
@@ -29,6 +35,8 @@ export function RecipeRowsEditor({
   rows: readonly RecipeRow[];
 }) {
   const fields = useRef(new Map<string, HTMLTextAreaElement>());
+  // The line the cursor was on as "Add section" was pressed; pressing it moves focus away.
+  const sectionAt = useRef<string | null>(null);
   const indexById = new Map(rows.map((row, index) => [row.id, index]));
   // Steps are numbered across sections, as on the recipe page.
   const stepById = new Map(
@@ -134,9 +142,15 @@ export function RecipeRowsEditor({
     change(replace(index, 1, ...inserted), { id: last.id, at });
   }
 
-  function addSection() {
-    const heading = createRow("heading");
-    change([...rows, heading, createRow("item")], { id: heading.id, at: 0 });
+  function rememberLine() {
+    const focused = [...fields.current].find(([, field]) => field === document.activeElement);
+    sectionAt.current = focused?.[0] ?? null;
+  }
+
+  function handleAddSection() {
+    const added = addSection(rows, sectionAt.current);
+    sectionAt.current = null;
+    change(added.rows, { id: added.heading.id, at: 0 });
   }
 
   function renderField(row: RecipeRow, label: string, className?: string) {
@@ -202,7 +216,13 @@ export function RecipeRowsEditor({
             ))}
         </div>
       ))}
-      <Button className="-mt-4 -ml-2 self-start" onClick={addSection} size="sm" variant="ghost">
+      <Button
+        className="-mt-4 -ml-2 self-start"
+        onClick={handleAddSection}
+        onPointerDown={rememberLine}
+        size="sm"
+        variant="ghost"
+      >
         <Add01Icon />
         Add section
       </Button>
