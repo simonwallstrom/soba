@@ -118,7 +118,7 @@ function MealItem({
     enabled: !isPast,
   });
   return (
-    // The drop overlay comes after the item, so it covers its actions; the week bands still sit
+    // The drop overlay comes after the item, so it covers its actions; the week headers still sit
     // above it.
     <div className="relative">
       <MediaListItem

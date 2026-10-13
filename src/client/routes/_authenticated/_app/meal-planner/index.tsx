@@ -38,7 +38,7 @@ function getScrollRoot(element: HTMLElement) {
   return element.closest<HTMLElement>('[data-scroll-restoration-id="app-content"]');
 }
 
-// Brings a week's band to the top of the content.
+// Brings a week's header to the top of the content.
 function scrollToWeek(list: HTMLElement, index: number, behavior: ScrollBehavior = "instant") {
   const root = getScrollRoot(list);
   const week = list.children[index];
@@ -221,7 +221,7 @@ function MealPlanner() {
                 onSuggest={() => suggest(week)}
                 week={week}
               />
-              <div className="col-span-full grid grid-cols-subgrid p-2 lg:p-3">
+              <div className="col-span-full grid grid-cols-subgrid px-2 pt-1 pb-2 lg:px-3 lg:pb-3">
                 {week.days.map((date) => {
                   const meal = mealOn(date);
                   return (
