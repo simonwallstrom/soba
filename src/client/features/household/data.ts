@@ -16,7 +16,7 @@ let clock = 0;
 let writes: Promise<unknown> = Promise.resolve();
 
 // Whose data a stored copy is: the member's favorites and their household's recipes.
-function currentOwner() {
+export function currentOwner() {
   const session = queryClient.getQueryData(sessionOptions.queryKey);
   return session?.user && session.household ? `${session.user.id}:${session.household.id}` : null;
 }
