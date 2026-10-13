@@ -6,16 +6,15 @@ The goal is still speed, not offline use: the app keeps the household's data in 
 
 ## The API
 
-| Route                                       | What it does                                                                        |
-| ------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `GET /api/recipes`                          | Recipes with tag IDs and profiles, the tags, and your favorite IDs                  |
-| `POST /api/recipes`, `PUT /api/recipes/:id` | Save a recipe, with any new tags it uses. The last save wins                        |
-| `DELETE /api/recipes/:id`                   | Delete a recipe, with its favorites, profile, and planned meals                     |
-| `PUT`/`DELETE /api/recipes/:id/favorite`    | Favorite or unfavorite it, for the signed-in member                                 |
-| `POST /api/recipes/:id/profile`             | Read it for meal suggestions; see [AI and meal planning](./ai-and-meal-planning.md) |
-| `GET /api/meal-plan`                        | Every planned dinner                                                                |
-| `PUT /api/meal-plan`                        | Plan dinners for up to 14 days, replacing any already there                         |
-| `POST /api/meal-plan/remove`, `/move`       | Clear days, or move a meal to another day, swapping if it is taken                  |
+| Route                                       | What it does                                                       |
+| ------------------------------------------- | ------------------------------------------------------------------ |
+| `GET /api/recipes`                          | Recipes with tag IDs and profiles, the tags, and your favorite IDs |
+| `POST /api/recipes`, `PUT /api/recipes/:id` | Save a recipe, with any new tags it uses. The last save wins       |
+| `DELETE /api/recipes/:id`                   | Delete a recipe, with its favorites, profile, and planned meals    |
+| `PUT`/`DELETE /api/recipes/:id/favorite`    | Favorite or unfavorite it, for the signed-in member                |
+| `GET /api/meal-plan`                        | Every planned dinner                                               |
+| `PUT /api/meal-plan`                        | Plan dinners for up to 14 days, replacing any already there        |
+| `POST /api/meal-plan/remove`, `/move`       | Clear days, or move a meal to another day, swapping if it is taken |
 
 Routes are in `src/server/recipes/` and `src/server/meal-plan/`. Keep these properties when changing them:
 
@@ -28,6 +27,9 @@ Routes are in `src/server/recipes/` and `src/server/meal-plan/`. Keep these prop
 `createHouseholdData` (`src/client/features/household/data.ts`) wraps one TanStack Query fetch. There are two: `recipeData` (`features/recipes/recipe-data.ts`) and `mealPlanData` (`features/meal-plan/meal-plan-data.ts`).
 
 - **Reads** use `useData()`, which suspends until the first fetch. The app layout starts both fetches as it mounts, and pages filter, sort, and search in memory.
+- **Between visits**, the server's last copy of each is kept in `localStorage` (`soba-recipes`, `soba-meal-plan`), so the app opens with it and fetches behind it. A copy only shows to the member and household it was saved for, and one that no longer matches its schema is dropped. Unsaved changes are never stored.
+- **Loading and errors:** only a first visit waits, with "Loading…" in the page area. If that first fetch fails, the app layout's error screen offers to try again. With a stored copy, a failed fetch changes nothing.
+- **Photos** live in R2 under the household's prefix. The server removes a recipe's uploaded photo when the recipe is deleted or its photo is replaced or removed. A photo uploaded for a recipe that is never saved is left behind.
 - **Changes** go through `save(update, send)`. `update` is applied on top of the cached server copy right away, and `send` goes to the server. Sends run one at a time, in order, so a quick undo never overtakes the change it takes back.
 - **After saving,** the data is fetched again, and a change stops being applied once a fetch that began after it was saved comes back. A fetch can bring a change back while it still shows, so write `update` to give the same result then: set values rather than toggling or appending.
 - **A failed save** removes the change and shows a toast. The cached copy was never edited, so nothing needs rolling back.

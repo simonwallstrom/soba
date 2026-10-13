@@ -30,8 +30,8 @@ const limitImports = createMiddleware<HouseholdEnv>(async (c, next) => {
   return next();
 });
 
-// Starts imports that a Workflow finishes in the background, lists the member's unfinished
-// ones, and saves each finished one as a recipe when the member's app claims it.
+// Starts imports that a Workflow finishes in the background and saves as recipes, and lists the
+// member's own: those still running, those that failed, and those saved but not yet announced.
 export const recipeImportRoutes = new Hono<HouseholdEnv>()
   .use(requireSession, requireHousehold)
   .get("/", async (c) => {
@@ -77,7 +77,8 @@ export const recipeImportRoutes = new Hono<HouseholdEnv>()
     // The first photo stands in for the recipe while it is written.
     return start(c, { kind: "photos", sourcePhotoIds, photoId: sourcePhotoIds[0] ?? null });
   })
-  // Saves a finished import as a recipe. Only one of the member's browsers gets it.
+  // Takes a saved import off the list, to announce its recipe. Only one of the member's browsers
+  // gets it.
   .post("/:id/claim", async (c) => {
     const claimed = await claimImport(c.req.param("id"), c.get("user").id);
     if (!claimed) return c.json({ error: "Import not found" }, 404);
@@ -99,6 +100,8 @@ export const recipeImportRoutes = new Hono<HouseholdEnv>()
   .delete("/:id", async (c) => {
     const row = await deleteImport(c.req.param("id"), c.get("user").id);
     if (!row) return c.json({ error: "Import not found" }, 404);
+    // Already a recipe, which keeps its photo.
+    if (row.status === "ready") return c.json({ ok: true }, 200);
     if (row.status === "reading" || row.status === "writing") {
       await c.env.RECIPE_IMPORT.get(row.runId)
         .then((run) => run.terminate())

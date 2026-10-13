@@ -1,5 +1,8 @@
 import { describe, expect, mock, test } from "bun:test";
 
+import { recipeProfileVersion } from "@shared/recipe-profile";
+import type { ExecutionContext } from "hono";
+
 import { addHousehold, createMemoryDatabase } from "../../../scripts/testing/memory-database";
 
 const { sqlite, db } = createMemoryDatabase();
@@ -18,13 +21,56 @@ await mock.module(new URL("../db/client.ts", import.meta.url).pathname, () => ({
 }));
 const { recipeRoutes } = await import("./routes");
 const { mealPlanRoutes } = await import("../meal-plan/routes");
+const { profileStaleRecipes } = await import("../recipe-profile/profiles");
+const { claimImport, saveImportedRecipe } = await import("../recipe-import/imports");
 
 type Routes = {
-  request: (path: string, init: RequestInit, env: object) => Response | Promise<Response>;
+  request: (
+    path: string,
+    init: RequestInit,
+    env: object,
+    executionCtx: ExecutionContext,
+  ) => Response | Promise<Response>;
 };
 
-// Just the binding the routes reach before they answer.
-const env = { PROFILE_RATE_LIMITER: { limit: async () => ({ success: true }) } };
+// Clef, which reads each saved recipe once the response is on its way.
+const clef = { reads: 0, isDown: false };
+// Photo keys the routes deleted from the bucket.
+const deletedPhotos: string[] = [];
+// Just the bindings the routes reach.
+const env = {
+  PHOTOS: {
+    delete: async (keys: string[]) => void deletedPhotos.push(...keys),
+  },
+  AI: {
+    run: async () => {
+      clef.reads += 1;
+      if (clef.isDown) throw new Error("Clef is down");
+      return {
+        answers: {
+          isDinner: { noul: 0.9 },
+          base: { choice: "pasta" },
+          protein: { choice: "vegetarian" },
+          effort: { score: 0.2 },
+          isTreat: { noul: 0.1 },
+        },
+      };
+    },
+  },
+  AI_GATEWAY_URL: "https://gateway.example/v1/account/default",
+};
+
+const background: Promise<unknown>[] = [];
+const executionCtx: ExecutionContext = {
+  waitUntil: (promise: Promise<unknown>) => void background.push(promise),
+  passThroughOnException: () => {},
+  props: {},
+};
+
+// Waits for the work the routes left running after they answered.
+async function settled() {
+  await Promise.all(background.splice(0));
+}
 
 function send(routes: Routes, user: string, method: string, path: string, json?: unknown) {
   return routes.request(
@@ -35,6 +81,7 @@ function send(routes: Routes, user: string, method: string, path: string, json?:
       ...(json === undefined ? {} : { body: JSON.stringify(json) }),
     },
     env,
+    executionCtx,
   );
 }
 
@@ -47,6 +94,7 @@ type Collection = {
     imageUrl: string | null;
     tagIds: string[];
     updatedBy: string;
+    profile: { base: string; effort: string; version: number; sourceHash: string } | null;
   }[];
   tags: { id: string; name: string }[];
   favoriteIds: string[];
@@ -150,12 +198,17 @@ describe("recipe routes", () => {
     ]);
     expect(tags.map((tag) => tag.name).toSorted()).toEqual(["Nudlar och sånt", "Quick"]);
 
+    await settled();
+    expect(deletedPhotos).toEqual([]);
     await send(recipeRoutes, "bob", "PUT", `/${soba}`, {
       ...fields,
       title: "Cold soba",
       photoId: null,
     });
     expect((await collection("alice")).recipes[0]?.imageUrl).toBeNull();
+    // A photo the recipe no longer uses is removed from the bucket.
+    await settled();
+    expect(deletedPhotos).toEqual([`households/h1/photos/${photo}`]);
   });
 
   test("favorites belong to the member who added them, newest first", async () => {
@@ -176,7 +229,6 @@ describe("recipe routes", () => {
     expect((await send(recipeRoutes, "stranger", "PUT", `/${soba}`, update)).status).toBe(404);
     expect((await send(recipeRoutes, "stranger", "DELETE", `/${soba}`)).status).toBe(404);
     expect((await send(recipeRoutes, "stranger", "PUT", `/${soba}/favorite`)).status).toBe(404);
-    expect((await send(recipeRoutes, "stranger", "POST", `/${soba}/profile`)).status).toBe(404);
     expect((await collection("alice")).recipes.map((recipe) => recipe.title).toSorted()).toEqual([
       "Cold soba",
       "Ramen",
@@ -229,5 +281,104 @@ describe("meal plan routes", () => {
     const { recipes, favoriteIds } = await collection("alice");
     expect(recipes.map((recipe) => recipe.id)).toEqual([ramen]);
     expect(favoriteIds).toEqual([]);
+  });
+});
+
+async function profileOf(id: string) {
+  await settled();
+  const { recipes } = await collection("alice");
+  return recipes.find((recipe) => recipe.id === id)?.profile ?? null;
+}
+
+describe("recipe profiles", () => {
+  const pasta = "00000000-0000-4000-8000-000000000003";
+
+  test("a saved recipe is read after the response, and again only when its text changes", async () => {
+    await settled();
+    clef.reads = 0;
+    await send(recipeRoutes, "alice", "POST", "/", { ...fields, id: pasta, title: "Pasta" });
+    const first = await profileOf(pasta);
+    expect(first).toMatchObject({ base: "pasta", effort: "quick", version: recipeProfileVersion });
+    expect(clef.reads).toBe(1);
+
+    await send(recipeRoutes, "alice", "PUT", `/${pasta}`, {
+      ...fields,
+      title: "Pasta",
+      servings: 4,
+    });
+    expect(await profileOf(pasta)).toEqual(first);
+    expect(clef.reads).toBe(1);
+
+    await send(recipeRoutes, "alice", "PUT", `/${pasta}`, { ...fields, title: "Pasta al limone" });
+    expect((await profileOf(pasta))?.sourceHash).not.toBe(first?.sourceHash);
+    expect(clef.reads).toBe(2);
+  });
+
+  test("the catch-up reads what was never read, and retries a failed read an hour later", async () => {
+    // Ramen and pasta are current; a recipe saved some other way has never been read.
+    sqlite.run("UPDATE recipe SET profile_checked_at = NULL WHERE id = ?", [ramen]);
+    sqlite.run("DELETE FROM recipe_profile WHERE recipe_id = ?", [ramen]);
+    clef.reads = 0;
+    clef.isDown = true;
+    expect(await profileStaleRecipes(env)).toBe(1);
+    expect(await profileOf(ramen)).toBeNull();
+    expect(await profileStaleRecipes(env)).toBe(0);
+    expect(clef.reads).toBe(1);
+
+    clef.isDown = false;
+    const later = new Date(Date.now() + 2 * 60 * 60_000);
+    expect(await profileStaleRecipes(env, later)).toBe(1);
+    expect(await profileOf(ramen)).toMatchObject({ base: "pasta" });
+    expect(await profileStaleRecipes(env, later)).toBe(0);
+    expect(clef.reads).toBe(2);
+  });
+});
+
+describe("recipe imports", () => {
+  const imported = "00000000-0000-4000-8000-000000000004";
+  const cover = "00000000-0000-4000-8000-0000000000f2";
+  const secondPage = "00000000-0000-4000-8000-0000000000f3";
+  const recipe = {
+    title: "Kimchi stew",
+    description: "",
+    servings: 4,
+    ingredients: [{ items: ["Kimchi"] }],
+    instructions: [{ items: ["Simmer"] }],
+    tags: ["quick", "Unknown"],
+  };
+
+  test("a finished import is saved for the household before any app asks for it", async () => {
+    sqlite.run(
+      "INSERT INTO recipe_import (id, household_id, user_id, kind, status, source_photo_ids, photo_id, run_id) VALUES (?, 'h1', 'alice', 'photos', 'writing', ?, ?, 'run')",
+      [imported, JSON.stringify([cover, secondPage]), cover],
+    );
+    const saved = await saveImportedRecipe(imported, recipe);
+    // Saving again, as a retried step would, changes nothing.
+    await saveImportedRecipe(imported, recipe);
+    expect(saved).toEqual({ householdId: "h1", unusedPhotoIds: [secondPage] });
+
+    const { recipes, tags } = await collection("bob");
+    const quickTag = tags.find((tag) => tag.name === "Quick");
+    expect(recipes.filter((other) => other.id === imported)).toMatchObject([
+      { title: "Kimchi stew", imageUrl: `/api/photos/${cover}`, tagIds: [quickTag?.id] },
+    ]);
+  });
+
+  test("only the importer announces it, once, and the recipe stays", async () => {
+    expect(await claimImport(imported, "bob")).toBeNull();
+    expect(await claimImport(imported, "alice")).toEqual({ title: "Kimchi stew" });
+    expect(await claimImport(imported, "alice")).toBeNull();
+    expect((await collection("alice")).recipes.some((other) => other.id === imported)).toBe(true);
+  });
+
+  test("an import dismissed while it ran saves nothing", async () => {
+    expect(await saveImportedRecipe("00000000-0000-4000-8000-000000000005", recipe)).toBeNull();
+  });
+
+  test("deleting the recipe removes its photo", async () => {
+    deletedPhotos.length = 0;
+    await send(recipeRoutes, "alice", "DELETE", `/${imported}`);
+    await settled();
+    expect(deletedPhotos).toEqual([`households/h1/photos/${cover}`]);
   });
 });

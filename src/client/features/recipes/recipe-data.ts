@@ -1,12 +1,64 @@
 import { createHouseholdData } from "@client/features/household/data";
 import { api } from "@client/lib/api";
+import { recipeBases, recipeEfforts, recipeProteins } from "@shared/recipe-profile";
 import { recipePhotoUrl } from "@shared/recipes";
 import type { Recipe, RecipeSection, Tag } from "@shared/recipes";
+import * as v from "valibot";
 
 // The household's recipes and tags, and the signed-in member's favorite recipe IDs, newest first.
 export type RecipeCollection = { recipes: Recipe[]; tags: Tag[]; favoriteIds: string[] };
 
-export const recipeData = createHouseholdData<RecipeCollection>(["recipes"], async (signal) => {
+const storedDate = v.pipe(
+  v.string(),
+  v.isoTimestamp(),
+  v.transform((value) => new Date(value)),
+);
+const storedSections = v.array(
+  v.object({ heading: v.optional(v.string()), items: v.array(v.string()) }),
+);
+
+// The copy kept in this browser between visits, as JSON.
+export const storedCollection = v.object({
+  recipes: v.array(
+    v.object({
+      id: v.string(),
+      title: v.string(),
+      description: v.nullable(v.string()),
+      servings: v.nullable(v.number()),
+      imageUrl: v.nullable(v.string()),
+      sourceUrl: v.nullable(v.string()),
+      ingredients: storedSections,
+      instructions: storedSections,
+      tagIds: v.array(v.string()),
+      profile: v.nullable(
+        v.object({
+          isDinner: v.boolean(),
+          base: v.picklist(recipeBases),
+          protein: v.picklist(recipeProteins),
+          effort: v.picklist(recipeEfforts),
+          isTreat: v.boolean(),
+          version: v.number(),
+          sourceHash: v.string(),
+        }),
+      ),
+      createdBy: v.string(),
+      updatedBy: v.string(),
+      createdAt: storedDate,
+      updatedAt: storedDate,
+    }),
+  ),
+  tags: v.array(v.object({ id: v.string(), name: v.string(), createdAt: storedDate })),
+  favoriteIds: v.array(v.string()),
+});
+
+export const recipeData = createHouseholdData<RecipeCollection>({
+  queryKey: ["recipes"],
+  storageKey: "soba-recipes",
+  schema: storedCollection,
+  fetchData: fetchRecipes,
+});
+
+async function fetchRecipes(signal: AbortSignal): Promise<RecipeCollection> {
   const response = await api.recipes.$get({}, { init: { signal, cache: "no-store" } });
   if (!response.ok) throw new Error(`API returned ${response.status}`);
   const { recipes, tags, favoriteIds } = await response.json();
@@ -19,7 +71,7 @@ export const recipeData = createHouseholdData<RecipeCollection>(["recipes"], asy
     tags: tags.map((tag) => ({ ...tag, createdAt: new Date(tag.createdAt) })),
     favoriteIds,
   };
-});
+}
 
 export function useRecipes() {
   return recipeData.useData().recipes;

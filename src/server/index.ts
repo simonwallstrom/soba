@@ -10,6 +10,7 @@ import { householdRoutes, inviteRoutes } from "./household/routes";
 import { mealPlanRoutes } from "./meal-plan/routes";
 import { photoRoutes } from "./photos/routes";
 import { recipeImportRoutes } from "./recipe-import/routes";
+import { profileStaleRecipes } from "./recipe-profile/profiles";
 import { recipeRoutes } from "./recipes/routes";
 
 export { RecipeImportWorkflow } from "./recipe-import/workflow";
@@ -59,4 +60,10 @@ const app = new Hono<{ Bindings: Env }>()
   .on(["GET", "POST"], "/api/auth/*", (c) => handleAuth(c.req.raw));
 
 export type AppType = typeof app;
-export default app;
+export default {
+  fetch: app.fetch,
+  // Every few minutes; see the trigger in cloudflare.config.ts.
+  scheduled(_controller, env, ctx) {
+    ctx.waitUntil(profileStaleRecipes(env));
+  },
+} satisfies ExportedHandler<Env>;

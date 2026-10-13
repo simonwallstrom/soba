@@ -155,7 +155,11 @@ export async function createRecipe(
   }
 }
 
-/** Replaces what the recipe form edits. An undefined image keeps the photo; null removes it. */
+/**
+ * Replaces what the recipe form edits. An undefined image keeps the photo; null removes it.
+ * Returns false for a recipe that isn't the household's, and otherwise the image URL the recipe
+ * no longer uses, or null.
+ */
 export async function updateRecipe(
   householdId: string,
   userId: string,
@@ -163,7 +167,8 @@ export async function updateRecipe(
   { imageUrl, ...input }: RecipeInput & { imageUrl: string | null | undefined },
 ) {
   const db = getDatabase();
-  if (!(await getRecipe(householdId, id))) return false;
+  const current = await getRecipe(householdId, id);
+  if (!current) return false;
   const { tagIds: _, newTags: __, ...fields } = input;
   await db.batch([
     db
@@ -178,15 +183,17 @@ export async function updateRecipe(
     db.delete(recipeTags).where(eq(recipeTags.recipeId, id)),
     ...(await tagStatements(householdId, id, input)),
   ]);
-  return true;
+  const replaced = imageUrl !== undefined && imageUrl !== current.imageUrl;
+  return { unusedImageUrl: replaced ? current.imageUrl : null };
 }
 
+/** Returns false for a recipe that isn't the household's, and otherwise its image URL. */
 export async function deleteRecipe(householdId: string, id: string) {
-  const deleted = await getDatabase()
+  const [deleted] = await getDatabase()
     .delete(recipes)
     .where(and(eq(recipes.id, id), eq(recipes.householdId, householdId)))
-    .returning({ id: recipes.id });
-  return deleted.length > 0;
+    .returning({ imageUrl: recipes.imageUrl });
+  return deleted ? { unusedImageUrl: deleted.imageUrl } : false;
 }
 
 // Two devices may favorite the same recipe; the first stays.
@@ -202,13 +209,4 @@ export async function setFavorite(recipeId: string, userId: string, isFavorite: 
       .delete(favorites)
       .where(and(eq(favorites.userId, userId), eq(favorites.recipeId, recipeId)));
   }
-}
-
-// Replaces a recipe's profile.
-export async function saveRecipeProfile(recipeId: string, profile: RecipeProfile) {
-  const values = { ...profile, profiledAt: new Date() };
-  await getDatabase()
-    .insert(recipeProfiles)
-    .values({ recipeId, ...values })
-    .onConflictDoUpdate({ target: recipeProfiles.recipeId, set: values });
 }

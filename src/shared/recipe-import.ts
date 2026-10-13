@@ -11,5 +11,6 @@ export type ImportedRecipe = {
   tags: string[];
 };
 
-// Reading the page or photos, writing the recipe, waiting to be claimed as a recipe, or failed.
+// Reading the page or photos, writing the recipe, saved as a recipe the member's app has yet to
+// announce, or failed.
 export type RecipeImportStatus = "reading" | "writing" | "ready" | "failed";

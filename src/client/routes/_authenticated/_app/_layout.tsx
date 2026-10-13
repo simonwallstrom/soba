@@ -1,16 +1,18 @@
 import { AppAsideSlot } from "@client/components/particles/app-aside";
 import { AppHeaderActionsSlot } from "@client/components/particles/app-header-actions";
+import { Button } from "@client/components/ui/button";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@client/components/ui/empty";
 import { mealPlanData } from "@client/features/meal-plan/meal-plan-data";
 import { recipeData } from "@client/features/recipes/recipe-data";
 import { RecipeImportWatcher } from "@client/features/recipes/recipe-import-watcher";
-import { RecipeProfiler } from "@client/features/recipes/recipe-profiler";
 import {
   RecipeSearchRequestProvider,
   useRequestRecipeSearch,
 } from "@client/features/recipes/search-request";
 import { formatMetaTitle } from "@client/lib/meta";
-import { usePrefetchQuery } from "@tanstack/react-query";
+import { usePrefetchQuery, useQueryErrorResetBoundary } from "@tanstack/react-query";
 import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-router";
+import type { ErrorComponentProps } from "@tanstack/react-router";
 import { Suspense, useEffect, useState } from "react";
 
 import { AppHeader } from "./-components/app-header";
@@ -23,6 +25,7 @@ export const Route = createFileRoute("/_authenticated/_app")({
     return { household: context.household };
   },
   component: AppLayout,
+  errorComponent: AppError,
 });
 
 // Route IDs match at runtime; `routesByPath` trims trailing slashes that its type keeps.
@@ -69,7 +72,6 @@ function AppLayout() {
                 }
               >
                 <RecipeImportWatcher />
-                <RecipeProfiler userId={user.id} />
                 <AppHeaderActionsSlot value={actionsSlot}>
                   <AppAsideSlot value={asideSlot}>
                     <Outlet />
@@ -113,4 +115,31 @@ function SearchShortcuts() {
   }, [requestSearch]);
 
   return null;
+}
+
+// Mostly a first visit that couldn't fetch the household's data: with a stored copy to show, a
+// failed fetch changes nothing. Trying again fetches whatever failed.
+function AppError({ error, reset }: ErrorComponentProps) {
+  const { reset: resetQueries } = useQueryErrorResetBoundary();
+  // Keeps the cause visible in the console behind the generic message.
+  useEffect(() => console.error(error), [error]);
+  return (
+    <main className="flex h-dvh items-center justify-center p-6">
+      <title>{formatMetaTitle("Couldn’t load page")}</title>
+      <Empty>
+        <EmptyHeader>
+          <EmptyTitle>Couldn’t load this page</EmptyTitle>
+          <EmptyDescription>Check your connection and try again.</EmptyDescription>
+        </EmptyHeader>
+        <Button
+          onClick={() => {
+            resetQueries();
+            reset();
+          }}
+        >
+          Try again
+        </Button>
+      </Empty>
+    </main>
+  );
 }

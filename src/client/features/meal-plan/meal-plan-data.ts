@@ -3,12 +3,33 @@ import { createHouseholdData } from "@client/features/household/data";
 import { api } from "@client/lib/api";
 import { withMealMoved, withMealsPlanned, withMealsUnplanned } from "@shared/meal-plan";
 import type { PlannedMealRow } from "@shared/meal-plan";
+import * as v from "valibot";
 
-export const mealPlanData = createHouseholdData<PlannedMealRow[]>(["meal-plan"], async (signal) => {
-  const response = await api["meal-plan"].$get({}, { init: { signal, cache: "no-store" } });
-  if (!response.ok) throw new Error(`API returned ${response.status}`);
-  const { meals } = await response.json();
-  return meals.map((meal) => ({ ...meal, plannedAt: new Date(meal.plannedAt) }));
+// The copy kept in this browser between visits, as JSON.
+const storedPlan = v.array(
+  v.object({
+    date: v.string(),
+    recipeId: v.string(),
+    suggestionId: v.nullable(v.string()),
+    plannedBy: v.string(),
+    plannedAt: v.pipe(
+      v.string(),
+      v.isoTimestamp(),
+      v.transform((value) => new Date(value)),
+    ),
+  }),
+);
+
+export const mealPlanData = createHouseholdData<PlannedMealRow[]>({
+  queryKey: ["meal-plan"],
+  storageKey: "soba-meal-plan",
+  schema: storedPlan,
+  fetchData: async (signal) => {
+    const response = await api["meal-plan"].$get({}, { init: { signal, cache: "no-store" } });
+    if (!response.ok) throw new Error(`API returned ${response.status}`);
+    const { meals } = await response.json();
+    return meals.map((meal) => ({ ...meal, plannedAt: new Date(meal.plannedAt) }));
+  },
 });
 
 export function usePlannedMeals() {

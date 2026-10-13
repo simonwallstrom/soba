@@ -1,24 +1,18 @@
-import {
-  recipeProfileSource,
-  recipeProfileSourceHash,
-  recipeProfileVersion,
-} from "@shared/recipe-profile";
 import { recipePhotoUrl } from "@shared/recipes";
 import { Hono } from "hono";
-import { createMiddleware } from "hono/factory";
 import * as v from "valibot";
 
 import { requireSession } from "../auth/middleware";
 import { requireHousehold } from "../household/middleware";
 import type { HouseholdEnv } from "../household/middleware";
 import { validateJson } from "../lib/validate";
-import { readRecipeProfile } from "../recipe-profile/clef";
+import { deleteRecipePhoto } from "../photos/photo";
+import { profileRecipe } from "../recipe-profile/profiles";
 import {
   createRecipe,
   deleteRecipe,
   getRecipe,
   listRecipes,
-  saveRecipeProfile,
   setFavorite,
   updateRecipe,
 } from "./recipes";
@@ -65,17 +59,11 @@ function recipeInput({
   return { ...recipe, description: description || null, servings: servings ?? null };
 }
 
-// Each read calls a model, so every member gets an allowance well above normal editing.
-const limitProfiles = createMiddleware<HouseholdEnv>(async (c, next) => {
-  const { success } = await c.env.PROFILE_RATE_LIMITER.limit({ key: c.get("user").id });
-  if (!success) return c.json({ error: "Too many recipes at once. Try again in a minute." }, 429);
-  return next();
-});
-
 const notFound = { error: "Recipe not found" };
 
 // The household's recipes, tags, and the member's favorites. The app generates recipe and tag
-// IDs, so it can show a new recipe before the server has answered.
+// IDs, so it can show a new recipe before the server has answered. A saved recipe is read for
+// meal suggestions once the response is on its way; see docs/ai-and-meal-planning.md.
 export const recipeRoutes = new Hono<HouseholdEnv>()
   .use(requireSession, requireHousehold)
   .get("/", async (c) => {
@@ -93,6 +81,7 @@ export const recipeRoutes = new Hono<HouseholdEnv>()
         imageUrl: photoId ? recipePhotoUrl(photoId) : null,
       });
       if (!created) return c.json({ error: "This recipe is already saved" }, 409);
+      c.executionCtx.waitUntil(profileRecipe(c.env, id));
       return c.json({ ok: true }, 201);
     },
   )
@@ -112,12 +101,19 @@ export const recipeRoutes = new Hono<HouseholdEnv>()
         },
       );
       if (!updated) return c.json(notFound, 404);
+      c.executionCtx.waitUntil(
+        deleteRecipePhoto(c.env.PHOTOS, c.get("membership").id, updated.unusedImageUrl),
+      );
+      c.executionCtx.waitUntil(profileRecipe(c.env, c.req.param("id")));
       return c.json({ ok: true }, 200);
     },
   )
   .delete("/:id", async (c) => {
     const deleted = await deleteRecipe(c.get("membership").id, c.req.param("id"));
     if (!deleted) return c.json(notFound, 404);
+    c.executionCtx.waitUntil(
+      deleteRecipePhoto(c.env.PHOTOS, c.get("membership").id, deleted.unusedImageUrl),
+    );
     return c.json({ ok: true }, 200);
   })
   .put("/:id/favorite", async (c) => {
@@ -129,26 +125,4 @@ export const recipeRoutes = new Hono<HouseholdEnv>()
   .delete("/:id/favorite", async (c) => {
     await setFavorite(c.req.param("id"), c.get("user").id, false);
     return c.json({ ok: true }, 200);
-  })
-  // Reads the recipe for meal suggestions and saves the profile, with the version of the
-  // questions it answered and a hash of what it was read from. The app decides when; see
-  // docs/ai-and-meal-planning.md.
-  .post("/:id/profile", limitProfiles, async (c) => {
-    const recipe = await getRecipe(c.get("membership").id, c.req.param("id"));
-    if (!recipe) return c.json(notFound, 404);
-    const source = recipeProfileSource(recipe);
-    const gatewayId =
-      new URL(c.env.AI_GATEWAY_URL).pathname.split("/").filter(Boolean).at(-1) ?? "";
-    const answers = await readRecipeProfile(c.env.AI, gatewayId, source).catch((error: unknown) => {
-      console.error("Reading a recipe profile failed", error);
-      return null;
-    });
-    if (!answers) return c.json({ error: "Couldn't read the recipe" }, 502);
-    const profile = {
-      ...answers,
-      version: recipeProfileVersion,
-      sourceHash: recipeProfileSourceHash(source),
-    };
-    await saveRecipeProfile(recipe.id, profile);
-    return c.json({ profile }, 200);
   });

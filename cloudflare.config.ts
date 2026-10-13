@@ -1,4 +1,4 @@
-import { bindings, defineConfig, exports } from "cf/config";
+import { bindings, defineConfig, exports, triggers } from "cf/config";
 
 export default defineConfig({
   worker: {
@@ -10,6 +10,8 @@ export default defineConfig({
     workersDev: false,
     previewUrls: false,
     observability: { enabled: true },
+    // Reads recipes whose profile is missing or out of date. See src/server/recipe-profile.
+    triggers: [triggers.scheduled({ schedule: "*/5 * * * *" })],
     assets: {
       notFoundHandling: "single-page-application",
       runWorkerFirst: ["/", "/api/*"],
@@ -38,11 +40,6 @@ export default defineConfig({
       IMPORT_RATE_LIMITER: bindings.rateLimit({
         namespace: "1002",
         simple: { limit: 10, period: 60 },
-      }),
-      // Reads recipes for meal suggestions; see src/server/recipes. Keyed by user.
-      PROFILE_RATE_LIMITER: bindings.rateLimit({
-        namespace: "1003",
-        simple: { limit: 30, period: 60 },
       }),
       // Workers AI, for Clef. See src/server/recipe-profile. Models only run on Cloudflare, so
       // local dev calls them remotely, which needs a Cloudflare login.

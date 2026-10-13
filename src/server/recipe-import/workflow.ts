@@ -1,10 +1,11 @@
 import { WorkflowEntrypoint } from "cloudflare:workers";
 import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
 
-import { detectPhotoType, maxPhotoBytes, photoKey, savePhoto } from "../photos/photo";
+import { deletePhotos, detectPhotoType, maxPhotoBytes, photoKey, savePhoto } from "../photos/photo";
+import { profileRecipe } from "../recipe-profile/profiles";
 import { ExtractionError, extractRecipe, ModelBusyError } from "./extract";
 import type { ImportSettings, Photo, Source } from "./extract";
-import { getImport, updateImport } from "./imports";
+import { getImport, saveImportedRecipe, updateImport } from "./imports";
 import { browserUserAgent, fetchRecipePage, PageError, readLimited } from "./page";
 import type { RecipePage } from "./page";
 
@@ -15,8 +16,8 @@ type Outcome<T> = { ok: true; value: T } | { ok: false; error: string };
 
 const failedMessage = "Could not import the recipe. Please try again.";
 
-// Turns a page or photos into a recipe in the background, so an import survives the member
-// closing the app. It becomes a recipe when the member's app claims it; see claimImport.
+// Turns a page or photos into a recipe in the background and saves it for the household, so an
+// import finishes whether or not the member's app is open. The app announces it; see claimImport.
 export class RecipeImportWorkflow extends WorkflowEntrypoint<Env, RecipeImportParams> {
   override async run(event: Readonly<WorkflowEvent<RecipeImportParams>>, step: WorkflowStep) {
     const { importId, settings } = event.payload;
@@ -78,9 +79,15 @@ export class RecipeImportWorkflow extends WorkflowEntrypoint<Env, RecipeImportPa
         },
       );
       if (!recipe.ok) return await this.fail(step, importId, recipe.error);
-      await step.do("store recipe", () =>
-        updateImport(importId, { status: "ready", recipe: recipe.value, error: null }),
-      );
+      await step.do("save recipe", async () => {
+        const saved = await saveImportedRecipe(importId, recipe.value);
+        // Photos of later pages, which only the import needed.
+        if (saved && saved.unusedPhotoIds.length > 0) {
+          await deletePhotos(this.env.PHOTOS, saved.householdId, saved.unusedPhotoIds);
+        }
+      });
+      // For meal suggestions. A failed read is left to the catch-up.
+      await step.do("profile recipe", () => profileRecipe(this.env, importId));
     } catch (error) {
       // Retries ran out, or something unexpected broke.
       console.error("Recipe import failed", importId, error);

@@ -1,7 +1,9 @@
 import { toast } from "@client/components/ui/toast";
 import { queryClient } from "@client/lib/query";
+import { sessionOptions } from "@client/lib/session";
 import { hashKey, queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
+import * as v from "valibot";
 
 // A change the app shows before the server has it. `savedAt` is set once the server does.
 type Change<TData> = { update: (data: TData) => TData; savedAt: number | null };
@@ -13,23 +15,73 @@ let clock = 0;
 // overtakes the change it takes back.
 let writes: Promise<unknown> = Promise.resolve();
 
+// Whose data a stored copy is: the member's favorites and their household's recipes.
+function currentOwner() {
+  const session = queryClient.getQueryData(sessionOptions.queryKey);
+  return session?.user && session.household ? `${session.user.id}:${session.household.id}` : null;
+}
+
 /**
  * Household data the app reads from one cached fetch and changes without waiting: a change
  * shows at once, on top of the server's copy, until a fetch brings it back from the server.
- * A change that fails to save just goes away, with a toast. See docs/data.md.
+ * A change that fails to save just goes away, with a toast.
+ *
+ * The server's last copy is also kept in this browser, so the app opens with it and fetches
+ * behind it. `schema` reads that copy back, and drops one saved in an older shape. See
+ * docs/data.md.
  */
-export function createHouseholdData<TData>(
-  queryKey: readonly string[],
-  fetchData: (signal: AbortSignal) => Promise<TData>,
-) {
+export function createHouseholdData<TData>({
+  queryKey,
+  storageKey,
+  schema,
+  fetchData,
+}: {
+  queryKey: readonly string[];
+  storageKey: string;
+  schema: v.GenericSchema<unknown, TData>;
+  fetchData: (signal: AbortSignal) => Promise<TData>;
+}) {
   const options = queryOptions({
     queryKey,
     queryFn: ({ signal }) => fetchData(signal),
     // Other members' changes show up when the app regains focus, or on the next visit.
     staleTime: 30_000,
     gcTime: Infinity,
+    // With nothing to show yet, say so soon rather than after three tries.
+    retry: 1,
   });
   const queryHash = hashKey(queryKey);
+
+  function readStored() {
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (!stored) return undefined;
+      const result = v.safeParse(v.object({ owner: v.string(), data: schema }), JSON.parse(stored));
+      return result.success && result.output.owner === currentOwner()
+        ? result.output.data
+        : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  function writeStored(data: TData) {
+    try {
+      const owner = currentOwner();
+      if (owner) localStorage.setItem(storageKey, JSON.stringify({ owner, data }));
+    } catch {
+      // Storage is full or unavailable: the next visit just waits for its fetch.
+      try {
+        localStorage.removeItem(storageKey);
+      } catch {
+        // Unavailable.
+      }
+    }
+  }
+
+  // Marked stale, so the first page to read it shows it at once and fetches behind it.
+  const stored = readStored();
+  if (stored !== undefined) queryClient.setQueryData(options.queryKey, stored, { updatedAt: 0 });
   let changes: readonly Change<TData>[] = [];
   let fetchStartedAt = 0;
   const listeners = new Set<() => void>();
@@ -54,6 +106,7 @@ export function createHouseholdData<TData>(
     if (event.action.type === "fetch") {
       fetchStartedAt = ++clock;
     } else if (event.action.type === "success" && !event.action.manual) {
+      writeStored(event.action.data);
       const kept = changes.filter(
         (change) => change.savedAt === null || change.savedAt > fetchStartedAt,
       );
@@ -110,30 +163,6 @@ export function createHouseholdData<TData>(
         // Once nothing is on its way, the server's copy replaces the app's.
         if (changes.every((other) => other.savedAt !== null)) void refetch();
       }
-    },
-
-    /** Calls the listener whenever the data or its unsaved changes may have changed. */
-    subscribe(listener: () => void) {
-      const unsubscribeChanges = subscribe(listener);
-      const unsubscribeCache = queryClient.getQueryCache().subscribe((event) => {
-        if (event.type === "updated" && event.query.queryHash === queryHash) listener();
-      });
-      return () => {
-        unsubscribeChanges();
-        unsubscribeCache();
-      };
-    },
-
-    /** Resolves once the changes made so far have reached the server, or failed to. */
-    whenSaved() {
-      return writes.then(() => {});
-    },
-
-    /** Puts something the server just returned into the cached copy. */
-    set(update: (data: TData) => TData) {
-      queryClient.setQueryData(options.queryKey, (data) =>
-        data === undefined ? undefined : update(data),
-      );
     },
   };
 }

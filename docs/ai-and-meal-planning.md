@@ -10,7 +10,7 @@ Soba uses language models in two places and plain, hand-tuned scoring code in a 
 
 ## 1. Importing recipes
 
-When someone pastes a link or uploads photos, a Workflow (`RecipeImportWorkflow`) sends the page or images to Claude Sonnet through Cloudflare AI Gateway. Sonnet pulls out a structured recipe (title, ingredients, steps) and translates it into the household's language and units. The recipe list shows each import while it runs, and the finished one is saved as a recipe when the member's app next claims it.
+When someone pastes a link or uploads photos, a Workflow (`RecipeImportWorkflow`) sends the page or images to Claude Sonnet through Cloudflare AI Gateway. Sonnet pulls out a structured recipe (title, ingredients, steps) and translates it into the household's language and units. The Workflow saves the finished recipe for the household itself, so an import completes whether or not the app is open. The recipe list shows each import while it runs, and the member's app announces the new recipe with a toast, right away or the next time it opens.
 
 Code: [`src/server/recipe-import/`](../src/server/recipe-import/). `bun run import:compare` compares models on the same sources.
 
@@ -30,23 +30,25 @@ The answers are validated and saved with the recipe as a hidden **profile**. Use
 
 ### Keeping profiles current
 
-The app decides when a recipe is read: `RecipeProfiler`, mounted in the app layout, asks the server (`POST /api/recipes/:id/profile`) to read any recipe whose profile is missing or out of date, one at a time in the background. Each profile stores:
+The server reads recipes on its own, so a recipe gets a profile however it was saved:
 
-- **`version`:** the version of the questions it answered. Bump `recipeProfileVersion` in `@shared/recipe-profile` when the questions change, and every recipe is read again.
+- **On save:** creating or editing a recipe starts a read once the response is on its way (`waitUntil`), so saving never waits for the model. An import's Workflow reads its recipe as a last step.
+- **Catch-up:** a scheduled run every 5 minutes (the trigger in `cloudflare.config.ts`) reads up to 10 recipes that were never read or changed since their last read. Recipes whose read failed, or whose profile answered older questions, are tried again at most once an hour each.
+
+Each profile stores:
+
+- **`version`:** the version of the questions it answered. Bump `recipeProfileVersion` in `@shared/recipe-profile` when the questions change, and the catch-up reads every recipe again.
 - **`sourceHash`:** a hash of the title, description, ingredients, and steps it was read from. Editing those triggers a new read; changing only a photo, tags, or servings doesn't.
 
-This covers new and edited recipes, imports, reads that failed, and tabs closed before a read finished. To avoid reading the same recipe twice:
+The recipe row keeps `profileCheckedAt`, when its last read began, which is how the catch-up tells what is due. The app gets a new profile with its next fetch of the recipes.
 
-- One tab per browser runs reads, using a Web Lock.
-- The member who saved a recipe reads it right away. Other members wait 2 minutes, in case that member's read is still on its way.
-- Except for recipes saved in this session, reads wait 10 seconds after the app opens, in case another member's browser is already reading them.
-- A failed read isn't retried until the recipe changes or the app opens again. Hitting the rate limit pauses reads for a minute.
+Scheduled runs don't fire on their own in local dev, so there only saving a recipe reads it.
 
 `bun run profile:compare` reads the 47 hand-labeled sample recipes with Clef and reports agreement per question, with how close each disagreement was. Run it after changing the questions.
 
 Until a recipe has a profile, a regex guess from its title and tags stands in, so new recipes can be suggested right away.
 
-Code: [`src/shared/recipe-profile.ts`](../src/shared/recipe-profile.ts) (types and versioning), [`src/server/recipe-profile/clef.ts`](../src/server/recipe-profile/clef.ts) (questions), [`features/recipes/recipe-profiler.tsx`](../src/client/features/recipes/recipe-profiler.tsx) (background reads), [`features/recipes/recipe-profile.ts`](../src/client/features/recipes/recipe-profile.ts) (reading and the fallback guess).
+Code: [`src/shared/recipe-profile.ts`](../src/shared/recipe-profile.ts) (types and versioning), [`src/server/recipe-profile/clef.ts`](../src/server/recipe-profile/clef.ts) (questions), [`src/server/recipe-profile/profiles.ts`](../src/server/recipe-profile/profiles.ts) (reading on save and the catch-up), [`features/recipes/recipe-profile.ts`](../src/client/features/recipes/recipe-profile.ts) (the fallback guess).
 
 ## 3. Suggesting meals
 

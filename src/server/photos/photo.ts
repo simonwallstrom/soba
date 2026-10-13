@@ -1,3 +1,5 @@
+import { recipePhotoUrl } from "@shared/recipes";
+
 // Clients shrink photos before uploading, so this is generous.
 export const maxPhotoBytes = 5 * 1024 * 1024;
 
@@ -17,6 +19,7 @@ export function detectPhotoType(bytes: Uint8Array) {
   return null;
 }
 
+const photoUrlPrefix = recipePhotoUrl("");
 const photoIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u;
 
 export function isPhotoId(value: string) {
@@ -43,4 +46,24 @@ export async function savePhoto(
     customMetadata: { uploadedBy },
   });
   return photoId;
+}
+
+// Removes photos nothing refers to anymore. Never throws: a photo left behind only takes space.
+export async function deletePhotos(bucket: R2Bucket, householdId: string, photoIds: string[]) {
+  try {
+    await bucket.delete(photoIds.map((photoId) => photoKey(householdId, photoId)));
+  } catch (error) {
+    console.error("Deleting photos failed", error);
+  }
+}
+
+// Removes a recipe's uploaded photo, given the recipe's image URL. An image elsewhere, or none,
+// is left alone.
+export async function deleteRecipePhoto(
+  bucket: R2Bucket,
+  householdId: string,
+  imageUrl: string | null,
+) {
+  const photoId = imageUrl?.startsWith(photoUrlPrefix) && imageUrl.slice(photoUrlPrefix.length);
+  if (photoId && isPhotoId(photoId)) await deletePhotos(bucket, householdId, [photoId]);
 }

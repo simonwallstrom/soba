@@ -64,14 +64,12 @@ export async function updateImport(
 }
 
 // Saves a finished import as a recipe under the import's ID, with the household's tags that match
-// by name, and deletes the import. Whichever of the member's browsers deletes the row saved it;
-// the others get null.
-export async function claimImport(id: string, userId: string) {
+// by name, and marks the import ready for the member's app to announce. Safe to run twice. Returns
+// the source photos the recipe doesn't use, or null when the import was dismissed meanwhile.
+export async function saveImportedRecipe(id: string, recipe: ImportedRecipe) {
   const db = getDatabase();
   const row = await getImport(id);
-  const ready: RecipeImportStatus = "ready";
-  if (!row?.recipe || row.userId !== userId || row.status !== ready) return null;
-  const recipe: ImportedRecipe = row.recipe;
+  if (!row) return null;
 
   const householdTags = await db
     .select({ id: tags.id, name: tags.name })
@@ -85,7 +83,7 @@ export async function claimImport(id: string, userId: string) {
       return match ? [match.id] : [];
     }),
   );
-  const [, deleted] = await db.batch([
+  await db.batch([
     db
       .insert(recipes)
       .values({
@@ -98,16 +96,39 @@ export async function claimImport(id: string, userId: string) {
         sourceUrl: row.kind === "page" ? row.sourceUrl : null,
         ingredients: recipe.ingredients,
         instructions: recipe.instructions,
-        createdBy: userId,
-        updatedBy: userId,
+        createdBy: row.userId,
+        updatedBy: row.userId,
       })
       .onConflictDoNothing(),
-    db.delete(recipeImports).where(eq(recipeImports.id, id)).returning({ id: recipeImports.id }),
     ...[...tagIds].map((tagId) =>
       db.insert(recipeTags).values({ recipeId: id, tagId }).onConflictDoNothing(),
     ),
+    db
+      .update(recipeImports)
+      .set({ status: "ready", recipe, error: null, updatedAt: new Date() })
+      .where(eq(recipeImports.id, id)),
   ]);
-  return deleted.length > 0 ? { title: recipe.title } : null;
+  return {
+    householdId: row.householdId,
+    unusedPhotoIds: (row.sourcePhotoIds ?? []).filter((photoId) => photoId !== row.photoId),
+  };
+}
+
+// Takes a saved import off the member's list. Whichever of their browsers deletes the row
+// announces the new recipe; the others get null.
+export async function claimImport(id: string, userId: string) {
+  const ready: RecipeImportStatus = "ready";
+  const [row] = await getDatabase()
+    .delete(recipeImports)
+    .where(
+      and(
+        eq(recipeImports.id, id),
+        eq(recipeImports.userId, userId),
+        eq(recipeImports.status, ready),
+      ),
+    )
+    .returning({ recipe: recipeImports.recipe });
+  return row?.recipe ? { title: row.recipe.title } : null;
 }
 
 export async function deleteImport(id: string, userId: string) {

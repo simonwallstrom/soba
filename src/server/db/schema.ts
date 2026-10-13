@@ -135,8 +135,8 @@ export const householdInvites = sqliteTable(
   (table) => [uniqueIndex("household_invite_token_unique").on(table.token)],
 );
 
-// Recipe imports a Workflow is still working on, or that failed. A finished import becomes a
-// recipe when the importer's app claims it, which deletes its row. The ID becomes the recipe's ID.
+// Recipe imports a Workflow is still working on, or that failed. The Workflow saves a finished
+// import as a recipe under the same ID; its row stays until the importer's app has announced it.
 export const recipeImports = sqliteTable(
   "recipe_import",
   {
@@ -190,6 +190,9 @@ export const recipes = sqliteTable(
     updatedBy: text("updated_by").notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
+    // When a read for the recipe's profile last began, whether or not it worked. See
+    // src/server/recipe-profile/profiles.ts.
+    profileCheckedAt: timestamp("profile_checked_at"),
   },
   (table) => [index("recipe_household_id_idx").on(table.householdId)],
 );

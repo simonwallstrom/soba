@@ -54,9 +54,9 @@ export function useRecentlyImported() {
   );
 }
 
-// Saves this member's finished imports as recipes wherever they are in the app, and says so with
-// a toast. Imports finish on the server, so one started before a reload or on another device is
-// saved the next time any of the member's tabs is open.
+// Announces this member's finished imports with a toast, wherever they are in the app. The server
+// saves each import as a recipe on its own, so one that finished while the app was closed, or
+// was started on another device, is announced the next time any of the member's tabs is open.
 export function RecipeImportWatcher() {
   const navigate = useNavigate();
   const pathname = useLocation({ select: (location) => location.pathname });

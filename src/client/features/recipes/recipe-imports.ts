@@ -93,8 +93,8 @@ export async function dismissImport(id: string) {
   }
 }
 
-// Saves a finished import as a recipe, under the import's ID. Resolves to its title, or null
-// when another of the member's browsers got there first.
+// Takes an import the server has saved as a recipe off the list. Resolves to the recipe's title,
+// or null when another of the member's browsers got there first.
 export async function claimImport(id: string) {
   const response = await api["recipe-import"][":id"].claim.$post({ param: { id } });
   if (response.status === 404) return null;
