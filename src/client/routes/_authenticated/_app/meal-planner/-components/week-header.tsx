@@ -15,6 +15,7 @@ import {
   MoreHorizontalIcon,
   SparklesIcon,
 } from "@client/components/ui/icons";
+import { cn } from "cn";
 
 import { formatWeekRange } from "../-meal-plan";
 import type { PlannerWeek } from "../-meal-plan";
@@ -22,7 +23,9 @@ import type { PlannerWeek } from "../-meal-plan";
 // A rounded gray label that sticks under the app header while its week scrolls past; the next
 // week's label pushes it away. The label is inset to the edges the meals highlight to, and sits in
 // a strip of the page's own color, so meals scrolling under it don't show around its corners. The
-// strip stacks above the meals' action buttons, which sit at z-10.
+// strip stacks above the meals' action buttons, which sit at z-10. Its buttons take the default
+// 8px corners, not the round ones used elsewhere, so they sit concentric in the label's 12px
+// corners, 4px in.
 //
 // Suggesting gets a button of its own while there are days to fill. The menu holds what acts on
 // planned meals, so an empty week goes without it.
@@ -55,7 +58,7 @@ export function WeekHeader({
         {week.offset === 0 && <Badge variant="primary">Current</Badge>}
         <div className="ml-auto flex shrink-0 items-center gap-1">
           {canSuggest && (
-            <Button onClick={onSuggest} shape="pill" variant="ghost">
+            <Button onClick={onSuggest} variant="ghost">
               <SparklesIcon />
               Suggest meals
             </Button>
@@ -64,7 +67,7 @@ export function WeekHeader({
             <DropdownMenu>
               <DropdownMenuTrigger
                 aria-label={`More actions for week ${week.number}`}
-                className={buttonVariants({ size: "icon", variant: "ghost" })}
+                className={cn(buttonVariants({ size: "icon", variant: "ghost" }), "rounded-lg")}
               >
                 <MoreHorizontalIcon />
               </DropdownMenuTrigger>
