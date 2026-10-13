@@ -3,12 +3,11 @@ import { Checkbox } from "@client/components/ui/checkbox";
 import { Add01Icon, MinusSignIcon } from "@client/components/ui/icons";
 import { textButtonStyles } from "@client/components/ui/styles";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@client/components/ui/tabs";
+import { useCookingSession } from "@client/features/recipes/cooking-session";
+import type { CookingMarks } from "@client/features/recipes/cooking-session";
 import { scaleIngredient } from "@client/features/recipes/scale-ingredient";
 import type { RecipeSection } from "@shared/recipes";
 import { cn } from "cn";
-
-import { useCookingSession } from "./cooking-session";
-import type { CookingMarks } from "./cooking-session";
 
 type ContentProps = {
   // Writes scaled decimals the household's way, such as "2,5" in Swedish.

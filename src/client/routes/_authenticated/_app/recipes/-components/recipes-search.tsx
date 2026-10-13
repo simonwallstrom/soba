@@ -5,7 +5,7 @@ import { useRecipeSearchField } from "@client/features/recipes/search-request";
 import { cn } from "cn";
 import type { KeyboardEvent } from "react";
 
-// The field beside the header's title. The app's search shortcuts focus it.
+// The field that leads the header's list controls. The app's search shortcuts focus it.
 export function RecipesSearch({
   className,
   onChange,

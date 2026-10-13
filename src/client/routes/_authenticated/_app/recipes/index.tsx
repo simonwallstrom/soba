@@ -41,8 +41,7 @@ import type { ImportSource } from "./-components/recipe-import-dialog";
 import { ActiveRecipeFilters, RecipesFilter } from "./-components/recipes-filters";
 import { RecipesDisplayMenu, RecipesHeaderActions } from "./-components/recipes-header-actions";
 import { RecipesSearch } from "./-components/recipes-search";
-import { filterRecipes, parseRecipeListSearch, pinFirst } from "./-recipe-list";
-import { recipeFilterFields } from "./-recipe-list";
+import { filterRecipes, hasFilters, parseRecipeListSearch, pinFirst } from "./-recipe-list";
 import type { RecipeFilterField, RecipeListFilters } from "./-recipe-list";
 
 export const Route = createFileRoute("/_authenticated/_app/recipes/")({
@@ -61,7 +60,9 @@ function Recipes() {
   const [settings, updateSettings] = useRecipeListSettings();
   const membersById = useMembersById();
   const [importSource, setImportSource] = useState<ImportSource | null>(null);
-  const { data: imports = [] } = useQuery(recipeImportsOptions);
+  const { data: allImports = [] } = useQuery(recipeImportsOptions);
+  // A saved import can reach the list as a recipe before it is announced; show it once.
+  const imports = allImports.filter((item) => !recipes.some((recipe) => recipe.id === item.id));
   const recentlyImported = useRecentlyImported();
   // Imports on their way count as content, so a new household sees its first import arrive.
   const isEmpty = recipes.length === 0 && imports.length === 0;
@@ -81,9 +82,10 @@ function Recipes() {
     open: false,
   });
   useEffect(() => onRecipeImported((id) => setPinnedIds((ids) => [id, ...ids])), []);
-  const entries = pinFirst(filterRecipes(recipes, tagsByRecipe, search, sort), pinnedIds).map(
-    toEntry,
-  );
+  const entries = pinFirst(
+    filterRecipes(recipes, tagsByRecipe, search, sort, favoriteIds),
+    pinnedIds,
+  ).map(toEntry);
   const plannerEntries = filterRecipes(recipes, tagsByRecipe, {}, "name").map(toEntry);
 
   const sortedTags = tags.toSorted((left, right) => compareNames(left.name, right.name));
@@ -104,7 +106,7 @@ function Recipes() {
   }
 
   function clearFilters() {
-    changeSearch({ q: "", tags: [], authors: [] });
+    changeSearch({ q: "", tags: [], authors: [], favorites: false });
   }
 
   const filterProps = {
@@ -112,6 +114,7 @@ function Recipes() {
     members: sortedMembers,
     filters: search,
     onChange: changeFilter,
+    onFavoritesChange: (favorites: boolean) => changeSearch({ favorites }),
   };
 
   return (
@@ -125,7 +128,7 @@ function Recipes() {
             recipes.length > 0 && (
               <>
                 <RecipesSearch
-                  className="mr-auto min-w-0 flex-1 max-sm:mr-2 sm:ml-3 sm:max-w-72 lg:ml-4"
+                  className="min-w-0 flex-1 max-sm:mr-2 sm:mr-1 sm:max-w-64"
                   onChange={(q) => changeSearch({ q })}
                   value={search.q ?? ""}
                 />
@@ -231,10 +234,6 @@ function Recipes() {
       />
     </>
   );
-}
-
-function hasFilters(search: RecipeListFilters) {
-  return recipeFilterFields.some((field) => (search[field]?.length ?? 0) > 0);
 }
 
 // Says what is hiding the recipes, so it's clear what clearing will bring back.

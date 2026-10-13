@@ -22,6 +22,7 @@ import {
 import { recipeDetails } from "@shared/recipes";
 import type { RecipeDetail, RecipeSort, RecipeView } from "@shared/recipes";
 import { Link } from "@tanstack/react-router";
+import { cn } from "cn";
 import type { ReactNode } from "react";
 
 import type { ImportSource } from "./recipe-import-dialog";
@@ -42,8 +43,10 @@ const detailOptions = [
   { label: "Tags", value: "tags" },
 ] as const satisfies readonly { label: string; value: RecipeDetail }[];
 
-// What shapes the list, then creating a recipe, then the side panel. Fills the row, so the
-// search that leads the list controls can sit beside the title.
+const dividerClassName = "mx-3 h-3.5 w-px shrink-0 bg-black/12 dark:bg-white/8";
+
+// What shapes the list, then a divider on wide screens, then creating a recipe and the side
+// panel. Fills the row, so on phones the search that leads the list controls can take it all.
 export function RecipesHeaderActions({
   isMealPlannerOpen,
   listControls,
@@ -58,6 +61,7 @@ export function RecipesHeaderActions({
   return (
     <div className="-mr-2 flex min-w-0 flex-1 items-center justify-end">
       {listControls}
+      {listControls && <div className={cn(dividerClassName, "max-lg:hidden")} />}
       <DropdownMenu>
         <DropdownMenuTrigger
           aria-label="New recipe"
@@ -82,7 +86,7 @@ export function RecipesHeaderActions({
         </DropdownMenuContent>
       </DropdownMenu>
       <div className="hidden items-center lg:flex">
-        <div className="mx-3 h-3.5 w-px bg-black/12 dark:bg-white/8" />
+        {!listControls && <div className={dividerClassName} />}
         <Button
           aria-controls="meal-planner-sidebar"
           aria-expanded={isMealPlannerOpen}

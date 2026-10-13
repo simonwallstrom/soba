@@ -6,8 +6,17 @@ export const recipeFilterFields = ["tags", "authors"] as const;
 export type RecipeFilterField = (typeof recipeFilterFields)[number];
 export type RecipeFilters = Partial<Record<RecipeFilterField, string[]>>;
 
-// The search text stays as typed; matching ignores surrounding spaces and case.
-export type RecipeListFilters = RecipeFilters & { q?: string };
+// The search text stays as typed; matching ignores surrounding spaces and case. `favorites`
+// keeps only the member's own favorites, so a shared link shows each member theirs.
+export type RecipeListFilters = RecipeFilters & { q?: string; favorites?: true };
+
+/** Whether anything but the search text narrows the list. */
+export function hasFilters(filters: RecipeListFilters) {
+  return (
+    filters.favorites === true ||
+    recipeFilterFields.some((field) => (filters[field]?.length ?? 0) > 0)
+  );
+}
 
 function parseIds(value: unknown) {
   const values = Array.isArray(value) ? value : [value];
@@ -24,6 +33,7 @@ export function parseRecipeListSearch(search: Record<string, unknown>): RecipeLi
   }
   const q = search["q"];
   if (typeof q === "string" && q.trim() !== "") result.q = q;
+  if (search["favorites"] === true) result.favorites = true;
   return result;
 }
 
@@ -42,12 +52,13 @@ function searchableText(recipe: Recipe, tags: readonly Tag[]) {
 }
 
 // A recipe matches the search, every selected tag (each one narrows the list), the selected
-// author, and so every field with a selection.
+// author, and so every field with a selection. With `favorites`, it must be one of the member's.
 export function filterRecipes(
   recipes: readonly Recipe[],
   tagsByRecipe: ReadonlyMap<string, readonly Tag[]>,
   filters: RecipeListFilters,
   sort: RecipeSort,
+  favoriteIds: ReadonlySet<string> = new Set(),
 ) {
   const { tags = [], authors = [] } = filters;
   const query = normalize(filters.q ?? "");
@@ -58,7 +69,8 @@ export function filterRecipes(
           text.includes(query),
         )) &&
       tags.every((id) => (tagsByRecipe.get(recipe.id) ?? []).some((tag) => tag.id === id)) &&
-      (authors.length === 0 || authors.includes(recipe.createdBy)),
+      (authors.length === 0 || authors.includes(recipe.createdBy)) &&
+      (filters.favorites !== true || favoriteIds.has(recipe.id)),
   );
   return matches.toSorted((left, right) => {
     if (sort === "created") {

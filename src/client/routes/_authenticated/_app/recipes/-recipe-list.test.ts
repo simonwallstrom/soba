@@ -112,6 +112,19 @@ describe("filterRecipes", () => {
   });
 });
 
+test("the favorites filter keeps only the member's favorites", () => {
+  const pasta = recipe("pasta", "Pasta");
+  const buns = recipe("buns", "Buns");
+  const favoriteIds = new Set(["buns"]);
+  const ids = (filters: Parameters<typeof filterRecipes>[2]) =>
+    filterRecipes([pasta, buns], new Map(), filters, "name", favoriteIds).map((item) => item.id);
+  expect(ids({ favorites: true })).toEqual(["buns"]);
+  expect(ids({})).toEqual(["buns", "pasta"]);
+  expect(parseRecipeListSearch({ favorites: true })).toEqual({ favorites: true });
+  expect(parseRecipeListSearch({ favorites: "yes" })).toEqual({});
+  expect(parseRecipeListSearch({ favorites: false })).toEqual({});
+});
+
 describe("parseRecipeListSearch", () => {
   test("keeps valid filters", () => {
     expect(parseRecipeListSearch({ tags: ["a", "a", 1] })).toEqual({ tags: ["a"] });

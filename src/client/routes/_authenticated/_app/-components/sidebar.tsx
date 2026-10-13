@@ -1,6 +1,13 @@
 import { Collapsible } from "@base-ui/react/collapsible";
-import { CaretUpIcon, File02Icon, SobaLogo, HashtagIcon } from "@client/components/ui/icons";
+import {
+  CaretUpIcon,
+  File02Icon,
+  HashtagIcon,
+  SobaLogo,
+  StarIcon,
+} from "@client/components/ui/icons";
 import { ScrollArea } from "@client/components/ui/scroll-area";
+import { useCookingProgress } from "@client/features/recipes/cooking-session";
 import { useFavorites, useRecipes, useTags } from "@client/features/recipes/recipe-data";
 import { recipeTagLinks, topTags } from "@client/features/recipes/recipe-tags";
 import { Link } from "@tanstack/react-router";
@@ -11,7 +18,8 @@ import { AccountMenu } from "./account-menu";
 import { desktopNavigation } from "./app-navigation";
 import { SidebarLink } from "./sidebar-link";
 
-const tagShortcutCount = 6;
+// Favorites and tags each show this many, to keep the sidebar short.
+const shortcutCount = 5;
 
 export function Sidebar({
   household,
@@ -45,6 +53,7 @@ export function Sidebar({
           </nav>
           {/* The sidebar renders before the recipes load; shortcuts appear once they have. */}
           <Suspense fallback={null}>
+            <CookingShortcuts />
             <FavoriteShortcuts />
             <TagShortcuts />
           </Suspense>
@@ -57,7 +66,38 @@ export function Sidebar({
   );
 }
 
-// Your favorite recipes, newest first. Favorites of deleted recipes are left out.
+// The recipes you're in the middle of cooking in this browser, with the steps done so far.
+function CookingShortcuts() {
+  const cooking = useCookingProgress(useRecipes());
+  if (cooking.length === 0) return null;
+
+  return (
+    <ShortcutSection label="Recipes you’re cooking" title="Cooking">
+      {cooking.map(({ recipe, doneCount, stepCount }) => (
+        <SidebarLink
+          key={recipe.id}
+          params={{ recipeId: recipe.id }}
+          showActiveState
+          to="/recipes/$recipeId"
+        >
+          <File02Icon />
+          <span className="truncate">{recipe.title}</span>
+          {stepCount > 0 && (
+            <span
+              aria-label={`${doneCount} of ${stepCount} steps done`}
+              className="mr-1 ml-auto text-sm text-olive-500 tabular-nums"
+            >
+              {doneCount}/{stepCount}
+            </span>
+          )}
+        </SidebarLink>
+      ))}
+    </ShortcutSection>
+  );
+}
+
+// Your newest favorite recipes, with a link to the rest in the recipe list. Favorites of deleted
+// recipes are left out.
 function FavoriteShortcuts() {
   const recipes = useRecipes();
   const { recipeIds } = useFavorites();
@@ -67,7 +107,7 @@ function FavoriteShortcuts() {
 
   return (
     <ShortcutSection label="Favorite recipes" title="Favorites">
-      {favorites.map((recipe) => (
+      {favorites.slice(0, shortcutCount).map((recipe) => (
         <SidebarLink
           key={recipe.id}
           params={{ recipeId: recipe.id }}
@@ -78,6 +118,15 @@ function FavoriteShortcuts() {
           <span className="truncate">{recipe.title}</span>
         </SidebarLink>
       ))}
+      {favorites.length > shortcutCount && (
+        <SidebarLink search={{ favorites: true }} showActiveState to="/recipes">
+          <StarIcon />
+          <span className="truncate">All favorites</span>
+          <span className="mr-1 ml-auto text-sm text-olive-500 tabular-nums">
+            {favorites.length}
+          </span>
+        </SidebarLink>
+      )}
     </ShortcutSection>
   );
 }
@@ -90,7 +139,7 @@ function TagShortcuts() {
     tags,
     recipeTagLinks(recipes),
     new Set(recipes.map(({ id }) => id)),
-    tagShortcutCount,
+    shortcutCount,
   );
   if (top.length === 0) return null;
 

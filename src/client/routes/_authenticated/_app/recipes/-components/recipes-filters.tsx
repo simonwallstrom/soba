@@ -6,6 +6,7 @@ import {
   DropdownMenuContent,
   DropdownMenuFilter,
   DropdownMenuInput,
+  DropdownMenuItem,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSub,
@@ -15,8 +16,10 @@ import {
 } from "@client/components/ui/dropdown-menu";
 import {
   Cancel01Icon,
+  CheckIcon,
   FilterIcon,
   HashtagIcon,
+  StarIcon,
   UserCircle02Icon,
 } from "@client/components/ui/icons";
 import type { HouseholdMember } from "@client/features/household/members";
@@ -24,7 +27,7 @@ import type { Tag } from "@shared/recipes";
 import { useState } from "react";
 
 import { recipeFilterFields } from "../-recipe-list";
-import type { RecipeFilterField, RecipeFilters } from "../-recipe-list";
+import type { RecipeFilterField, RecipeListFilters } from "../-recipe-list";
 
 type FieldOption = {
   value: RecipeFilterField;
@@ -61,8 +64,9 @@ type FilterProps = {
   // The household's tags and members, sorted by name.
   tags: readonly Tag[];
   members: readonly HouseholdMember[];
-  filters: RecipeFilters;
+  filters: RecipeListFilters;
   onChange: (field: RecipeFilterField, ids: string[]) => void;
+  onFavoritesChange: (favorites: boolean) => void;
 };
 
 function getValueLabels(field: RecipeFilterField, { tags, members }: FilterProps) {
@@ -86,8 +90,9 @@ function valuesContentProps(field: RecipeFilterField) {
   };
 }
 
-// A searchable menu of fields, each opening a searchable submenu of its values. Every menu
-// highlights its first item, so Enter works before typing.
+// A searchable menu of fields, each opening a searchable submenu of its values, then favorites,
+// which is yes or no and so switches right there. Every menu highlights its first item, so Enter
+// works before typing.
 export function RecipesFilter(props: FilterProps) {
   return (
     <DropdownMenuFilter autoHighlight="always">
@@ -118,6 +123,13 @@ export function RecipesFilter(props: FilterProps) {
               </DropdownMenuSub>
             </DropdownMenuFilter>
           ))}
+          <DropdownMenuItem
+            onClick={() => props.onFavoritesChange(props.filters.favorites !== true)}
+          >
+            <StarIcon />
+            Favorites
+            {props.filters.favorites === true && <CheckIcon className="ml-auto" />}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </DropdownMenuFilter>
@@ -172,7 +184,9 @@ export function ActiveRecipeFilters({ onClear, ...props }: FilterProps & { onCle
   const activeFields = recipeFilterFields.filter(
     (field) => (props.filters[field]?.length ?? 0) > 0,
   );
-  if (activeFields.length === 0) return null;
+  const favorites = props.filters.favorites === true;
+  const activeCount = activeFields.length + (favorites ? 1 : 0);
+  if (activeCount === 0) return null;
 
   return (
     // Sits on the page above the list, lined up with its content; the chips scroll right to the
@@ -181,7 +195,21 @@ export function ActiveRecipeFilters({ onClear, ...props }: FilterProps & { onCle
       {activeFields.map((field) => (
         <FilterChip {...props} field={field} key={field} />
       ))}
-      {activeFields.length > 1 && (
+      {favorites && (
+        <Badge className="h-7 gap-1 p-1 pl-2.5">
+          Favorites
+          <Button
+            aria-label="Clear favorites filter"
+            className="size-5 rounded-full"
+            onClick={() => props.onFavoritesChange(false)}
+            size="icon-sm"
+            variant="ghost"
+          >
+            <Cancel01Icon />
+          </Button>
+        </Badge>
+      )}
+      {activeCount > 1 && (
         <Button className="-mr-2 ml-auto shrink-0" onClick={onClear} size="sm" variant="ghost">
           Clear
         </Button>
