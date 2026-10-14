@@ -10,7 +10,7 @@ const noBreadcrumbs: Breadcrumb[] = [];
 
 // Shows the trail the current page declares in `staticData.breadcrumbs`, plus its actions slot.
 // The slot fills the rest of the row and keeps its contents to the right; a page puts something
-// beside its title by giving it `mr-auto`. On phones a page's search takes the trail's place.
+// beside its title by giving it `mr-auto`. On phones a page's search takes the trail's place while it's open.
 export function AppHeader({ actionsRef }: { actionsRef: Ref<HTMLDivElement> }) {
   const breadcrumbs = useMatches({
     select: (matches) => matches.at(-1)?.staticData.breadcrumbs ?? noBreadcrumbs,
@@ -25,7 +25,7 @@ export function AppHeader({ actionsRef }: { actionsRef: Ref<HTMLDivElement> }) {
 
   return (
     <header className="group/header sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b-[0.5px] border-black/18 bg-white pr-[max(1.25rem,env(safe-area-inset-right))] pl-[max(1.25rem,env(safe-area-inset-left))] font-medium max-lg:h-[calc(3rem+env(safe-area-inset-top))] max-lg:pt-[env(safe-area-inset-top)] lg:px-6 dark:border-white/10 dark:bg-olive-925">
-      <div className="flex min-w-0 items-center gap-1.5 max-sm:group-has-[search]/header:hidden">
+      <div className="flex min-w-0 items-center gap-1.5 max-sm:group-has-[search[data-expanded=true]]/header:hidden">
         {back?.link && (
           <Link
             className={cn(buttonVariants({ shape: "pill", variant: "ghost" }), "-ml-3 lg:hidden")}

@@ -128,7 +128,7 @@ function Recipes() {
             recipes.length > 0 && (
               <>
                 <RecipesSearch
-                  className="min-w-0 flex-1 max-sm:mr-2 sm:mr-1 sm:max-w-64"
+                  className="min-w-0 max-sm:data-[expanded=true]:mr-2 max-sm:data-[expanded=true]:flex-1 sm:mr-1 sm:max-w-64 sm:flex-1"
                   onChange={(q) => changeSearch({ q })}
                   value={search.q ?? ""}
                 />
