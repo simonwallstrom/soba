@@ -89,7 +89,7 @@ function RecipeDetail() {
         recipe={recipe}
         userId={user.id}
       />
-      <article className="mx-auto flex max-w-5xl flex-col gap-8 p-5 lg:gap-12 lg:p-12">
+      <article className="mx-auto flex max-w-5xl flex-col gap-5 p-5 lg:gap-12 lg:p-12">
         {/* The photo leads on small screens and sits beside the text on large ones. */}
         <header className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,28rem)] lg:items-center lg:gap-16">
           {recipe.imageUrl ? (

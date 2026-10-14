@@ -40,7 +40,8 @@ export function RecipeContent({
   return (
     <>
       <Tabs className="lg:hidden" defaultValue="ingredients">
-        <div className="sticky top-0 z-20 -mx-5 border-y-[0.5px] border-black/18 bg-olive-50 p-2 dark:border-white/10 dark:bg-olive-925">
+        {/* Outset by the toggle's own padding, so its buttons line up with the page text. */}
+        <div className="sticky top-0 z-20 -mx-0.5 bg-white pt-2 dark:bg-olive-925">
           <TabsList className="w-full">
             <TabsTrigger className="flex-1" value="ingredients">
               Ingredients
@@ -50,10 +51,10 @@ export function RecipeContent({
             </TabsTrigger>
           </TabsList>
         </div>
-        <TabsContent className="pt-5" keepMounted value="ingredients">
+        <TabsContent className="pt-7" keepMounted value="ingredients">
           <Ingredients hideHeading idPrefix="mobile" {...ingredientsProps} />
         </TabsContent>
-        <TabsContent className="pt-3" keepMounted value="instructions">
+        <TabsContent className="pt-7" keepMounted value="instructions">
           <Instructions done={session.done} hideHeading idPrefix="mobile" sections={instructions} />
         </TabsContent>
       </Tabs>
