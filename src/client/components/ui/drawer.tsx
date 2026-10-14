@@ -29,7 +29,8 @@ const closeButton = (
 
 // A bottom sheet. It extends 3rem below the screen, the bleed, so dragging it up never reveals
 // a gap underneath. Like current iOS sheets, it closes with a button in the corner rather than
-// showing a grabber, and still closes with a swipe down, a tap outside, or Escape.
+// showing a grabber, and still closes with a swipe down, a tap outside, or Escape. With a field
+// focused, it rides on top of the software keyboard, which covers the home indicator area.
 export function DrawerContent({
   children,
   className,
@@ -44,12 +45,12 @@ export function DrawerContent({
           data-slot="drawer-backdrop"
         />
         <DrawerPrimitive.Viewport
-          className="fixed inset-0 z-50 flex items-end justify-center"
+          className="fixed inset-0 z-50 flex items-end justify-center pb-(--drawer-keyboard-inset,0px) transition-[padding] duration-250 ease-out"
           data-slot="drawer-viewport"
         >
           <DrawerPrimitive.Popup
             className={cn(
-              "relative -mb-12 flex max-h-[calc(100dvh-env(safe-area-inset-top))] min-h-0 w-full flex-col gap-6 rounded-t-2xl border-[0.5px] border-b-0 border-black/40 bg-white px-6 pt-6 pb-[calc(4.5rem+env(safe-area-inset-bottom))] text-olive-900 outline-none sm:max-w-lg",
+              "relative -mb-12 flex max-h-[calc(100dvh-env(safe-area-inset-top)-var(--drawer-keyboard-inset,0px))] min-h-0 w-full flex-col gap-6 rounded-t-2xl border-[0.5px] border-b-0 border-black/40 bg-white px-6 pt-6 pb-[calc(4.5rem+max(0px,env(safe-area-inset-bottom)-var(--drawer-keyboard-inset,0px)))] text-olive-900 outline-none sm:max-w-lg",
               "translate-y-(--drawer-swipe-movement-y) transition-transform duration-450 ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 data-swiping:select-none data-ending-style:translate-y-[calc(100%-3rem+2px)] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-starting-style:translate-y-[calc(100%-3rem+2px)]",
               "before:pointer-events-none before:absolute before:inset-0 before:rounded-t-[calc(var(--radius-2xl)-0.5px)] before:shadow-md before:content-['']",
               "dark:border-white/12 dark:bg-olive-900 dark:text-olive-100 dark:before:inset-[-0.5px] dark:before:rounded-t-2xl dark:before:inset-shadow-[0_0.5px_0_var(--color-white)]/14 dark:before:shadow-black/40",
