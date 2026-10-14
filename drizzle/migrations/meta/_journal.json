@@ -36,6 +36,13 @@
       "when": 1791898691901,
       "tag": "0004_recipe_profile_checked_at",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1791988589846,
+      "tag": "0005_household_languages_en_sv",
+      "breakpoints": true
     }
   ]
 }

@@ -47,3 +47,9 @@ export async function signOut() {
   await clearSession();
   window.location.replace("/");
 }
+
+export async function updateUserName(name: string) {
+  const authClient = await getAuthClient();
+  const result = await authClient.updateUser({ name });
+  if (result.error) throw new Error(result.error.message ?? "Could not save your name");
+}

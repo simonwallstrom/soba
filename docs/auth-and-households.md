@@ -13,12 +13,18 @@ The invite page passes its token through Google sign-in as OAuth state. A databa
 
 Only allowlisted users can create a household. Everyone else joins one through an invite.
 
+## Names and photos
+
+A new account takes its name and photo from Google, or the start of its email when Google gives no name. They aren't synced on later logins, because users can rename themselves on the Settings page through Better Auth's update-user endpoint. A database hook (`cleanUserUpdate` in `src/server/auth/policy.ts`) trims the name and drops any photo change, so the photo stays Google's.
+
 ## Households
 
 - **Roles:** the creator is the `owner`, and everyone who joins is a `member`. A household holds at most 20 members.
-- **Invites:** each household has one invite link. Only the owner can reset it, and resetting replaces the token, so the old link stops working.
+- **Invites:** each household has at most one invite link, on when it's created. Only the owner can switch it off, which deletes it, or on or reset, which makes a new token, so an old link never works again.
 - **Leaving:** a member can leave at any time. The owner can't be removed and can leave only by deleting the household once nobody else is in it.
-- **Settings:** language and units, used to translate and convert imported recipes. A new household's defaults come from the browser's locale.
+- **Name:** only the owner can rename the household.
+- **Settings:** language and units, used to translate and convert imported recipes. Any member can change them. A new household's defaults come from the browser's locale.
+- **Settings page:** your account and everything about the household (name, settings, members, the invite link, leaving or deleting) are on `/settings`. `/settings?invite=true` scrolls to the invite link and switches it on, which the account menu links to.
 
 Routes are in `src/server/household/routes.ts` and queries in `src/server/household/household.ts`.
 

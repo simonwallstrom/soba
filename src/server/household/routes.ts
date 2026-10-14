@@ -9,12 +9,14 @@ import { isAllowlisted } from "../auth/policy";
 import { validateJson } from "../lib/validate";
 import {
   createHousehold,
+  deleteInvite,
   findInvite,
   getInviteToken,
   joinHousehold,
   leaveHousehold,
   listMembers,
   removeMember,
+  renameHousehold,
   resetInviteToken,
   updateHouseholdSettings,
 } from "./household";
@@ -27,6 +29,13 @@ const requireOwner = createMiddleware<HouseholdEnv>(async (c, next) => {
   }
   return next();
 });
+
+const nameSchema = v.pipe(
+  v.string(),
+  v.trim(),
+  v.minLength(1, "Enter a household name"),
+  v.maxLength(80, "Use at most 80 characters"),
+);
 
 const settingsSchema = {
   language: v.picklist(
@@ -49,12 +58,7 @@ export const householdRoutes = new Hono<SessionEnv>()
     "/",
     validateJson(
       v.object({
-        name: v.pipe(
-          v.string(),
-          v.trim(),
-          v.minLength(1, "Enter a household name"),
-          v.maxLength(80, "Use at most 80 characters"),
-        ),
+        name: nameSchema,
         ...settingsSchema,
       }),
     ),
@@ -81,9 +85,24 @@ export const householdRoutes = new Hono<SessionEnv>()
     await updateHouseholdSettings(c.get("membership").id, c.req.valid("json"));
     return c.json({ ok: true }, 200);
   })
-  .post("/invite/reset", requireHousehold, requireOwner, async (c) => {
+  .put(
+    "/name",
+    requireHousehold,
+    requireOwner,
+    validateJson(v.object({ name: nameSchema })),
+    async (c) => {
+      await renameHousehold(c.get("membership").id, c.req.valid("json").name);
+      return c.json({ ok: true }, 200);
+    },
+  )
+  // Switching the link on, or resetting it, always makes a new one, so old links stay dead.
+  .post("/invite", requireHousehold, requireOwner, async (c) => {
     const token = await resetInviteToken(c.get("membership").id, c.get("user").id);
     return c.json({ inviteUrl: inviteUrl(c.req.url, token) }, 200);
+  })
+  .delete("/invite", requireHousehold, requireOwner, async (c) => {
+    await deleteInvite(c.get("membership").id);
+    return c.json({ ok: true }, 200);
   })
   .delete("/members/:userId", requireHousehold, requireOwner, async (c) => {
     const removed = await removeMember(c.get("membership").id, c.req.param("userId"));

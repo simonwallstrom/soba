@@ -4,14 +4,6 @@ export const MAX_HOUSEHOLD_MEMBERS = 20;
 export const householdLanguages = [
   { value: "en", label: "English" },
   { value: "sv", label: "Svenska" },
-  { value: "da", label: "Dansk" },
-  { value: "nb", label: "Norsk" },
-  { value: "fi", label: "Suomi" },
-  { value: "de", label: "Deutsch" },
-  { value: "nl", label: "Nederlands" },
-  { value: "fr", label: "Français" },
-  { value: "es", label: "Español" },
-  { value: "it", label: "Italiano" },
 ] as const;
 export type HouseholdLanguage = (typeof householdLanguages)[number]["value"];
 
@@ -28,9 +20,7 @@ export function isHouseholdLanguage(value: string): value is HouseholdLanguage {
 // A new household's language follows the browser that creates it, falling back to English.
 export function defaultHouseholdLanguage(locales: readonly string[]): HouseholdLanguage {
   for (const locale of locales) {
-    const code = locale.split("-")[0]?.toLowerCase() ?? "";
-    // Norwegian browsers report "no" or "nn" as often as "nb".
-    const language = code === "no" || code === "nn" ? "nb" : code;
+    const language = locale.split("-")[0]?.toLowerCase() ?? "";
     if (isHouseholdLanguage(language)) return language;
   }
   return "en";

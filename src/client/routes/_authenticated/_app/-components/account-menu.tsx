@@ -28,7 +28,7 @@ export function AccountMenu({
   household,
 }: {
   user: { name: string; image: string | null };
-  household: { name: string };
+  household: { name: string; role: "owner" | "member" };
 }) {
   const { logOut, signingOut, signOutError } = useSignOut();
 
@@ -80,10 +80,12 @@ export function AccountMenu({
         <DropdownMenuSeparator />
 
         <DropdownMenuGroup>
-          <DropdownMenuItem render={<Link to="/household" />}>
-            <UserAdd01Icon />
-            Invite member
-          </DropdownMenuItem>
+          {household.role === "owner" && (
+            <DropdownMenuItem render={<Link search={{ invite: true }} to="/settings" />}>
+              <UserAdd01Icon />
+              Invite member
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem render={<Link to={destinations.settings.to} />}>
             <Settings01Icon />
             {destinations.settings.label}

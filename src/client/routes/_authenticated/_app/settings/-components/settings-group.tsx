@@ -1,0 +1,87 @@
+import { cn } from "cn";
+import type { ReactNode } from "react";
+
+// A titled card of rows, with an optional note under it, like a section of iOS Settings.
+export function SettingsGroup({
+  children,
+  note,
+  title,
+}: {
+  children: ReactNode;
+  note?: ReactNode;
+  title?: string;
+}) {
+  return (
+    <section className="flex flex-col gap-3">
+      {/* The rows' padding plus the card's 1px border, so the text lines up with theirs. */}
+      {(title || note) && (
+        <div className="px-[calc(--spacing(3)+1px)]">
+          {title && <h2 className="text-base font-medium">{title}</h2>}
+          {note && <p className="text-sm text-olive-500">{note}</p>}
+        </div>
+      )}
+      <div className="flex flex-col divide-y overflow-hidden rounded-xl border bg-white dark:bg-white/3">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+// One line in a group; callers render it as a div, button, or link.
+export const settingsRowStyles = "flex min-h-12 items-center gap-3 p-3";
+
+// Rows that act when pressed. The outline sits inside, since the card clips its corners.
+export const settingsButtonRowStyles = [
+  settingsRowStyles,
+  "w-full text-left font-medium hover:bg-black/4 focus-visible:outline-2 focus-visible:-outline-offset-2 active:bg-black/8 disabled:pointer-events-none disabled:opacity-50 dark:hover:bg-white/4 dark:active:bg-white/8",
+  "[&_svg]:shrink-0 [&_svg]:opacity-80",
+];
+
+// A labeled value with an optional action at the end. Labels share one width, so values line up
+// in every card. On phones the label sits above the value and the action stays beside the label.
+export function SettingsField({
+  action,
+  children,
+  htmlFor,
+  label,
+}: {
+  action?: ReactNode;
+  children: ReactNode;
+  htmlFor?: string;
+  label: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 p-3",
+        "[grid-template-areas:'label_action'_'value_value'] sm:grid-cols-[10rem_minmax(0,1fr)_auto] sm:[grid-template-areas:'label_value_action']",
+      )}
+    >
+      {htmlFor ? (
+        <label className="[grid-area:label]" htmlFor={htmlFor}>
+          {label}
+        </label>
+      ) : (
+        <span className="[grid-area:label]">{label}</span>
+      )}
+      <div className="flex min-w-0 items-center [grid-area:value]">{children}</div>
+      {action && <div className="flex gap-2 [grid-area:action]">{action}</div>}
+    </div>
+  );
+}
+
+// An icon as wide as the avatars in the rows above it, so the icon centers under them and the
+// text lines up with their names.
+export function SettingsRowIcon({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <span className={cn("flex w-8 shrink-0 items-center justify-center", className)}>
+      {children}
+    </span>
+  );
+}

@@ -8,7 +8,7 @@ import { serialize } from "hono/utils/cookie";
 import { getDatabase } from "../db/client";
 import { accounts, sessions, users, verifications } from "../db/schema";
 import { findInvite } from "../household/household";
-import { isAllowlisted, normalizeEmail } from "./policy";
+import { cleanUserUpdate, isAllowlisted, normalizeEmail, signUpName } from "./policy";
 
 // The invite page passes its token through Google login as OAuth `additionalData`.
 // Clients control that value, which is fine: the token itself is the invite.
@@ -47,7 +47,21 @@ function createAuth() {
         create: {
           before: async (user) => {
             await assertCanSignUp(user.email);
-            return { data: { ...user, email: normalizeEmail(user.email) } };
+            return {
+              data: {
+                ...user,
+                name: signUpName(user.name, user.email),
+                email: normalizeEmail(user.email),
+              },
+            };
+          },
+        },
+        // Users can rename themselves through Better Auth's update-user endpoint.
+        update: {
+          before: async (user) => {
+            const result = cleanUserUpdate(user);
+            if (!result.ok) throw new APIError("BAD_REQUEST", { message: result.error });
+            return { data: result.data };
           },
         },
       },

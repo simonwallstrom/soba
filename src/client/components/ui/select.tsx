@@ -86,6 +86,12 @@ export function SelectContent({
           className={cn(
             popupStyles,
             "isolate min-w-(--anchor-width) data-[align-trigger=true]:transition-none",
+            // Over the trigger, the item text sits 3.5px further in than the trigger's (0.5px
+            // border, 4px list padding, 10px item padding against a 1px border and 10px padding),
+            // so the popup shifts left by that much. Widening it by twice that covers the trigger's
+            // right edge too. Base UI measures the item in whole pixels and misses the 0.5px
+            // border, which the nudge down puts back.
+            "data-[align-trigger=true]:min-w-[calc(var(--anchor-width)+7px)] data-[align-trigger=true]:translate-y-[0.5px]",
             className,
           )}
           data-align-trigger={alignItemWithTrigger}

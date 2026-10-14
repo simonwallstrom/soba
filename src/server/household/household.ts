@@ -65,6 +65,10 @@ export async function updateHouseholdSettings(householdId: string, settings: Hou
   await getDatabase().update(households).set(settings).where(eq(households.id, householdId));
 }
 
+export async function renameHousehold(householdId: string, name: string) {
+  await getDatabase().update(households).set({ name }).where(eq(households.id, householdId));
+}
+
 export async function listMembers(householdId: string) {
   return getDatabase()
     .select({
@@ -89,6 +93,7 @@ export async function getInviteToken(householdId: string) {
   return invite?.token ?? null;
 }
 
+/** Replaces the household's invite link with a new one, or creates it when it's switched off. */
 export async function resetInviteToken(householdId: string, userId: string) {
   const token = crypto.randomUUID();
   await getDatabase()
@@ -99,6 +104,11 @@ export async function resetInviteToken(householdId: string, userId: string) {
       set: { token, createdBy: userId, createdAt: new Date() },
     });
   return token;
+}
+
+/** Switches the invite link off: the old link stops working until a new one is made. */
+export async function deleteInvite(householdId: string) {
+  await getDatabase().delete(householdInvites).where(eq(householdInvites.householdId, householdId));
 }
 
 export async function findInvite(token: string) {

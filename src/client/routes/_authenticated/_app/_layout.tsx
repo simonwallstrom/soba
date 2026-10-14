@@ -33,7 +33,6 @@ const appPageIds = [
   "/_authenticated/_app/recipes/",
   "/_authenticated/_app/meal-planner/",
   "/_authenticated/_app/settings/",
-  "/_authenticated/_app/household",
 ] as const;
 
 function AppLayout() {
