@@ -3,7 +3,7 @@ import { CheckIcon, Copy01Icon, UserAdd01Icon } from "@client/components/ui/icon
 import { Input } from "@client/components/ui/input";
 import { Switch } from "@client/components/ui/switch";
 import { cn } from "cn";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import { SettingsRowIcon, settingsRowStyles } from "./settings-group";
 
@@ -11,18 +11,12 @@ import { SettingsRowIcon, settingsRowStyles } from "./settings-group";
 // deletes the link, and switching it on or resetting makes a new one, so old links stop working.
 export function InviteLinkRow({
   inviteUrl,
-  onRequestHandled,
   onSwitch,
-  requested,
 }: {
   // Undefined until the household loads.
   inviteUrl: string | null | undefined;
-  onRequestHandled: () => void;
   onSwitch: (on: boolean) => Promise<void>;
-  // Set when the account menu's "Invite member" led here: the link is switched on and shown.
-  requested: boolean;
 }) {
-  const rowRef = useRef<HTMLDivElement>(null);
   const [pending, setPending] = useState<"on" | "off" | "reset" | null>(null);
   // Briefly confirms a reset, since the new link looks much like the old one.
   const [justReset, setJustReset] = useState(false);
@@ -49,20 +43,14 @@ export function InviteLinkRow({
     setTimeout(() => setCopied(false), 2000);
   }
 
-  useEffect(() => {
-    if (!requested || !loaded) return;
-    rowRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
-    if (!inviteUrl) void change("on");
-    onRequestHandled();
-    // Runs once per request, after the household loads.
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [requested, loaded]);
-
   return (
-    <div className={cn(settingsRowStyles, "items-start")} ref={rowRef}>
-      {/* As tall as the title and its description, so the icon centers beside them. */}
+    <div className={cn(settingsRowStyles, "items-start")}>
+      {/* As tall as the title and its description, so the icon centers beside them. Its circle
+          matches a member's avatar fallback, so it reads as the next member in the list. */}
       <SettingsRowIcon className="h-10">
-        <UserAdd01Icon />
+        <span className="flex size-8 items-center justify-center rounded-full bg-olive-200 text-olive-600 dark:bg-olive-800 dark:text-olive-400 [&_svg]:size-4">
+          <UserAdd01Icon />
+        </span>
       </SettingsRowIcon>
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         <div className="flex items-center gap-3">
@@ -82,7 +70,7 @@ export function InviteLinkRow({
 
         {isOn && (
           <div className="flex flex-col gap-2">
-            <div className="flex gap-2 max-sm:flex-col">
+            <div className="flex gap-2">
               <Input
                 aria-label="Invite link"
                 onFocus={(event) => event.currentTarget.select()}
@@ -90,13 +78,15 @@ export function InviteLinkRow({
                 readOnly
                 value={pending ? "" : (inviteUrl ?? "")}
               />
+              {/* Just the icon, which turns to a check, so the field keeps its width. */}
               <Button
-                className="shrink-0"
+                aria-label={copied ? "Copied" : "Copy link"}
+                className="shrink-0 rounded-lg"
                 disabled={!inviteUrl || pending !== null}
                 onClick={() => void copy()}
+                size="icon"
               >
                 {copied ? <CheckIcon /> : <Copy01Icon />}
-                {copied ? "Copied" : "Copy link"}
               </Button>
             </div>
             {justReset ? (

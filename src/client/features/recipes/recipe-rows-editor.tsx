@@ -203,10 +203,11 @@ export function RecipeRowsEditor({
                 ))}
               </ul>
             ) : (
-              <ol className="flex flex-col gap-5">
+              // Spaced like the recipe's steps, which pad each step for its pressable area.
+              <ol className="flex flex-col gap-3">
                 {items.map((item) => (
                   <li
-                    className="grid grid-cols-[2rem_minmax(0,1fr)] leading-6 [counter-increment:steps] before:font-mono before:text-olive-400 before:content-[counter(steps,decimal-leading-zero)]"
+                    className="grid grid-cols-[2rem_minmax(0,1fr)] py-1 leading-6 [counter-increment:steps] before:font-mono before:text-olive-400 before:content-[counter(steps,decimal-leading-zero)]"
                     key={item.id}
                   >
                     {renderField(item, `Step ${stepById.get(item.id)}`, "leading-6")}

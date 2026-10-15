@@ -1,3 +1,4 @@
+import { FoodIllustrations } from "@client/components/particles/welcome-layout";
 import { GoogleIcon, SobaLogoWithKana } from "@client/components/ui/icons";
 import { signInErrorMessage, signInGoogle } from "@client/lib/auth";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -53,7 +54,11 @@ function Start() {
             <GoogleIcon className="-ml-0.5" />
             <span>{signingIn ? "Logging in…" : "Login with Google"}</span>
           </button>
-          {signInError && <p role="alert">{signInError}</p>}
+          {signInError && (
+            <p className="text-red-600 dark:text-red-400" role="alert">
+              {signInError}
+            </p>
+          )}
           <nav
             aria-label="Footer"
             className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm font-medium text-olive-600 dark:text-olive-400"
@@ -79,24 +84,7 @@ function Start() {
           </nav>
         </footer>
 
-        <div className="pointer-events-none fixed top-0 left-0 -z-10 max-w-64 motion-safe:animate-[fade-in_0.5s_ease-in-out] sm:max-w-none">
-          <img
-            className="dark:opacity-60"
-            alt=""
-            height="398"
-            src="/images/food-illustration-top-left.avif"
-            width="338"
-          />
-        </div>
-        <div className="pointer-events-none fixed right-0 bottom-0 -z-10 hidden motion-safe:animate-[fade-in_0.5s_ease-in-out] md:block">
-          <img
-            className="dark:opacity-60"
-            alt=""
-            height="336"
-            src="/images/food-illustration-bottom-right.avif"
-            width="416"
-          />
-        </div>
+        <FoodIllustrations />
       </main>
     </>
   );

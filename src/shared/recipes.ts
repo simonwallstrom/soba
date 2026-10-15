@@ -53,3 +53,13 @@ export function normalizeTagName(name: string) {
     .replace(/\s+/gu, " ")
     .replace(/^\p{Ll}/u, (first) => first.toLocaleUpperCase("sv-SE"));
 }
+
+// Whether two names are the same tag: case, accents, and spacing aside, so "creme brulee" matches
+// "Crème brûlée". Swedish letters stay distinct, so "Kål" is not "Kal".
+export function sameTagName(left: string, right: string) {
+  return (
+    normalizeTagName(left).localeCompare(normalizeTagName(right), "sv-SE", {
+      sensitivity: "base",
+    }) === 0
+  );
+}

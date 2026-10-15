@@ -159,7 +159,14 @@ export function RecipeForm({
               type="file"
             />
             {photoUrl && (
-              <img alt="" className="absolute inset-0 size-full object-cover" src={photoUrl} />
+              <>
+                <img alt="" className="absolute inset-0 size-full object-cover" src={photoUrl} />
+                {/* Over the photo, which would cover the box's own hairline. */}
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 ring-[0.5px] ring-black/20 ring-inset max-lg:hidden lg:rounded-xl dark:ring-white/20"
+                />
+              </>
             )}
             <span
               className={
@@ -192,7 +199,7 @@ export function RecipeForm({
         </div>
         <div className="flex flex-col gap-3 lg:col-start-1 lg:row-start-1">
           <RecipeByline author={author} createdAt={createdAt} sourceUrl={sourceUrl} />
-          <h1 className="text-3xl font-medium tracking-tight">
+          <h1 className="font-serif text-3xl">
             <textarea
               aria-describedby={isTitleMissing ? "title-error" : undefined}
               aria-invalid={isTitleMissing || undefined}
@@ -222,7 +229,7 @@ export function RecipeForm({
           )}
           <textarea
             aria-label="Description"
-            className="block field-sizing-content max-w-xl resize-none bg-transparent p-0 leading-6 text-olive-600 outline-none placeholder:text-olive-400 dark:text-olive-400 dark:placeholder:text-olive-600"
+            className="block field-sizing-content max-w-xl resize-none bg-transparent p-0 text-base text-pretty text-olive-600 outline-none placeholder:text-olive-400 dark:text-olive-400 dark:placeholder:text-olive-600"
             onChange={(event) => update({ description: event.currentTarget.value })}
             maxLength={recipeDescriptionMaxLength}
             placeholder="What makes it special? A tip or serving idea…"
@@ -292,6 +299,7 @@ export function UnsavedChangesDialog({
     enableBeforeUnload: isDirty,
     withResolver: true,
   });
+  const keepWritingRef = useRef<HTMLButtonElement>(null);
 
   return (
     <Dialog
@@ -300,17 +308,19 @@ export function UnsavedChangesDialog({
       }}
       open={blocker.status === "blocked"}
     >
-      <DialogContent showCloseButton={false}>
+      <DialogContent initialFocus={keepWritingRef} showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
+          <Button onClick={() => blocker.proceed?.()} variant="destructive">
+            Discard
+          </Button>
           {/* Staying is the safe choice, so it takes focus and Enter. */}
-          <Button onClick={() => blocker.reset?.()} variant="primary">
+          <Button onClick={() => blocker.reset?.()} ref={keepWritingRef}>
             Keep writing
           </Button>
-          <Button onClick={() => blocker.proceed?.()}>Discard</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

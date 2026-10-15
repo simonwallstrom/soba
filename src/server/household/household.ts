@@ -117,6 +117,7 @@ export async function findInvite(token: string) {
       householdId: households.id,
       householdName: households.name,
       inviterName: users.name,
+      inviterImage: users.image,
     })
     .from(householdInvites)
     .innerJoin(households, eq(householdInvites.householdId, households.id))

@@ -24,7 +24,7 @@ A new account takes its name and photo from Google, or the start of its email wh
 - **Leaving:** a member can leave at any time. The owner can't be removed and can leave only by deleting the household once nobody else is in it.
 - **Name:** only the owner can rename the household.
 - **Settings:** language and units, used to translate and convert imported recipes. Any member can change them. A new household's defaults come from the browser's locale.
-- **Settings page:** your account and everything about the household (name, settings, members, the invite link, leaving or deleting) are on `/settings`. `/settings?invite=true` scrolls to the invite link and switches it on, which the account menu links to.
+- **Settings page:** your account and everything about the household (name, settings, members, the invite link, leaving or deleting) are on `/settings`. Groups can be linked to by hash, like `/settings#members` from the account menu's "Invite member" and `/settings#tags` from the sidebar.
 
 Routes are in `src/server/household/routes.ts` and queries in `src/server/household/household.ts`.
 

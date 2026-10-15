@@ -44,7 +44,7 @@ export function ConfirmDialog({
           >
             {action}
           </Button>
-          <Button onClick={() => onOpenChange(false)} ref={cancelRef} variant="primary">
+          <Button onClick={() => onOpenChange(false)} ref={cancelRef}>
             Cancel
           </Button>
         </DialogFooter>

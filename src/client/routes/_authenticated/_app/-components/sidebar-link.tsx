@@ -11,15 +11,17 @@ export const sidebarItemStyles = [
 ];
 
 export function SidebarLink({
+  className,
   showActiveState = false,
   ...props
-}: Omit<LinkComponentProps, "className"> & { showActiveState?: boolean }) {
+}: Omit<LinkComponentProps, "className"> & { className?: string; showActiveState?: boolean }) {
   return (
     <Link
       className={cn(
         sidebarItemStyles,
         showActiveState &&
           "[&.active]:bg-olive-300/50 [&.active]:text-inherit dark:[&.active]:bg-olive-900",
+        className,
       )}
       {...props}
     />

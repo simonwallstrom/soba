@@ -26,7 +26,7 @@ import { householdLanguages, householdUnits } from "@shared/household";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { cn } from "cn";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 import { ConfirmDialog } from "./-components/confirm-dialog";
 import { EditableTextRow } from "./-components/editable-text-row";
@@ -39,12 +39,10 @@ import {
   settingsButtonRowStyles,
   settingsRowStyles,
 } from "./-components/settings-group";
+import { TagsGroup } from "./-components/tags-group";
 import { renameUser, sendHouseholdRequest, updateHousehold } from "./-settings-requests";
 
 export const Route = createFileRoute("/_authenticated/_app/settings/")({
-  // `?invite` shows the invite link, switched on, so the account menu can link straight to it.
-  validateSearch: (search: Record<string, unknown>): { invite?: true } =>
-    search["invite"] === true ? { invite: true } : {},
   // Starts the members request without blocking navigation.
   loader: () => {
     void queryClient.prefetchQuery(householdOptions);
@@ -66,8 +64,6 @@ async function removeMember(member: HouseholdMember) {
 
 function Settings() {
   const { user, household } = Route.useRouteContext();
-  const { invite: inviteRequested = false } = Route.useSearch();
-  const navigate = Route.useNavigate();
   const { data, isError } = useQuery(householdOptions);
   const { logOut, signingOut, signOutError } = useSignOut();
   // Kept after the dialog closes, so its text doesn't change while it animates out.
@@ -90,7 +86,7 @@ function Settings() {
   return (
     <>
       <title>{formatMetaTitle("Settings")}</title>
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-12 p-5 sm:py-16 md:px-6 xl:py-20">
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 p-5 sm:gap-12 sm:py-16 md:px-6 xl:py-20">
         <SettingsGroup note="How you appear to your household." title="Profile">
           <ProfileRow onRename={(name) => void renameUser(name)} user={user} />
           <button
@@ -177,7 +173,11 @@ function Settings() {
           </SettingsField>
         </SettingsGroup>
 
-        <SettingsGroup note="Everyone here shares the recipes and meal plan." title="Members">
+        <SettingsGroup
+          id="members"
+          note="Everyone here shares the recipes and meal plan."
+          title="Members"
+        >
           {isError && !data && (
             <p className={cn(settingsRowStyles, "text-olive-500")} role="alert">
               Could not load members. Check your connection.
@@ -237,17 +237,20 @@ function Settings() {
           {isOwner && (
             <InviteLinkRow
               inviteUrl={data?.inviteUrl}
-              onRequestHandled={() => void navigate({ search: {}, replace: true })}
               onSwitch={async (on) => {
                 const switched = await sendHouseholdRequest(() =>
                   on ? api.household.invite.$post() : api.household.invite.$delete(),
                 );
                 if (switched) await refreshMembers();
               }}
-              requested={inviteRequested}
             />
           )}
         </SettingsGroup>
+
+        {/* Tags come with the recipes, which may still be loading. */}
+        <Suspense fallback={null}>
+          <TagsGroup />
+        </Suspense>
 
         <SettingsGroup
           note={

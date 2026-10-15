@@ -45,11 +45,8 @@ function NewRecipe() {
     <>
       <title>{formatMetaTitle("New recipe")}</title>
       <AppHeaderActions>
-        <div className="-mr-2 flex items-center gap-1">
-          <Link
-            className={buttonVariants({ className: "max-lg:hidden", variant: "ghost" })}
-            to="/recipes"
-          >
+        <div className="-mr-2 flex items-center gap-2">
+          <Link className={buttonVariants({ className: "max-lg:hidden" })} to="/recipes">
             Cancel
           </Link>
           <Button disabled={photoSave.isSaving} form="new-recipe" type="submit" variant="primary">

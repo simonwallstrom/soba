@@ -12,11 +12,14 @@ The goal is still speed, not offline use: the app keeps the household's data in 
 | `POST /api/recipes`, `PUT /api/recipes/:id` | Save a recipe, with any new tags it uses. The last save wins       |
 | `DELETE /api/recipes/:id`                   | Delete a recipe, with its favorites, profile, and planned meals    |
 | `PUT`/`DELETE /api/recipes/:id/favorite`    | Favorite or unfavorite it, for the signed-in member                |
+| `POST /api/tags`, `PUT /api/tags/:id`       | Add or rename a tag. A name another tag has, in any case, is a 409 |
+| `POST /api/tags/:id/merge`                  | Move a tag's recipes to another tag (`into`) and delete it         |
+| `DELETE /api/tags/:id`                      | Delete a tag and take it off its recipes                           |
 | `GET /api/meal-plan`                        | Every planned dinner                                               |
 | `PUT /api/meal-plan`                        | Plan dinners for up to 14 days, replacing any already there        |
 | `POST /api/meal-plan/remove`, `/move`       | Clear days, or move a meal to another day, swapping if it is taken |
 
-Routes are in `src/server/recipes/` and `src/server/meal-plan/`. Keep these properties when changing them:
+Routes are in `src/server/recipes/`, `src/server/tags/`, and `src/server/meal-plan/`. Every member can manage tags, from Settings. Keep these properties when changing them:
 
 - **Scoped to the household:** `requireSession` and `requireHousehold` run on every request, and every query filters by the member's household. A recipe ID from another household is a 404.
 - **IDs come from the client:** the app makes recipe and tag IDs, so a new recipe's page can open before the server answers.

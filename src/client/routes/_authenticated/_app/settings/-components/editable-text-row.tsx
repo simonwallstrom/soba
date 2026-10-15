@@ -82,7 +82,7 @@ export function EditableTextRow({
         <SettingsField
           action={
             <>
-              <Button onClick={edit.stop} type="button" variant="ghost">
+              <Button onClick={edit.stop} type="button">
                 Cancel
               </Button>
               <Button disabled={!edit.canSave} type="submit" variant="primary">

@@ -93,14 +93,21 @@ function RecipeDetail() {
         {/* The photo leads on small screens and sits beside the text on large ones. */}
         <header className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,28rem)] lg:items-center lg:gap-16">
           {recipe.imageUrl ? (
-            <img
-              alt={recipe.title}
-              className="-mx-5 -mt-5 aspect-5/4 w-[calc(100%+2.5rem)] max-w-none object-cover lg:col-start-2 lg:row-start-1 lg:m-0 lg:w-full lg:rounded-xl"
-              decoding="async"
-              height="1100"
-              src={recipe.imageUrl}
-              width="1200"
-            />
+            <div className="relative -mx-5 -mt-5 lg:col-start-2 lg:row-start-1 lg:m-0">
+              <img
+                alt={recipe.title}
+                className="aspect-5/4 w-full object-cover lg:rounded-xl"
+                decoding="async"
+                height="1100"
+                src={recipe.imageUrl}
+                width="1200"
+              />
+              {/* The hairline other images have, once the photo stops running edge to edge. */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-xl ring-[0.5px] ring-black/20 ring-inset max-lg:hidden dark:ring-white/20"
+              />
+            </div>
           ) : (
             <ImagePlaceholder className="aspect-5/4 w-full rounded-xl max-lg:hidden lg:col-start-2 lg:row-start-1 [&_svg]:size-12">
               <ServingFoodIcon />
@@ -110,7 +117,7 @@ function RecipeDetail() {
             <RecipeByline author={author} createdAt={recipe.createdAt} />
             <h1 className="font-serif text-3xl text-balance">{recipe.title}</h1>
             {recipe.description && (
-              <p className="max-w-xl text-base leading-6 text-pretty text-olive-600 dark:text-olive-400">
+              <p className="max-w-xl text-base text-pretty text-olive-600 dark:text-olive-400">
                 {recipe.description}
               </p>
             )}

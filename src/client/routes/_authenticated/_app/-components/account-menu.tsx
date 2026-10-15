@@ -81,7 +81,7 @@ export function AccountMenu({
 
         <DropdownMenuGroup>
           {household.role === "owner" && (
-            <DropdownMenuItem render={<Link search={{ invite: true }} to="/settings" />}>
+            <DropdownMenuItem render={<Link hash="members" to="/settings" />}>
               <UserAdd01Icon />
               Invite member
             </DropdownMenuItem>

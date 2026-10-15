@@ -99,7 +99,7 @@ export function RecipeActionsMenu({
               Delete
             </Button>
             {/* Cancel is the safe choice, so it takes focus and Enter. */}
-            <Button onClick={() => setIsConfirmingDelete(false)} ref={cancelRef} variant="primary">
+            <Button onClick={() => setIsConfirmingDelete(false)} ref={cancelRef}>
               Cancel
             </Button>
           </DialogFooter>

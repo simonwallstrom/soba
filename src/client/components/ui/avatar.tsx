@@ -14,6 +14,8 @@ export function Avatar({
     <AvatarPrimitive.Root
       className={cn(
         "group/avatar relative flex size-8 shrink-0 rounded-full select-none",
+        // A photo gets the same hairline as other images, drawn over it; initials don't need one.
+        "has-data-[slot=avatar-image]:after:pointer-events-none has-data-[slot=avatar-image]:after:absolute has-data-[slot=avatar-image]:after:inset-0 has-data-[slot=avatar-image]:after:rounded-full has-data-[slot=avatar-image]:after:ring-[0.5px] has-data-[slot=avatar-image]:after:ring-black/20 has-data-[slot=avatar-image]:after:ring-inset has-data-[slot=avatar-image]:after:content-[''] dark:has-data-[slot=avatar-image]:after:ring-white/20",
         "data-[size=lg]:size-10 data-[size=sm]:size-5",
         className,
       )}

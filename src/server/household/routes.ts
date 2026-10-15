@@ -120,7 +120,15 @@ export const inviteRoutes = new Hono<SessionEnv>()
     c.header("Cache-Control", "private, no-store");
     const invite = await findInvite(c.req.param("token"));
     if (!invite) return c.json({ error: "This invite link is no longer valid" }, 404);
-    return c.json({ householdName: invite.householdName, inviterName: invite.inviterName }, 200);
+    // The inviter's photo makes the invite feel personal; the name stands in without one.
+    return c.json(
+      {
+        householdName: invite.householdName,
+        inviterName: invite.inviterName,
+        inviterImage: invite.inviterImage,
+      },
+      200,
+    );
   })
   .post("/:token/join", requireSession, async (c) => {
     const invite = await findInvite(c.req.param("token"));

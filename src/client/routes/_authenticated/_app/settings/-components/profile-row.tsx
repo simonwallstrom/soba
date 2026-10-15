@@ -43,12 +43,9 @@ export function ProfileRow({
     return (
       <form className={settingsRowStyles} {...edit.formProps}>
         {avatar}
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <Input aria-label="Name" {...edit.inputProps} />
-          <p className="truncate text-sm text-olive-500">{user.email}</p>
-        </div>
-        <div className="flex shrink-0 gap-2 self-start">
-          <Button onClick={edit.stop} type="button" variant="ghost">
+        <Input aria-label="Name" className="min-w-0 flex-1" {...edit.inputProps} />
+        <div className="flex shrink-0 gap-2">
+          <Button onClick={edit.stop} type="button">
             Cancel
           </Button>
           <Button disabled={!edit.canSave} type="submit" variant="primary">

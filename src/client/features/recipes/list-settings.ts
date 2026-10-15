@@ -18,7 +18,8 @@ const defaults: RecipeListSettings = {
   view: "list",
   sort: "name",
   visibleDetails: [...recipeDetails],
-  isMealPlannerOpen: true,
+  // Closed until opened, so a first visit shows just the recipes.
+  isMealPlannerOpen: false,
 };
 
 function readSettings() {

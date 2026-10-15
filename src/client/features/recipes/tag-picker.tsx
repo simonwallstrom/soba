@@ -12,7 +12,7 @@ import {
 } from "@client/components/ui/combobox";
 import { Add01Icon, Cancel01Icon } from "@client/components/ui/icons";
 import { compareNames } from "@client/features/recipes/recipe-tags";
-import { normalizeTagName } from "@shared/recipes";
+import { normalizeTagName, sameTagName } from "@shared/recipes";
 import { cn } from "cn";
 import { useState } from "react";
 
@@ -36,9 +36,7 @@ export function TagPicker({
   const [query, setQuery] = useState("");
   const names = new Map(tags.map((tag) => [tag.id, tag.name]));
   const name = normalizeTagName(query);
-  const canCreate =
-    name !== "" &&
-    !tags.some((tag) => tag.name.localeCompare(name, "sv-SE", { sensitivity: "base" }) === 0);
+  const canCreate = name !== "" && !tags.some((tag) => sameTagName(tag.name, name));
   const ids = tags
     .toSorted((left, right) => compareNames(left.name, right.name))
     .map((tag) => tag.id);
@@ -54,19 +52,22 @@ export function TagPicker({
 
   return (
     <div className="flex flex-wrap items-center gap-1.5" ref={anchor}>
-      {selected.map((id) => (
-        <span className={badgeVariants({ className: "pr-0.5" })} key={id}>
-          {names.get(id)}
-          <button
-            aria-label={`Remove ${names.get(id)}`}
-            className="flex size-4 cursor-pointer items-center justify-center rounded-full hover:bg-black/10 focus-visible:outline-2 dark:hover:bg-white/12"
-            onClick={() => onChange(selected.filter((tagId) => tagId !== id))}
-            type="button"
-          >
-            <Cancel01Icon />
-          </button>
-        </span>
-      ))}
+      {/* A–Ö, as the recipe lists them. */}
+      {selected
+        .toSorted((left, right) => compareNames(names.get(left) ?? "", names.get(right) ?? ""))
+        .map((id) => (
+          <span className={badgeVariants({ className: "pr-0.5" })} key={id}>
+            {names.get(id)}
+            <button
+              aria-label={`Remove ${names.get(id)}`}
+              className="flex size-4 cursor-pointer items-center justify-center rounded-full hover:bg-black/10 focus-visible:outline-2 dark:hover:bg-white/12"
+              onClick={() => onChange(selected.filter((tagId) => tagId !== id))}
+              type="button"
+            >
+              <Cancel01Icon />
+            </button>
+          </span>
+        ))}
       <Combobox
         autoHighlight
         inputValue={query}

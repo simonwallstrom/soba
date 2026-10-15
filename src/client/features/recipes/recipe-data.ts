@@ -1,7 +1,7 @@
 import { createHouseholdData } from "@client/features/household/data";
 import { api } from "@client/lib/api";
 import { recipeBases, recipeEfforts, recipeProteins } from "@shared/recipe-profile";
-import { recipePhotoUrl } from "@shared/recipes";
+import { normalizeTagName, recipePhotoUrl } from "@shared/recipes";
 import type { Recipe, RecipeSection, Tag } from "@shared/recipes";
 import * as v from "valibot";
 
@@ -195,5 +195,61 @@ export function deleteRecipe(id: string) {
       favoriteIds: data.favoriteIds.filter((recipeId) => recipeId !== id),
     }),
     () => api.recipes[":id"].$delete({ param: { id } }),
+  );
+}
+
+// Adds a tag no recipe uses yet, under an ID made here.
+export function createTag(id: string, name: string) {
+  const tag = { id, name: normalizeTagName(name), createdAt: new Date() };
+  return recipeData.save(
+    (data) => ({ ...data, tags: [...data.tags.filter((other) => other.id !== id), tag] }),
+    () => api.tags.$post({ json: { id, name } }),
+  );
+}
+
+// Renames a tag on every recipe that uses it.
+export function renameTag(id: string, name: string) {
+  const normalized = normalizeTagName(name);
+  return recipeData.save(
+    (data) => ({
+      ...data,
+      tags: data.tags.map((tag) => (tag.id === id ? { ...tag, name: normalized } : tag)),
+    }),
+    () => api.tags[":id"].$put({ param: { id }, json: { name } }),
+  );
+}
+
+// Moves a tag's recipes to another tag and deletes it. A recipe that had both keeps one.
+export function mergeTag(id: string, into: string) {
+  return recipeData.save(
+    (data) => ({
+      ...data,
+      tags: data.tags.filter((tag) => tag.id !== id),
+      recipes: data.recipes.map((recipe) =>
+        recipe.tagIds.includes(id)
+          ? {
+              ...recipe,
+              tagIds: [...new Set(recipe.tagIds.map((tagId) => (tagId === id ? into : tagId)))],
+            }
+          : recipe,
+      ),
+    }),
+    () => api.tags[":id"].merge.$post({ param: { id }, json: { into } }),
+  );
+}
+
+// Deletes a tag and takes it off its recipes; the recipes stay.
+export function deleteTag(id: string) {
+  return recipeData.save(
+    (data) => ({
+      ...data,
+      tags: data.tags.filter((tag) => tag.id !== id),
+      recipes: data.recipes.map((recipe) =>
+        recipe.tagIds.includes(id)
+          ? { ...recipe, tagIds: recipe.tagIds.filter((tagId) => tagId !== id) }
+          : recipe,
+      ),
+    }),
+    () => api.tags[":id"].$delete({ param: { id } }),
   );
 }

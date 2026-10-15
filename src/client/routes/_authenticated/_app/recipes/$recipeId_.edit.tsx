@@ -71,9 +71,9 @@ function EditRecipe({ recipe, tags }: { recipe: Recipe; tags: readonly Tag[] }) 
     <>
       <title>{formatMetaTitle(`Edit ${recipe.title}`)}</title>
       <AppHeaderActions>
-        <div className="-mr-2 flex items-center gap-1">
+        <div className="-mr-2 flex items-center gap-2">
           <Link
-            className={buttonVariants({ className: "max-lg:hidden", variant: "ghost" })}
+            className={buttonVariants({ className: "max-lg:hidden" })}
             params={{ recipeId: recipe.id }}
             to="/recipes/$recipeId"
           >

@@ -12,6 +12,7 @@ import { photoRoutes } from "./photos/routes";
 import { recipeImportRoutes } from "./recipe-import/routes";
 import { profileStaleRecipes } from "./recipe-profile/profiles";
 import { recipeRoutes } from "./recipes/routes";
+import { tagRoutes } from "./tags/routes";
 
 export { RecipeImportWorkflow } from "./recipe-import/workflow";
 
@@ -56,6 +57,7 @@ const app = new Hono<{ Bindings: Env }>()
   .route("/api/photos", photoRoutes)
   .route("/api/recipe-import", recipeImportRoutes)
   .route("/api/recipes", recipeRoutes)
+  .route("/api/tags", tagRoutes)
   .route("/api/meal-plan", mealPlanRoutes)
   .on(["GET", "POST"], "/api/auth/*", (c) => handleAuth(c.req.raw));
 

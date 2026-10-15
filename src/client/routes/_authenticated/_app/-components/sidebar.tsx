@@ -1,12 +1,8 @@
 import { Collapsible } from "@base-ui/react/collapsible";
-import {
-  CaretUpIcon,
-  File02Icon,
-  HashtagIcon,
-  SobaLogo,
-  StarIcon,
-} from "@client/components/ui/icons";
+import { CaretUpIcon, File02Icon, HashtagIcon, SobaLogo } from "@client/components/ui/icons";
 import { ScrollArea } from "@client/components/ui/scroll-area";
+import { usePlannedMeals } from "@client/features/meal-plan/meal-plan-data";
+import { dayKey } from "@client/features/meal-plan/weeks";
 import { useCookingProgress } from "@client/features/recipes/cooking-session";
 import { useFavorites, useRecipes, useTags } from "@client/features/recipes/recipe-data";
 import { recipeTagLinks, topTags } from "@client/features/recipes/recipe-tags";
@@ -18,8 +14,19 @@ import { AccountMenu } from "./account-menu";
 import { desktopNavigation } from "./app-navigation";
 import { SidebarLink } from "./sidebar-link";
 
-// Favorites and tags each show this many, to keep the sidebar short.
-const shortcutCount = 5;
+// Each section shows at most this many, to keep the sidebar short. Older cooking sessions stay
+// kept, and come back once touched again.
+const shortcutCount = 3;
+
+// Rows that end a section, like "Show all": muted, so they read as a way onward rather than one
+// more item in the list.
+const mutedRowStyles =
+  "text-olive-500 hover:text-olive-800 dark:text-olive-500 dark:hover:text-olive-200";
+
+// Lined up with the titles above it, past where their icons sit.
+function MutedRowLabel({ children }: { children: ReactNode }) {
+  return <span className="pl-6.5">{children}</span>;
+}
 
 export function Sidebar({
   household,
@@ -44,8 +51,15 @@ export function Sidebar({
         <div className="grid grid-cols-1 gap-1 px-1">
           {/* Less padding on top centers the first link on the page's toolbar beside it. */}
           <nav aria-label="Main navigation" className="flex flex-col gap-0.5 px-2 pt-1 pb-2">
+            {/* Lit only on the page itself, filtered or not, so a recipe lights only its own row
+                below and Recipes plainly leads back to the whole list. */}
             {desktopNavigation.map(({ icon: Icon, label, to }) => (
-              <SidebarLink key={to} showActiveState to={to}>
+              <SidebarLink
+                activeOptions={{ exact: true, includeSearch: false }}
+                key={to}
+                showActiveState
+                to={to}
+              >
                 <Icon />
                 <span>{label}</span>
               </SidebarLink>
@@ -53,6 +67,7 @@ export function Sidebar({
           </nav>
           {/* The sidebar renders before the recipes load; shortcuts appear once they have. */}
           <Suspense fallback={null}>
+            <TodayShortcut />
             <CookingShortcuts />
             <FavoriteShortcuts />
             <TagShortcuts />
@@ -66,33 +81,79 @@ export function Sidebar({
   );
 }
 
-// The recipes you're in the middle of cooking in this browser, with the steps done so far.
-function CookingShortcuts() {
+// The recipe planned for today, unless it's been deleted.
+function useTodaysRecipe() {
+  const recipes = useRecipes();
+  const today = dayKey(new Date());
+  const meal = usePlannedMeals().find(({ date }) => date === today);
+  return meal && recipes.find(({ id }) => id === meal.recipeId);
+}
+
+// Today's meal from the meal plan, first since it's what's most likely needed next. It stays here
+// once cooking starts, with its progress, rather than moving to Cooking.
+function TodayShortcut() {
+  const recipe = useTodaysRecipe();
   const cooking = useCookingProgress(useRecipes());
+  if (!recipe) return null;
+  const session = cooking.find((progress) => progress.recipe.id === recipe.id);
+
+  return (
+    <ShortcutSection label="Today’s meal" title="Today">
+      <RecipeShortcut
+        doneCount={session?.doneCount}
+        recipe={recipe}
+        stepCount={session?.stepCount}
+      />
+    </ShortcutSection>
+  );
+}
+
+// The recipes you're in the middle of cooking in this browser, most recently touched first, with
+// the steps done so far. Today's meal shows its progress under Today instead.
+function CookingShortcuts() {
+  const todaysRecipe = useTodaysRecipe();
+  const cooking = useCookingProgress(useRecipes()).filter(
+    ({ recipe }) => recipe.id !== todaysRecipe?.id,
+  );
   if (cooking.length === 0) return null;
 
   return (
     <ShortcutSection label="Recipes you’re cooking" title="Cooking">
-      {cooking.map(({ recipe, doneCount, stepCount }) => (
-        <SidebarLink
+      {cooking.slice(0, shortcutCount).map(({ recipe, doneCount, stepCount }) => (
+        <RecipeShortcut
+          doneCount={doneCount}
           key={recipe.id}
-          params={{ recipeId: recipe.id }}
-          showActiveState
-          to="/recipes/$recipeId"
-        >
-          <File02Icon />
-          <span className="truncate">{recipe.title}</span>
-          {stepCount > 0 && (
-            <span
-              aria-label={`${doneCount} of ${stepCount} steps done`}
-              className="mr-1 ml-auto text-sm text-olive-500 tabular-nums"
-            >
-              {doneCount}/{stepCount}
-            </span>
-          )}
-        </SidebarLink>
+          recipe={recipe}
+          stepCount={stepCount}
+        />
       ))}
     </ShortcutSection>
+  );
+}
+
+// A recipe's link, with the steps done so far when it's being cooked.
+function RecipeShortcut({
+  doneCount,
+  recipe,
+  stepCount,
+}: {
+  doneCount?: number | undefined;
+  recipe: { id: string; title: string };
+  stepCount?: number | undefined;
+}) {
+  return (
+    <SidebarLink params={{ recipeId: recipe.id }} showActiveState to="/recipes/$recipeId">
+      <File02Icon />
+      <span className="truncate">{recipe.title}</span>
+      {doneCount !== undefined && stepCount ? (
+        <span
+          aria-label={`${doneCount} of ${stepCount} steps done`}
+          className="mr-1 ml-auto text-sm text-olive-500 tabular-nums"
+        >
+          {doneCount}/{stepCount}
+        </span>
+      ) : null}
+    </SidebarLink>
   );
 }
 
@@ -108,30 +169,19 @@ function FavoriteShortcuts() {
   return (
     <ShortcutSection label="Favorite recipes" title="Favorites">
       {favorites.slice(0, shortcutCount).map((recipe) => (
-        <SidebarLink
-          key={recipe.id}
-          params={{ recipeId: recipe.id }}
-          showActiveState
-          to="/recipes/$recipeId"
-        >
-          <File02Icon />
-          <span className="truncate">{recipe.title}</span>
-        </SidebarLink>
+        <RecipeShortcut key={recipe.id} recipe={recipe} />
       ))}
       {favorites.length > shortcutCount && (
-        <SidebarLink search={{ favorites: true }} showActiveState to="/recipes">
-          <StarIcon />
-          <span className="truncate">All favorites</span>
-          <span className="mr-1 ml-auto text-sm text-olive-500 tabular-nums">
-            {favorites.length}
-          </span>
+        <SidebarLink className={mutedRowStyles} search={{ favorites: true }} to="/recipes">
+          <MutedRowLabel>Show all</MutedRowLabel>
         </SidebarLink>
       )}
     </ShortcutSection>
   );
 }
 
-// The tags on the most recipes, each opening the recipe list filtered by it.
+// The tags on the most recipes, each opening the recipe list filtered by it, and a way to manage
+// them all.
 function TagShortcuts() {
   const recipes = useRecipes();
   const tags = useTags();
@@ -152,6 +202,9 @@ function TagShortcuts() {
           <span className="mr-1 ml-auto text-sm text-olive-500 tabular-nums">{count}</span>
         </SidebarLink>
       ))}
+      <SidebarLink className={mutedRowStyles} hash="tags" to="/settings">
+        <MutedRowLabel>Manage tags</MutedRowLabel>
+      </SidebarLink>
     </ShortcutSection>
   );
 }

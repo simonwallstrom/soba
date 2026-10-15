@@ -17,7 +17,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as PublicPrivacyRouteImport } from './routes/_public/privacy'
 import { Route as PublicRequestAccessRouteImport } from './routes/_public/request-access'
 import { Route as PublicTermsRouteImport } from './routes/_public/terms'
-import { Route as PublicInviteTokenRouteImport } from './routes/_public/invite.$token'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AuthenticatedAppDesignSystemIndexRouteImport } from './routes/_authenticated/_app/design-system/index'
 import { Route as AuthenticatedAppMealPlannerIndexRouteImport } from './routes/_authenticated/_app/meal-planner/index'
 import { Route as AuthenticatedAppRecipesIndexRouteImport } from './routes/_authenticated/_app/recipes/index'
@@ -64,10 +64,10 @@ const PublicTermsRoute = PublicTermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => PublicLayoutRoute,
 } as any)
-const PublicInviteTokenRoute = PublicInviteTokenRouteImport.update({
+const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
-  getParentRoute: () => PublicLayoutRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppDesignSystemIndexRoute =
   AuthenticatedAppDesignSystemIndexRouteImport.update({
@@ -124,7 +124,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PublicPrivacyRoute
   '/request-access': typeof PublicRequestAccessRoute
   '/terms': typeof PublicTermsRoute
-  '/invite/$token': typeof PublicInviteTokenRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/recipes/$recipeId': typeof AuthenticatedAppRecipesRecipeIdRoute
   '/recipes/new': typeof AuthenticatedAppRecipesNewRoute
   '/design-system/': typeof AuthenticatedAppDesignSystemIndexRoute
@@ -140,7 +140,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PublicPrivacyRoute
   '/request-access': typeof PublicRequestAccessRoute
   '/terms': typeof PublicTermsRoute
-  '/invite/$token': typeof PublicInviteTokenRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/recipes/$recipeId': typeof AuthenticatedAppRecipesRecipeIdRoute
   '/recipes/new': typeof AuthenticatedAppRecipesNewRoute
   '/design-system': typeof AuthenticatedAppDesignSystemIndexRoute
@@ -160,7 +160,7 @@ export interface FileRoutesById {
   '/_public/privacy': typeof PublicPrivacyRoute
   '/_public/request-access': typeof PublicRequestAccessRoute
   '/_public/terms': typeof PublicTermsRoute
-  '/_public/invite/$token': typeof PublicInviteTokenRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/_authenticated/_app/recipes/$recipeId': typeof AuthenticatedAppRecipesRecipeIdRoute
   '/_authenticated/_app/recipes/new': typeof AuthenticatedAppRecipesNewRoute
   '/_authenticated/_app/design-system/': typeof AuthenticatedAppDesignSystemIndexRoute
@@ -213,7 +213,7 @@ export interface FileRouteTypes {
     | '/_public/privacy'
     | '/_public/request-access'
     | '/_public/terms'
-    | '/_public/invite/$token'
+    | '/invite/$token'
     | '/_authenticated/_app/recipes/$recipeId'
     | '/_authenticated/_app/recipes/new'
     | '/_authenticated/_app/design-system/'
@@ -228,6 +228,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedLayoutRoute: typeof AuthenticatedLayoutRouteWithChildren
   PublicLayoutRoute: typeof PublicLayoutRouteWithChildren
+  InviteTokenRoute: typeof InviteTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -288,12 +289,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicTermsRouteImport
       parentRoute: typeof PublicLayoutRoute
     }
-    '/_public/invite/$token': {
-      id: '/_public/invite/$token'
+    '/invite/$token': {
+      id: '/invite/$token'
       path: '/invite/$token'
       fullPath: '/invite/$token'
-      preLoaderRoute: typeof PublicInviteTokenRouteImport
-      parentRoute: typeof PublicLayoutRoute
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_app/design-system/': {
       id: '/_authenticated/_app/design-system/'
@@ -403,14 +404,12 @@ interface PublicLayoutRouteChildren {
   PublicPrivacyRoute: typeof PublicPrivacyRoute
   PublicRequestAccessRoute: typeof PublicRequestAccessRoute
   PublicTermsRoute: typeof PublicTermsRoute
-  PublicInviteTokenRoute: typeof PublicInviteTokenRoute
 }
 
 const PublicLayoutRouteChildren: PublicLayoutRouteChildren = {
   PublicPrivacyRoute: PublicPrivacyRoute,
   PublicRequestAccessRoute: PublicRequestAccessRoute,
   PublicTermsRoute: PublicTermsRoute,
-  PublicInviteTokenRoute: PublicInviteTokenRoute,
 }
 
 const PublicLayoutRouteWithChildren = PublicLayoutRoute._addFileChildren(
@@ -421,6 +420,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedLayoutRoute: AuthenticatedLayoutRouteWithChildren,
   PublicLayoutRoute: PublicLayoutRouteWithChildren,
+  InviteTokenRoute: InviteTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
