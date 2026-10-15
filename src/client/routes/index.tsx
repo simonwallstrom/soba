@@ -35,7 +35,7 @@ function Start() {
       <main className="relative isolate flex flex-1 flex-col items-center justify-center overflow-y-auto px-6 py-40">
         <div className="flex flex-col items-center gap-4 text-center">
           <h1>
-            <SobaLogoWithKana className="h-auto w-50 text-olive-900 dark:text-olive-100" />
+            <SobaLogoWithKana className="h-auto w-48 text-olive-900 dark:text-olive-100" />
             <span className="sr-only">Soba</span>
           </h1>
 

@@ -28,7 +28,8 @@ function Root() {
   );
 }
 
-// Logged-out visitors land on the start page from /recipes, so this suits both.
+// A last resort: wrong URLs land in the app's own not-found page (`_app/$.tsx`), or the start
+// page when logged out. Logged-out visitors land on the start page from /recipes too.
 function NotFound() {
   return (
     <>

@@ -7,6 +7,7 @@
 - Keep route-specific UI, types, and behavior in `src/client/routes/`. Inline one-off markup in the route component so the page composition stays readable.
 - Extract a component when it is reused, owns meaningful behavior or state, or clarifies a repeated pattern. Keep route-local components beside the route in a dash-prefixed file or folder that TanStack Router ignores.
 - The route controls layout and spacing between sections. A child controls spacing inside itself. Prefer `flex` or `grid` with `gap-*` for siblings.
+- **Not found:** inside the app, show `NotFoundState` (`components/particles/not-found-state.tsx`) in the page area, so the sidebar and header stay. Unknown URLs reach it through the catch-all `_authenticated/_app/$.tsx`, which sends logged-out visitors to the start page. Missing data, like a deleted recipe, uses it with its own wording. Pages before the app (invites, onboarding) handle their own dead ends on the welcome card; the root not-found is only a last resort.
 - Follow the nearest route's pattern before introducing an abstraction. Use function declarations for named components.
 
 ## Code organization
