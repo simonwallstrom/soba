@@ -109,7 +109,7 @@ function Invite() {
             description="It may have been reset. Ask someone in the household for a new link."
             title="This invite link no longer works"
           />
-          <Link className={buttonVariants({ className: "h-10" })} to="/">
+          <Link className={buttonVariants()} to="/">
             Go to Soba
           </Link>
         </WelcomeLayout>
