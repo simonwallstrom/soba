@@ -302,6 +302,8 @@ export const households = sqliteTable("household", {
   // See householdLanguages and householdUnits in @shared/household.
   language: text().$type<HouseholdLanguage>().default("en").notNull(),
   units: text().$type<HouseholdUnits>().default("metric").notNull(),
+  // An IANA name like "Europe/Stockholm", for the household's own "today" where no browser says.
+  timeZone: text("time_zone").default("UTC").notNull(),
   createdAt: createdAt(),
 });
 

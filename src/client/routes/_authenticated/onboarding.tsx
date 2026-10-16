@@ -137,7 +137,15 @@ function NameStep({ userName }: { userName: string }) {
     setError("");
     setCreating(true);
     try {
-      const response = await api.household.$post({ json: { name, language, units } });
+      const response = await api.household.$post({
+        json: {
+          name,
+          language,
+          units,
+          // Not asked for here; Settings shows it, for anyone who signs up away from home.
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
+      });
       if (!response.ok) {
         const result = await response.json();
         setError("error" in result ? result.error : "Could not create household");

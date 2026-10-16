@@ -25,6 +25,7 @@ const signedIn: Session = {
     role: "owner",
     language: "en",
     units: "metric",
+    timeZone: "Europe/Stockholm",
   },
   canCreateHousehold: false,
 };

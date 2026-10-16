@@ -34,7 +34,7 @@ Members import recipes with their own Claude rather than through Soba's import: 
 - **Tags:** recipes get only the household's existing tags, matched by name. Names it doesn't have are left out and listed in the answer. `create_tag` adds one when the member wants it, so an import never invents tags. The tag tools take names, as Claude sees them in `get_household`, and use the same functions as Settings.
 - **Duplicates:** a recipe already saved from the same `sourceUrl` is refused unless Claude passes `allowDuplicate`.
 - **Photos:** a tool call's arguments are JSON the model writes, so a photo the member attached in Claude can't reach a tool. `imageUrl` takes a photo on the web instead, such as the page's main image, and Soba downloads it into the household's photos (`downloadPhoto`, shared with link imports), so recipes never depend on another site. When the download fails the recipe saves without it, or keeps its photo, and the answer says why. Replacing or clearing an uploaded photo deletes it from the bucket, as the app does. `get_recipe` only says whether there is a photo, since photo URLs need a member's session.
-- **The meal plan:** days before yesterday can't change. Meals Claude plans count as the member's own.
+- **The meal plan:** days before today can't change. Meals Claude plans count as the member's own.
 - **Annotations:** every tool that changes or removes data is marked destructive, so clients may ask before running it; only `create_recipe` and `create_tag` aren't. A recipe page could ask Claude to delete things, so `delete_recipe`'s description tells Claude to delete only when the member asks, after confirming the title.
 - The open app shows changes when it next refetches, such as when it regains focus.
 
@@ -51,7 +51,7 @@ MCP clients find everything through OAuth discovery, starting from `/mcp`'s 401:
 ## How it's built
 
 - **The MCP server** (`src/server/mcp/server.ts`) uses the official SDK's `createMcpHandler`, which builds a server for each request, for the token's member, and keeps no sessions. Tool input schemas are Valibot, converted with `toStandardJsonSchema`. JSON Schema can't express regex flags, so dates use `v.isoDate()` rather than `mealDatePattern`.
-- **Tool answers** (`src/server/mcp/read-tools.ts`) reuse the API's queries, like `listRecipes` and `listMeals`, and are plain JSON with names rather than member IDs. "Today", for the default meal plan range and what counts as eaten, is the UTC date.
+- **Tool answers** (`src/server/mcp/read-tools.ts`) reuse the API's queries, like `listRecipes` and `listMeals`, and are plain JSON with names rather than member IDs. "Today", for the default meal plan range, what counts as eaten, and which days can change, is the date in the household's time zone.
 - **Rate limit:** 120 requests a minute per member (`MCP_RATE_LIMITER`). It's keyed by member rather than IP, because every claude.ai user calls from Claude's servers.
 - **Better Auth's `mcp()` plugin** (`@better-auth/mcp`) is the OAuth provider, configured in `src/server/auth/auth.ts` beside the `jwt()` plugin that signs tokens. Its tables are in `src/server/db/schema.ts`. Members can't create or edit OAuth apps by hand; only registration creates them.
 - **`requireMcpToken`** (`src/server/mcp/auth.ts`) checks the token's signature, issuer, audience, and expiry with the auth instance's keys, in the Worker rather than over HTTP. It then looks up the member's household on every request, so a member who leaves stops reaching it at once. Tokens bound to a DPoP key are refused.

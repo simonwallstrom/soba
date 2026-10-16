@@ -25,7 +25,7 @@ for (const [id, household, title, ingredients] of [
 }
 sqlite.run("INSERT INTO tag (id, household_id, name) VALUES ('t1', 'h1', 'Quick')");
 sqlite.run(`INSERT INTO recipe_tag (recipe_id, tag_id) VALUES ('${curry}', 't1')`);
-// The tools take today's date as the UTC date, so these days are years either side of it.
+// These days are years either side of today, whatever the household's time zone.
 for (const [date, recipe, by] of [
   ["2020-10-09", curry, "bob"],
   ["2020-10-12", pancakes, "alice"],

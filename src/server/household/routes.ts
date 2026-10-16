@@ -1,4 +1,4 @@
-import { householdLanguages, householdUnits } from "@shared/household";
+import { householdLanguages, householdUnits, isTimeZone } from "@shared/household";
 import { Hono } from "hono";
 import { createMiddleware } from "hono/factory";
 import * as v from "valibot";
@@ -46,6 +46,7 @@ const settingsSchema = {
     householdUnits.map((units) => units.value),
     "Choose units",
   ),
+  timeZone: v.pipe(v.string(), v.check(isTimeZone, "Choose a time zone")),
 };
 
 function inviteUrl(requestUrl: string, token: string) {
@@ -80,7 +81,7 @@ export const householdRoutes = new Hono<SessionEnv>()
     ]);
     return c.json({ members, inviteUrl: token ? inviteUrl(c.req.url, token) : null }, 200);
   })
-  // Any member can change how imported recipes are written.
+  // Any member can change how imported recipes are written, and the household's time zone.
   .put("/settings", requireHousehold, validateJson(v.object(settingsSchema)), async (c) => {
     await updateHouseholdSettings(c.get("membership").id, c.req.valid("json"));
     return c.json({ ok: true }, 200);

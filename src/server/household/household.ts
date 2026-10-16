@@ -6,7 +6,11 @@ import { getDatabase } from "../db/client";
 import { isUniqueViolation } from "../db/errors";
 import { householdInvites, householdMembers, households, users } from "../db/schema";
 
-export type HouseholdSettings = { language: HouseholdLanguage; units: HouseholdUnits };
+export type HouseholdSettings = {
+  language: HouseholdLanguage;
+  units: HouseholdUnits;
+  timeZone: string;
+};
 
 export type Membership = HouseholdSettings & {
   id: string;
@@ -22,6 +26,7 @@ export async function getMembership(userId: string): Promise<Membership | null> 
       role: householdMembers.role,
       language: households.language,
       units: households.units,
+      timeZone: households.timeZone,
     })
     .from(householdMembers)
     .innerJoin(households, eq(householdMembers.householdId, households.id))

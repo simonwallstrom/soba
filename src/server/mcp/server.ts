@@ -130,7 +130,7 @@ export function createServer({ membership, userId, appUrl, today, photos }: McpC
     {
       title: "Get household",
       description:
-        "The household's name, members, language and units for writing recipes, how many recipes it has, and its tags with how many recipes have each.",
+        "The household's name, members, language and units for writing recipes, its time zone, how many recipes it has, and its tags with how many recipes have each.",
       annotations: readOnly,
     },
     async () => json(await getHousehold(membership, userId)),

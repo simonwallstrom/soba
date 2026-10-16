@@ -9,7 +9,7 @@ import { listRecipes } from "../recipes/recipes";
 // What the read-only MCP tools answer, built from the same queries as the app's API. Answers are
 // plain JSON for the model to read: names rather than IDs where it helps, and links to the app.
 
-type Household = Pick<Membership, "id" | "name" | "language" | "units">;
+type Household = Pick<Membership, "id" | "name" | "language" | "units" | "timeZone">;
 
 const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -54,6 +54,7 @@ export async function getHousehold(household: Household, userId: string) {
     name: household.name,
     language: household.language,
     units: household.units,
+    timeZone: household.timeZone,
     members: members.map(({ id, name, role }) => ({ name, role, isYou: id === userId })),
     recipeCount: recipes.length,
     tags: tags.map((name) => ({

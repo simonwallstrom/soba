@@ -15,12 +15,12 @@ export function SettingsGroup({
   title?: string;
 }) {
   return (
-    <section className="flex scroll-mt-6 flex-col gap-5" id={id}>
+    <section className="flex scroll-mt-6 flex-col gap-4" id={id}>
       {/* The rows' padding plus the card's 1px border, so the text lines up with theirs. */}
       {(title || note) && (
         <div className="px-[calc(--spacing(3)+1px)]">
           {title && <h2 className="text-lg font-medium">{title}</h2>}
-          {note && <p className="mt-0.5 text-sm text-olive-500">{note}</p>}
+          {note && <p className="text-sm text-olive-500">{note}</p>}
         </div>
       )}
       <div className="flex flex-col divide-y rounded-xl border bg-white dark:bg-white/3">

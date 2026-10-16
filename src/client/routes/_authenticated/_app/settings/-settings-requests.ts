@@ -37,7 +37,7 @@ export async function sendHouseholdRequest(send: () => Promise<ApiResponse>) {
  * fetched again either way, which keeps the change or puts back what the server has.
  */
 export async function updateHousehold(
-  change: Partial<Pick<Household, "name" | "language" | "units">>,
+  change: Partial<Pick<Household, "name" | "language" | "units" | "timeZone">>,
   send: () => Promise<ApiResponse>,
 ) {
   queryClient.setQueryData(sessionOptions.queryKey, (session): Session | undefined =>

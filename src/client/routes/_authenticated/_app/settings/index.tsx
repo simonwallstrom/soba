@@ -40,6 +40,7 @@ import {
   settingsRowStyles,
 } from "./-components/settings-group";
 import { TagsGroup } from "./-components/tags-group";
+import { TimeZoneField } from "./-components/time-zone-field";
 import { renameUser, sendHouseholdRequest, updateHousehold } from "./-settings-requests";
 
 export const Route = createFileRoute("/_authenticated/_app/settings/")({
@@ -128,7 +129,7 @@ function Settings() {
               items={householdLanguages}
               onValueChange={(language) => {
                 if (!language) return;
-                const settings = { language, units: household.units };
+                const settings = { language, units: household.units, timeZone: household.timeZone };
                 void updateHousehold(settings, () =>
                   api.household.settings.$put({ json: settings }),
                 );
@@ -152,7 +153,11 @@ function Settings() {
               items={householdUnits}
               onValueChange={(units) => {
                 if (!units) return;
-                const settings = { language: household.language, units };
+                const settings = {
+                  language: household.language,
+                  units,
+                  timeZone: household.timeZone,
+                };
                 void updateHousehold(settings, () =>
                   api.household.settings.$put({ json: settings }),
                 );
@@ -170,6 +175,18 @@ function Settings() {
                 ))}
               </SelectContent>
             </Select>
+          </SettingsField>
+          <SettingsField htmlFor="household-time-zone" label="Time zone">
+            <TimeZoneField
+              id="household-time-zone"
+              onChange={(timeZone) => {
+                const settings = { language: household.language, units: household.units, timeZone };
+                void updateHousehold(settings, () =>
+                  api.household.settings.$put({ json: settings }),
+                );
+              }}
+              value={household.timeZone}
+            />
           </SettingsField>
         </SettingsGroup>
 

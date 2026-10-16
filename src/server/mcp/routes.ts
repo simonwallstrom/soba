@@ -1,4 +1,5 @@
 import { createMcpHandler } from "@modelcontextprotocol/server";
+import { todayIn } from "@shared/household";
 import { Hono } from "hono";
 
 import { requireMcpToken } from "./auth";
@@ -30,8 +31,7 @@ export const mcpRoutes = new Hono<McpEnv>()
         membership: c.get("membership"),
         userId: c.get("userId"),
         appUrl: new URL(c.env.BETTER_AUTH_URL).origin,
-        // Calendar dates are the household's own; UTC is close enough to pick the default range.
-        today: new Date().toISOString().slice(0, 10),
+        today: todayIn(c.get("membership").timeZone),
         photos: c.env.PHOTOS,
       }),
     ).fetch(c.req.raw),

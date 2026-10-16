@@ -13,7 +13,7 @@ import {
   updateRecipe,
 } from "../recipes/recipes";
 import { createTag, deleteTag, mergeTag, renameTag } from "../tags/tags";
-import { addDays, weekday } from "./read-tools";
+import { weekday } from "./read-tools";
 
 // What the MCP tools that change data do, with the same queries as the app's API. They answer
 // with what changed, or a message Claude can act on, rather than throwing.
@@ -225,11 +225,8 @@ export async function deleteMcpRecipe(context: WriteContext, id: string): Promis
   };
 }
 
-// The first day Claude may change. Yesterday rather than today, since "today" is the UTC date
-// and the household's own day may still be the one before.
 function checkDays(context: WriteContext, dates: readonly string[]) {
-  const earliest = addDays(context.today, -1);
-  const past = dates.filter((date) => date < earliest);
+  const past = dates.filter((date) => date < context.today);
   if (past.length > 0) return `Days that have passed can't change: ${past.join(", ")}.`;
   if (new Set(dates).size !== dates.length) return "Give each date once.";
   return null;

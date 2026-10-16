@@ -28,6 +28,8 @@ const snapshotSchema = v.object({
       // Snapshots saved before household settings were added have neither.
       language: v.optional(v.picklist(householdLanguages.map((language) => language.value)), "en"),
       units: v.optional(v.picklist(householdUnits.map((units) => units.value)), "metric"),
+      // Snapshots saved before households had a time zone.
+      timeZone: v.optional(v.string(), "UTC"),
     }),
   ),
   canCreateHousehold: v.boolean(),

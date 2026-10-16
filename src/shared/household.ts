@@ -30,3 +30,17 @@ export function defaultHouseholdLanguage(locales: readonly string[]): HouseholdL
 export function defaultHouseholdUnits(locales: readonly string[]): HouseholdUnits {
   return locales[0]?.toLowerCase() === "en-us" ? "us" : "metric";
 }
+
+// A time zone the runtime knows, as an IANA name like "Europe/Stockholm".
+export function isTimeZone(value: string) {
+  try {
+    return new Intl.DateTimeFormat("en", { timeZone: value }).resolvedOptions().timeZone !== "";
+  } catch {
+    return false;
+  }
+}
+
+// The household's calendar date, like "2026-10-16", which is what the meal plan is keyed by.
+export function todayIn(timeZone: string, now = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone }).format(now);
+}
