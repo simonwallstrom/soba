@@ -41,14 +41,14 @@ export function RecipesSearch({
       data-expanded={isExpanded}
     >
       {/* Takes the text color while the field has focus. */}
-      <Search01Icon className="pointer-events-none absolute left-2.5 text-olive-500 group-focus-within/search:text-inherit max-sm:group-data-[expanded=false]/search:left-2 max-sm:group-data-[expanded=false]/search:text-inherit max-sm:group-data-[expanded=false]/search:opacity-80 max-sm:group-data-[expanded=false]/search:group-hover/search:opacity-100" />
+      <Search01Icon className="pointer-events-none absolute left-2.5 text-olive-500 group-focus-within/search:text-inherit max-sm:group-data-[expanded=false]/search:left-2 max-sm:group-data-[expanded=false]/search:text-inherit max-sm:group-data-[expanded=false]/search:opacity-80 max-sm:group-data-[expanded=false]/search:group-hover/search:opacity-100 pointer-coarse:max-sm:group-data-[expanded=false]/search:left-3" />
       <Input
         aria-keyshortcuts="/ Meta+K Control+K"
         aria-label="Search recipes"
         className={cn(
           "pr-8 pl-8 [&::-webkit-search-cancel-button]:appearance-none",
           // Resting on a phone, it looks like the round icon buttons beside it.
-          "max-sm:group-data-[expanded=false]/search:size-8 max-sm:group-data-[expanded=false]/search:cursor-pointer max-sm:group-data-[expanded=false]/search:rounded-full max-sm:group-data-[expanded=false]/search:border-transparent max-sm:group-data-[expanded=false]/search:bg-transparent max-sm:group-data-[expanded=false]/search:p-0 max-sm:group-data-[expanded=false]/search:placeholder:text-transparent max-sm:group-data-[expanded=false]/search:hover:bg-black/5 dark:max-sm:group-data-[expanded=false]/search:hover:bg-white/6",
+          "max-sm:group-data-[expanded=false]/search:size-8 pointer-coarse:max-sm:group-data-[expanded=false]/search:size-10 max-sm:group-data-[expanded=false]/search:cursor-pointer max-sm:group-data-[expanded=false]/search:rounded-full max-sm:group-data-[expanded=false]/search:border-transparent max-sm:group-data-[expanded=false]/search:bg-transparent max-sm:group-data-[expanded=false]/search:p-0 max-sm:group-data-[expanded=false]/search:placeholder:text-transparent max-sm:group-data-[expanded=false]/search:hover:bg-black/5 dark:max-sm:group-data-[expanded=false]/search:hover:bg-white/6",
         )}
         enterKeyHint="search"
         onBlur={() => setIsFocused(false)}
@@ -63,7 +63,7 @@ export function RecipesSearch({
       {value !== "" && (
         <Button
           aria-label="Clear search"
-          className="absolute right-1 size-6"
+          className="absolute right-1 size-6 pointer-coarse:size-8"
           onClick={() => onChange("")}
           size="icon-sm"
           variant="ghost"

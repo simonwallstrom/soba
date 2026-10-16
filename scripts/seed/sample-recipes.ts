@@ -1615,4 +1615,101 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       },
     ],
   },
+  {
+    title: "Coq au vin med potatispuré",
+    description:
+      "Långkokt kyckling i rödvin med bacon, champinjoner och smålök. Ett helgprojekt som blir godare dagen efter, med en len potatispuré till.",
+    servings: 6,
+    createdAt: "2026-07-04T15:00:00.000Z",
+    tags: ["French", "Chicken", "Potato", "Involved"],
+    ingredients: [
+      {
+        heading: "Marinad",
+        items: [
+          "1 hel kyckling, ca 1,5 kg, styckad i 8 bitar",
+          "7,5 dl torrt rött vin, gärna Bourgogne",
+          "1 morot, i grova bitar",
+          "1 gul lök, i grova bitar",
+          "2 vitlöksklyftor, krossade",
+          "2 lagerblad",
+          "4 kvistar färsk timjan",
+          "1 tsk svartpepparkorn",
+        ],
+      },
+      {
+        heading: "Grytan",
+        items: [
+          "150 g rökt sidfläsk, i stavar",
+          "2 msk smör",
+          "1 msk olivolja",
+          "3 msk vetemjöl",
+          "2 msk konjak",
+          "2 msk tomatpuré",
+          "3 dl kycklingfond",
+          "1 tsk salt",
+          "1 krm nymald svartpeppar",
+        ],
+      },
+      {
+        heading: "Garnityr",
+        items: [
+          "250 g små champinjoner",
+          "200 g smålök eller schalottenlök, skalade",
+          "2 msk smör",
+          "1 tsk strösocker",
+          "1 knippe bladpersilja, hackad",
+        ],
+      },
+      {
+        heading: "Potatispuré",
+        items: [
+          "1,2 kg mjölig potatis",
+          "100 g smör, i bitar",
+          "2 dl varm mjölk",
+          "1 dl vispgrädde",
+          "1 krm riven muskot",
+          "1 tsk salt",
+        ],
+      },
+    ],
+    instructions: [
+      {
+        heading: "Dagen innan",
+        items: [
+          "Lägg kycklingbitarna i en stor skål med morot, lök, vitlök, lagerblad, timjan och pepparkorn.",
+          "Häll över vinet så att kycklingen täcks, sätt på lock och låt marinera i kylen över natten, minst 8 timmar.",
+        ],
+      },
+      {
+        heading: "Grytan",
+        items: [
+          "Ta upp kycklingen och torka den torr med hushållspapper. Sila marinaden och spara både vin och grönsaker.",
+          "Stek sidfläsket knaprigt i en gjutjärnsgryta på medelvärme. Lyft upp det med hålslev och låt fettet vara kvar.",
+          "Salta kycklingen, tillsätt smör och olja i grytan och bryn bitarna gyllene i omgångar, cirka 4 minuter per sida. Lägg dem åt sidan.",
+          "Fräs de silade grönsakerna i samma gryta i 5 minuter tills de mjuknat.",
+          "Häll i konjaken och låt den koka bort under omrörning, och skrapa loss allt som fastnat i botten.",
+          "Strö över mjölet, rör ner tomatpurén och låt fräsa en minut.",
+          "Späd med marinadvinet och fonden lite i taget, under omrörning, så att såsen blir slät.",
+          "Lägg tillbaka kycklingen och sidfläsket, låt sjuda under lock på svag värme i 1 ½ timme tills köttet lossnar från benen.",
+        ],
+      },
+      {
+        heading: "Garnityr",
+        items: [
+          "Bryn champinjonerna i hälften av smöret på hög värme tills de fått färg. Salta lätt.",
+          "Glasera smålöken i resten av smöret med sockret och en skvätt vatten, under lock, i 10 minuter tills den är mjuk och blank.",
+          "Rör ner champinjoner och smålök i grytan de sista 15 minuterna.",
+        ],
+      },
+      {
+        heading: "Potatispuré och servering",
+        items: [
+          "Skala potatisen och koka den mjuk i saltat vatten, cirka 20 minuter. Häll av och låt ånga av i en minut.",
+          "Pressa potatisen genom en potatispress, rör ner smöret bit för bit, och späd sedan med varm mjölk och grädde till en len puré. Smaka av med muskot och salt.",
+          "Fiska upp kryddkvistar och lagerblad ur grytan, och koka ihop såsen utan lock om den känns tunn. Smaka av med salt och peppar.",
+          "Strö över persiljan och servera direkt med potatispurén.",
+        ],
+      },
+    ],
+  },
 ];

@@ -33,6 +33,11 @@ export function SettingsGroup({
 // One line in a group; callers render it as a div, button, or link.
 export const settingsRowStyles = "flex min-h-12 items-center gap-3 p-3";
 
+// A row edited in place, with Cancel and Save at its end. On phones the buttons take their own
+// line under the field, which would otherwise be left too narrow to read; give the form `flex-wrap`.
+export const inlineEditActionsStyles =
+  "flex shrink-0 gap-2 max-sm:order-last max-sm:basis-full max-sm:justify-end";
+
 // Rows that act when pressed. The first and last round to fit the card's corners, so their hover
 // stays inside it, and the outline reaches 1px out to cover the card's border and dividers.
 export const settingsButtonRowStyles = [
@@ -44,8 +49,8 @@ export const settingsButtonRowStyles = [
 
 // A labeled value with an optional action at the end. Labels share one width, so values line up
 // in every card. On phones the label sits above the value. A control (named by `htmlFor`) keeps
-// some room below its label, with the action beside the label; plain text reads as one block, with
-// the action centered beside both lines.
+// some room below its label, with the action on its own line under the control; plain text reads
+// as one block, with the action centered beside both lines.
 export function SettingsField({
   action,
   children,
@@ -62,7 +67,7 @@ export function SettingsField({
       className={cn(
         "grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 p-3",
         htmlFor
-          ? "gap-y-2 [grid-template-areas:'label_action'_'value_value']"
+          ? "gap-y-2 [grid-template-areas:'label_label'_'value_value'_'._action']"
           : "[grid-template-areas:'label_action'_'value_action']",
         // Without an action, the value reaches the row's end rather than leaving an empty column.
         action
@@ -78,7 +83,11 @@ export function SettingsField({
         <span className="text-olive-600 [grid-area:label] dark:text-olive-400">{label}</span>
       )}
       <div className="flex min-w-0 items-center [grid-area:value]">{children}</div>
-      {action && <div className="flex gap-2 [grid-area:action]">{action}</div>}
+      {action && (
+        <div className={cn("flex gap-2 [grid-area:action]", htmlFor && "max-sm:mt-1")}>
+          {action}
+        </div>
+      )}
     </div>
   );
 }

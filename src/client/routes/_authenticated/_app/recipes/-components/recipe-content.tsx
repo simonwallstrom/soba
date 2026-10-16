@@ -8,6 +8,8 @@ import type { CookingMarks } from "@client/features/recipes/cooking-session";
 import { scaleIngredient } from "@client/features/recipes/scale-ingredient";
 import type { RecipeSection } from "@shared/recipes";
 import { cn } from "cn";
+import { useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 type ContentProps = {
   // Writes scaled decimals the household's way, such as "2,5" in Swedish.
@@ -20,6 +22,8 @@ type ContentProps = {
 
 type CookingSession = ReturnType<typeof useCookingSession>;
 
+type Tab = "ingredients" | "instructions";
+
 // Tabs on small screens; side-by-side columns on large ones. Both show the same cooking session.
 // Key it by the recipe ID, so moving to another recipe starts from that recipe's session.
 export function RecipeContent({
@@ -30,6 +34,32 @@ export function RecipeContent({
   servings,
 }: ContentProps) {
   const session = useCookingSession(recipeId, servings);
+  const [tab, setTab] = useState<Tab>("ingredients");
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const tabOffsets = useRef<Partial<Record<Tab, number>>>({});
+
+  // Both tabs scroll the page, so each keeps its own position: switching back returns to where
+  // you were. Above the tab bar, the tabs share the page's top and switching doesn't scroll.
+  function changeTab(next: Tab) {
+    const page = tabsRef.current?.closest("main");
+    if (!page || !tabsRef.current) {
+      setTab(next);
+      return;
+    }
+    // Where the tab bar starts sticking, with each tab's content just below it.
+    const stuckAt =
+      tabsRef.current.getBoundingClientRect().top -
+      page.getBoundingClientRect().top +
+      page.scrollTop;
+    const current = page.scrollTop;
+    tabOffsets.current[tab] = current;
+    const saved = tabOffsets.current[next];
+    // A pixel of slack, since the stuck position can be fractional.
+    const target = current < stuckAt - 1 ? current : Math.max(saved ?? stuckAt, stuckAt);
+    // Swap the panels and scroll in one frame, so the wrong position never paints.
+    flushSync(() => setTab(next));
+    page.scrollTop = target;
+  }
   const ingredientsProps = {
     decimalSeparator,
     recipeServings: servings,
@@ -39,7 +69,12 @@ export function RecipeContent({
 
   return (
     <>
-      <Tabs className="lg:hidden" defaultValue="ingredients">
+      <Tabs
+        className="lg:hidden"
+        onValueChange={(value: Tab) => changeTab(value)}
+        ref={tabsRef}
+        value={tab}
+      >
         {/* Outset by the toggle's own padding, so its buttons line up with the page text. */}
         <div className="sticky top-0 z-20 -mx-0.5 bg-white pt-2 dark:bg-olive-925">
           <TabsList className="w-full">
@@ -51,10 +86,22 @@ export function RecipeContent({
             </TabsTrigger>
           </TabsList>
         </div>
-        <TabsContent className="pt-7" keepMounted value="ingredients">
+        {/* Hidden right away: Base UI would keep the old panel a frame longer, for exit animations,
+            and the browser's scroll anchoring would then undo the scroll. */}
+        <TabsContent
+          className="pt-7"
+          hidden={tab !== "ingredients"}
+          keepMounted
+          value="ingredients"
+        >
           <Ingredients hideHeading idPrefix="mobile" {...ingredientsProps} />
         </TabsContent>
-        <TabsContent className="pt-7" keepMounted value="instructions">
+        <TabsContent
+          className="pt-7"
+          hidden={tab !== "instructions"}
+          keepMounted
+          value="instructions"
+        >
           <Instructions done={session.done} hideHeading idPrefix="mobile" sections={instructions} />
         </TabsContent>
       </Tabs>

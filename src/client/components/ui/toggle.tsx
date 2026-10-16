@@ -32,8 +32,8 @@ export const toggleVariants = cva(
         ghost: "",
       },
       size: {
-        default: "h-8 gap-3 rounded-lg px-3",
-        sm: "h-7 gap-2 rounded-lg px-2",
+        default: "h-8 gap-3 rounded-lg px-3 pointer-coarse:h-10",
+        sm: "h-7 gap-2 rounded-lg px-2 pointer-coarse:h-9",
       },
     },
     defaultVariants: {

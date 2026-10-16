@@ -7,8 +7,8 @@ export function Input({ className, ...props }: InputPrimitive.Props) {
     <InputPrimitive
       className={cn(
         controlStyles,
-        "h-8 w-full px-2.5",
-        "file:mr-2 file:inline-flex file:h-8 file:border-0 file:bg-transparent file:p-0 file:font-medium file:text-current",
+        "h-8 w-full px-2.5 pointer-coarse:h-10",
+        "file:mr-2 file:inline-flex file:h-8 pointer-coarse:file:h-10 file:border-0 file:bg-transparent file:p-0 file:font-medium file:text-current",
         className,
       )}
       data-slot="input"

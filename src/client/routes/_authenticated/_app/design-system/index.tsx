@@ -34,6 +34,7 @@ import * as Icons from "@client/components/ui/icons";
 import { Input } from "@client/components/ui/input";
 import { Label } from "@client/components/ui/label";
 import { ScrollArea } from "@client/components/ui/scroll-area";
+import { toast } from "@client/components/ui/toast";
 import { formatMetaTitle } from "@client/lib/meta";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ReactNode } from "react";
@@ -57,6 +58,7 @@ import {
 import {
   CheckboxExamples,
   RadioGroupExample,
+  SwitchExamples,
   ToggleExamples,
   ToggleGroupExamples,
 } from "./-components/selection-examples";
@@ -84,12 +86,13 @@ const oliveSwatches = [
   { step: "950", className: "bg-olive-950" },
 ];
 
+// Body and small text step up on touch screens; see styles.css.
 const typeScale = [
   { label: "Heading 1", className: "text-3xl font-medium", details: "text-3xl · 30px · 500" },
   { label: "Heading 2", className: "text-xl font-medium", details: "text-xl · 20px · 500" },
-  { label: "Heading 3", className: "font-medium", details: "text-base · 15px · 500" },
-  { label: "Body", className: "", details: "text-base · 15px · 400" },
-  { label: "Small", className: "text-sm", details: "text-sm · 13px · 400" },
+  { label: "Heading 3", className: "font-medium", details: "text-base · 14px, touch 16px · 500" },
+  { label: "Body", className: "", details: "text-base · 14px, touch 16px · 400" },
+  { label: "Small", className: "text-sm", details: "text-sm · 12px, touch 14px · 400" },
 ];
 
 const avatarSizes = ["sm", "default", "lg"] as const;
@@ -371,12 +374,42 @@ function DesignSystem() {
           <SelectExamples />
         </Section>
 
+        <Section title="Switch">
+          <SwitchExamples />
+        </Section>
+
         <Section title="Tabs">
           <TabsExample />
         </Section>
 
         <Section title="Textarea">
           <TextareaExamples />
+        </Section>
+
+        <Section title="Toast">
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => toast.add({ title: "Recipe saved" })}>Title</Button>
+            <Button
+              onClick={() =>
+                toast.add({
+                  title: "Couldn't save the recipe",
+                  description: "Check your connection and try again.",
+                })
+              }
+            >
+              With description
+            </Button>
+            <Button
+              onClick={() =>
+                toast.add({
+                  title: "Recipe deleted",
+                  actionProps: { children: "Undo", onClick: () => {} },
+                })
+              }
+            >
+              With action
+            </Button>
+          </div>
         </Section>
 
         <Section title="Toggle">

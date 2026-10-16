@@ -47,7 +47,7 @@ export function ComboboxButton({ className, children, ...props }: ComboboxPrimit
     <ComboboxPrimitive.Trigger
       className={cn(
         controlStyles,
-        "flex h-8 w-full items-center justify-between gap-2 pr-2 pl-2.5 text-left whitespace-nowrap",
+        "flex h-8 w-full items-center pointer-coarse:h-10 justify-between gap-2 pr-2 pl-2.5 text-left whitespace-nowrap",
         "data-placeholder:text-olive-400 dark:data-placeholder:text-olive-600",
         "*:data-[slot=combobox-value]:min-w-0 *:data-[slot=combobox-value]:truncate",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:opacity-80",
@@ -101,7 +101,7 @@ export function ComboboxInput({
       <ComboboxPrimitive.Input
         className={cn(
           variant === "default"
-            ? [controlStyles, "h-8 w-full px-2.5"]
+            ? [controlStyles, "h-8 w-full px-2.5 pointer-coarse:h-10"]
             : [
                 textEntryStyles,
                 "h-9 w-full min-w-0 bg-transparent px-3 outline-none disabled:text-black/35 dark:disabled:text-white/35",
@@ -290,7 +290,7 @@ export function ComboboxChips({
   return (
     <ComboboxPrimitive.Chips
       className={cn(
-        "relative flex min-h-8 w-full min-w-0 flex-wrap items-center gap-1 rounded-lg border border-black/18 bg-white px-1 py-[3px] dark:border-white/15 dark:bg-white/5",
+        "relative flex min-h-8 w-full min-w-0 flex-wrap items-center gap-1 rounded-lg border border-black/18 bg-white px-1 py-[3px] pointer-coarse:min-h-10 pointer-coarse:py-[7px] dark:border-white/15 dark:bg-white/5",
         showTrigger && "pr-8",
         "focus-within:outline-2 focus-within:-outline-offset-1",
         "has-aria-invalid:border-red-500 has-aria-invalid:outline-red-500 dark:has-aria-invalid:border-red-400 dark:has-aria-invalid:outline-red-400",
@@ -302,7 +302,10 @@ export function ComboboxChips({
     >
       {children}
       {showTrigger && (
-        <ComboboxTrigger aria-label="Show options" className="absolute top-[3px] right-[3px]" />
+        <ComboboxTrigger
+          aria-label="Show options"
+          className="absolute top-[3px] right-[3px] pointer-coarse:top-[7px]"
+        />
       )}
     </ComboboxPrimitive.Chips>
   );

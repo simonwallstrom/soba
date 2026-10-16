@@ -132,7 +132,7 @@ function MediaLink({
   return (
     <Link
       aria-label={`Open ${title}`}
-      className="absolute inset-0 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-1 active:bg-black/5 dark:active:bg-white/4"
+      className="absolute inset-0 rounded-2xl [-webkit-touch-callout:none] focus-visible:outline-2 focus-visible:outline-offset-1 active:bg-black/5 dark:active:bg-white/4"
       draggable={isDraggable ? false : undefined}
       {...link}
     />

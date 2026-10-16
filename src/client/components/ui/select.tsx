@@ -40,7 +40,7 @@ export function SelectTrigger({
     <SelectPrimitive.Trigger
       className={cn(
         controlStyles,
-        "flex w-full items-center justify-between gap-2 pr-2 pl-2.5 text-left whitespace-nowrap data-[size=default]:h-8 data-[size=sm]:h-7",
+        "flex w-full items-center justify-between gap-2 pr-2 pl-2.5 text-left whitespace-nowrap data-[size=default]:h-8 data-[size=sm]:h-7 pointer-coarse:data-[size=default]:h-10 pointer-coarse:data-[size=sm]:h-9",
         "data-placeholder:text-olive-400 dark:data-placeholder:text-olive-600",
         "*:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:truncate",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:opacity-80",

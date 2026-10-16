@@ -24,11 +24,14 @@ export function AppHeader({ actionsRef }: { actionsRef: Ref<HTMLDivElement> }) {
   // background touches it; this header is that element.
 
   return (
-    <header className="group/header sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b-[0.5px] border-black/18 bg-white pr-[max(1.25rem,env(safe-area-inset-right))] pl-[max(1.25rem,env(safe-area-inset-left))] font-medium max-lg:h-[calc(3rem+env(safe-area-inset-top))] max-lg:pt-[env(safe-area-inset-top)] lg:px-6 dark:border-white/10 dark:bg-olive-925">
+    <header className="group/header sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b-[0.5px] border-black/18 bg-white pr-[max(1.25rem,env(safe-area-inset-right))] pl-[max(1.25rem,env(safe-area-inset-left))] font-medium max-lg:h-[calc(3rem+env(safe-area-inset-top))] max-lg:pt-[env(safe-area-inset-top)] lg:px-6 dark:border-white/10 dark:bg-olive-925 pointer-coarse:max-lg:h-[calc(3.5rem+env(safe-area-inset-top))]">
       <div className="flex min-w-0 items-center gap-1.5 max-sm:group-has-[search[data-expanded=true]]/header:hidden">
         {back?.link && (
           <Link
-            className={cn(buttonVariants({ shape: "pill", variant: "ghost" }), "-ml-3 lg:hidden")}
+            className={cn(
+              buttonVariants({ shape: "pill", variant: "ghost" }),
+              "-ml-3 pointer-coarse:-ml-4 lg:hidden",
+            )}
             {...back.link}
           >
             <ArrowLeftIcon />

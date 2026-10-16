@@ -273,7 +273,7 @@ function PlannedMeal({
       )}
       <Link
         aria-label={`Open ${recipe.title}`}
-        className="absolute inset-0 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-1"
+        className="absolute inset-0 rounded-xl [-webkit-touch-callout:none] focus-visible:outline-2 focus-visible:outline-offset-1"
         draggable={canDrag ? false : undefined}
         params={{ recipeId: recipe.id }}
         to="/recipes/$recipeId"

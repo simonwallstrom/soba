@@ -43,6 +43,8 @@ export function useInlineEdit({
       },
     },
     inputProps: {
+      // The return key saves, so it says so.
+      enterKeyHint: "done" as const,
       maxLength: 80,
       onChange: (event: ChangeEvent<HTMLInputElement>) => setDraft(event.currentTarget.value),
       onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => {

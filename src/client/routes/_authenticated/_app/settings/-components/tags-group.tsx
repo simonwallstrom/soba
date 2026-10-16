@@ -49,6 +49,7 @@ import { flushSync } from "react-dom";
 import { ConfirmDialog } from "./confirm-dialog";
 import { useInlineEdit } from "./editable-text-row";
 import {
+  inlineEditActionsStyles,
   SettingsGroup,
   SettingsRowIcon,
   settingsButtonRowStyles,
@@ -281,6 +282,7 @@ function AddTagRow({ names, onAdd }: { names: readonly string[]; onAdd: (name: s
         aria-invalid={existing ? true : undefined}
         aria-label="New tag name"
         className="min-w-0 flex-1"
+        enterKeyHint="done"
         maxLength={80}
         onChange={(event) => setDraft(event.currentTarget.value)}
         onKeyDown={(event) => {
@@ -293,7 +295,7 @@ function AddTagRow({ names, onAdd }: { names: readonly string[]; onAdd: (name: s
         ref={inputRef}
         value={draft}
       />
-      <div className="flex shrink-0 gap-2">
+      <div className={inlineEditActionsStyles}>
         <Button onClick={stop} type="button">
           Cancel
         </Button>
@@ -338,10 +340,10 @@ function TagRow({
 
   if (edit.draft !== null) {
     return (
-      <form className={tagRowStyles} {...edit.formProps}>
+      <form className={cn(tagRowStyles, "flex-wrap")} {...edit.formProps}>
         {icon}
         <Input aria-label="Tag name" className="min-w-0 flex-1" {...edit.inputProps} />
-        <div className="flex shrink-0 gap-2">
+        <div className={inlineEditActionsStyles}>
           <Button onClick={edit.stop} type="button">
             Cancel
           </Button>

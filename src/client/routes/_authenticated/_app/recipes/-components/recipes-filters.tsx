@@ -196,11 +196,11 @@ export function ActiveRecipeFilters({ onClear, ...props }: FilterProps & { onCle
         <FilterChip {...props} field={field} key={field} />
       ))}
       {favorites && (
-        <Badge className="h-7 gap-1 p-1 pl-2.5">
+        <Badge className="h-7 gap-1 p-1 pl-2.5 pointer-coarse:h-8">
           Favorites
           <Button
             aria-label="Clear favorites filter"
-            className="size-5 rounded-full"
+            className="size-5 rounded-full pointer-coarse:size-6"
             onClick={() => props.onFavoritesChange(false)}
             size="icon-sm"
             variant="ghost"
@@ -227,7 +227,7 @@ function FilterChip({ field, ...props }: FilterProps & { field: RecipeFilterFiel
   const summary = `${label}: ${firstName}${rest.length > 0 ? ` +${rest.length}` : ""}`;
 
   return (
-    <Badge className="h-7 gap-1 p-1 pl-2.5">
+    <Badge className="h-7 gap-1 p-1 pl-2.5 pointer-coarse:h-8">
       <DropdownMenuFilter autoHighlight="always">
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -243,7 +243,7 @@ function FilterChip({ field, ...props }: FilterProps & { field: RecipeFilterFiel
       </DropdownMenuFilter>
       <Button
         aria-label={`Clear ${label.toLowerCase()} filter`}
-        className="size-5 rounded-full"
+        className="size-5 rounded-full pointer-coarse:size-6"
         onClick={() => props.onChange(field, [])}
         size="icon-sm"
         variant="ghost"

@@ -44,11 +44,12 @@ export const buttonVariants = cva(
           "[:active,[data-pressed]]:bg-black/10 dark:[:active,[data-pressed]]:bg-white/10",
         ],
       },
+      // Touch screens get larger targets, in step with their larger text.
       size: {
-        default: "h-8 gap-2 px-3",
-        sm: "h-7 gap-1 px-2",
-        icon: "size-8 rounded-full",
-        "icon-sm": "size-7 rounded-full",
+        default: "h-8 gap-2 px-3 pointer-coarse:h-10 pointer-coarse:px-4",
+        sm: "h-7 gap-1 px-2 pointer-coarse:h-9 pointer-coarse:px-3",
+        icon: "size-8 rounded-full pointer-coarse:size-10",
+        "icon-sm": "size-7 rounded-full pointer-coarse:size-9",
       },
       // Text buttons keep corners in content, forms, and dialogs. In the app header and the bars
       // under it they're pills, matching the round icon buttons beside them.

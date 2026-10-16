@@ -9,10 +9,11 @@ import {
 import { FileEditIcon, ImageUploadIcon, MoreHorizontalIcon } from "@client/components/ui/icons";
 import { Input } from "@client/components/ui/input";
 import { getInitials } from "@client/features/household/members";
+import { cn } from "cn";
 import { useRef } from "react";
 
 import { useInlineEdit } from "./editable-text-row";
-import { settingsRowStyles } from "./settings-group";
+import { inlineEditActionsStyles, settingsRowStyles } from "./settings-group";
 
 // You, as your household sees you. Phones get one menu, as two buttons don't fit beside the name.
 // Changing the photo does nothing yet.
@@ -41,10 +42,10 @@ export function ProfileRow({
 
   if (edit.draft !== null) {
     return (
-      <form className={settingsRowStyles} {...edit.formProps}>
+      <form className={cn(settingsRowStyles, "flex-wrap")} {...edit.formProps}>
         {avatar}
         <Input aria-label="Name" className="min-w-0 flex-1" {...edit.inputProps} />
-        <div className="flex shrink-0 gap-2">
+        <div className={inlineEditActionsStyles}>
           <Button onClick={edit.stop} type="button">
             Cancel
           </Button>

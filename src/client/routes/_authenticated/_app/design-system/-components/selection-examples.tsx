@@ -1,6 +1,7 @@
 import { Checkbox } from "@client/components/ui/checkbox";
 import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@client/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@client/components/ui/radio-group";
+import { Switch } from "@client/components/ui/switch";
 import { Toggle } from "@client/components/ui/toggle";
 import { ToggleGroup, ToggleGroupItem } from "@client/components/ui/toggle-group";
 
@@ -48,6 +49,29 @@ export function RadioGroupExample() {
         ))}
       </RadioGroup>
     </FieldSet>
+  );
+}
+
+export function SwitchExamples() {
+  const states = [
+    { id: "off", label: "Off", props: {} },
+    { id: "on", label: "On", props: { defaultChecked: true } },
+    { id: "disabled", label: "Disabled", props: { disabled: true } },
+  ] as const;
+
+  return (
+    <FieldGroup className="max-w-sm">
+      {states.map((state) => (
+        <Field
+          data-disabled={state.id === "disabled" || undefined}
+          key={state.id}
+          orientation="horizontal"
+        >
+          <Switch id={`switch-${state.id}`} {...state.props} />
+          <FieldLabel htmlFor={`switch-${state.id}`}>{state.label}</FieldLabel>
+        </Field>
+      ))}
+    </FieldGroup>
   );
 }
 
