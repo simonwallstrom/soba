@@ -6,6 +6,7 @@ import { createMiddleware } from "hono/factory";
 import { getAuth, mcpResource } from "../auth/auth";
 import { getMembership } from "../household/household";
 import type { Membership } from "../household/household";
+import { isConnected } from "./connections";
 
 export type McpEnv = {
   Bindings: Env;
@@ -24,6 +25,7 @@ export const requireMcpToken = createMiddleware<McpEnv>(async (c, next) => {
   const [scheme, token] = c.req.header("authorization")?.split(" ") ?? [];
 
   let userId: string | undefined;
+  let clientId: string | undefined;
   if (scheme?.toLowerCase() === "bearer" && token) {
     try {
       const payload = await verifyJwsAccessToken(token, {
@@ -32,11 +34,16 @@ export const requireMcpToken = createMiddleware<McpEnv>(async (c, next) => {
         verifyOptions: { issuer: (await auth.$context).baseURL, audience: resource },
       });
       // Tokens bound to a DPoP key need a proof this server doesn't check, so they're refused.
-      if (!payload["cnf"]) userId = payload.sub;
+      if (!payload["cnf"] && typeof payload["azp"] === "string") {
+        userId = payload.sub;
+        clientId = payload["azp"];
+      }
     } catch {
       // Expired, revoked keys, or not ours: all get the challenge below.
     }
   }
+  // A revoked app's token stays valid until it expires, so its consent must still be here.
+  if (userId && clientId && !(await isConnected(userId, clientId))) userId = undefined;
   if (!userId) {
     const challenge = createResourceServerChallenge(
       new APIError("UNAUTHORIZED", { message: "Log in to Soba to continue" }),

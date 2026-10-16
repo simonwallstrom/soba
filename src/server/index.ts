@@ -7,6 +7,7 @@ import { rateLimit } from "./auth/middleware";
 import { isAllowlisted } from "./auth/policy";
 import { getMembership } from "./household/household";
 import { householdRoutes, inviteRoutes } from "./household/routes";
+import { connectionRoutes } from "./mcp/connection-routes";
 import { mcpRoutes } from "./mcp/routes";
 import { mealPlanRoutes } from "./meal-plan/routes";
 import { photoRoutes } from "./photos/routes";
@@ -68,6 +69,7 @@ const app = new Hono<{ Bindings: Env }>()
     c.header("Clear-Site-Data", '"storage"');
     return c.body(null, 204);
   })
+  .route("/api/connections", connectionRoutes)
   .route("/api/household", householdRoutes)
   .route("/api/invites", inviteRoutes)
   .route("/api/photos", photoRoutes)

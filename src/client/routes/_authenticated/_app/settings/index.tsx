@@ -28,6 +28,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Suspense, useState } from "react";
 
+import { AssistantsGroup, connectionsOptions } from "./-components/assistants-group";
 import { ConfirmDialog } from "./-components/confirm-dialog";
 import { EditableTextRow } from "./-components/editable-text-row";
 import { InviteLinkRow } from "./-components/invite-link-row";
@@ -44,9 +45,10 @@ import { TimeZoneField } from "./-components/time-zone-field";
 import { renameUser, sendHouseholdRequest, updateHousehold } from "./-settings-requests";
 
 export const Route = createFileRoute("/_authenticated/_app/settings/")({
-  // Starts the members request without blocking navigation.
+  // Starts the members and assistants requests without blocking navigation.
   loader: () => {
     void queryClient.prefetchQuery(householdOptions);
+    void queryClient.prefetchQuery(connectionsOptions);
   },
   staticData: { breadcrumbs: [{ label: "Settings" }] },
   component: Settings,
@@ -110,6 +112,8 @@ function Settings() {
             </p>
           )}
         </SettingsGroup>
+
+        <AssistantsGroup />
 
         <SettingsGroup
           note="The app and imported recipes use this language and these units."

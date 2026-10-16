@@ -37,6 +37,29 @@ for (const [date, recipe, by] of [
   );
 }
 
+// Claude, connected by every member, and another app only alice let in.
+for (const clientId of ["claude", "other-app"]) {
+  sqlite.run("INSERT INTO oauth_client (id, client_id, name, redirect_uris) VALUES (?, ?, ?, ?)", [
+    clientId,
+    clientId,
+    clientId,
+    '["https://claude.test/callback"]',
+  ]);
+}
+for (const [userId, clientId] of [
+  ["alice", "claude"],
+  ["bob", "claude"],
+  ["stranger", "claude"],
+  ["carol", "claude"],
+  ["alice", "other-app"],
+] as const) {
+  sqlite.run("INSERT INTO oauth_consent (id, client_id, user_id, scopes) VALUES (?, ?, ?, '[]')", [
+    `${userId}-${clientId}`,
+    clientId,
+    userId,
+  ]);
+}
+
 const issuer = "https://soba.test/api/auth";
 const resource = "https://soba.test/mcp";
 
@@ -56,6 +79,7 @@ await mock.module(new URL("../db/client.ts", import.meta.url).pathname, () => ({
   getDatabase: () => db,
 }));
 const { mcpRoutes } = await import("./routes");
+const { listConnections, revokeConnection } = await import("./connections");
 
 // Images on the web: one PNG, and nothing else.
 const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0]);
@@ -92,6 +116,7 @@ async function sign(claims: Record<string, unknown>) {
     aud: resource,
     iat: now,
     exp: now + 3600,
+    azp: "claude",
     ...claims,
   })}`;
   const signature = await crypto.subtle.sign(
@@ -179,6 +204,25 @@ test("tokens for another resource, expired, or bound to a DPoP key are refused",
     expect((await post(await sign(claims), "tools/list")).status).toBe(401);
   }
   expect((await post("not-a-jwt", "tools/list")).status).toBe(401);
+});
+
+test("revoking an app refuses its tokens at once, and leaves the member's other apps", async () => {
+  const token = await sign({ sub: "alice", azp: "other-app" });
+  expect((await post(token, "tools/list")).status).toBe(200);
+  expect((await listConnections("alice")).map((app) => app.clientId).toSorted()).toEqual([
+    "claude",
+    "other-app",
+  ]);
+
+  expect(await revokeConnection("alice", "other-app")).toBe(true);
+  expect((await post(token, "tools/list")).status).toBe(401);
+  expect((await listConnections("alice")).map((app) => app.host)).toEqual(["claude.test"]);
+  expect((await post(await sign({ sub: "alice" }), "tools/list")).status).toBe(200);
+  expect(await revokeConnection("alice", "other-app")).toBe(false);
+});
+
+test("tokens without a client are refused", async () => {
+  expect((await post(await sign({ sub: "alice", azp: undefined }), "tools/list")).status).toBe(401);
 });
 
 test("a member without a household is told to join one", async () => {

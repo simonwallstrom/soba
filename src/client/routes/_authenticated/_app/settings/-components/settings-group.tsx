@@ -64,7 +64,10 @@ export function SettingsField({
         htmlFor
           ? "gap-y-2 [grid-template-areas:'label_action'_'value_value']"
           : "[grid-template-areas:'label_action'_'value_action']",
-        "sm:grid-cols-[10rem_minmax(0,1fr)_auto] sm:[grid-template-areas:'label_value_action']",
+        // Without an action, the value reaches the row's end rather than leaving an empty column.
+        action
+          ? "sm:grid-cols-[10rem_minmax(0,1fr)_auto] sm:[grid-template-areas:'label_value_action']"
+          : "sm:grid-cols-[10rem_minmax(0,1fr)] sm:[grid-template-areas:'label_value']",
       )}
     >
       {htmlFor ? (

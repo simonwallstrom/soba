@@ -48,6 +48,14 @@ MCP clients find everything through OAuth discovery, starting from `/mcp`'s 401:
 4. **Consent:** `/oauth/consent` names the app and the host it returns to, since any app can register under any name. A member answers once per app; later logins skip the page.
 5. **Tokens:** the client gets a 1-hour JWT access token for `/mcp` and a 30-day refresh token.
 
+## AI assistants in Settings
+
+Settings has an "AI assistants" group (`#assistants`, also in the account menu) for the member's own connected apps, from `/api/connections` (`src/server/mcp/connections.ts`). With none it shows the connector URL and how to add it; with some it lists them, and "Connect another" shows the URL again. It's named for assistants in general, since any MCP client can connect, not only Claude.
+
+- **Connected apps** are the member's OAuth consents, with the app's name, the host it returns to, and roughly when it was last used: the newest refresh token, since an app refreshes when it's used after its hour is up.
+- **Disconnecting** deletes the consent and every access and refresh token the app holds for the member. Better Auth's own `delete-consent` endpoint leaves the tokens, so it isn't used.
+- **At once:** access tokens are JWTs checked without the database, so `requireMcpToken` also refuses a token whose app (its `azp` claim) no longer has the member's consent.
+
 ## How it's built
 
 - **The MCP server** (`src/server/mcp/server.ts`) uses the official SDK's `createMcpHandler`, which builds a server for each request, for the token's member, and keeps no sessions. Tool input schemas are Valibot, converted with `toStandardJsonSchema`. JSON Schema can't express regex flags, so dates use `v.isoDate()` rather than `mealDatePattern`.

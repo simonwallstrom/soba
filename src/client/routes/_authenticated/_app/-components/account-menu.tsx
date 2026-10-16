@@ -13,6 +13,7 @@ import {
   Logout03Icon,
   SelectorIcon,
   Settings01Icon,
+  SparklesIcon,
   UserAdd01Icon,
 } from "@client/components/ui/icons";
 import { getInitials } from "@client/features/household/members";
@@ -86,6 +87,10 @@ export function AccountMenu({
               Invite member
             </DropdownMenuItem>
           )}
+          <DropdownMenuItem render={<Link hash="assistants" to="/settings" />}>
+            <SparklesIcon />
+            AI assistants
+          </DropdownMenuItem>
           <DropdownMenuItem render={<Link to={destinations.settings.to} />}>
             <Settings01Icon />
             {destinations.settings.label}
