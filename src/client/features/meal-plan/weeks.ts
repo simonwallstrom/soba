@@ -42,3 +42,9 @@ export function startOfDay(date: Date) {
 export function isPast(date: Date, today: Date) {
   return date < startOfDay(today);
 }
+
+// Local midnight on a day like "2026-10-16".
+export function dateOfKey(key: string) {
+  const [year = 0, month = 1, day = 1] = key.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}

@@ -2,7 +2,7 @@ import { Collapsible } from "@base-ui/react/collapsible";
 import { CaretUpIcon, File02Icon, HashtagIcon, SobaLogo } from "@client/components/ui/icons";
 import { ScrollArea } from "@client/components/ui/scroll-area";
 import { usePlannedMeals } from "@client/features/meal-plan/meal-plan-data";
-import { dayKey } from "@client/features/meal-plan/weeks";
+import { useToday } from "@client/features/meal-plan/use-today";
 import { useCookingProgress } from "@client/features/recipes/cooking-session";
 import { useFavorites, useRecipes, useTags } from "@client/features/recipes/recipe-data";
 import { recipeTagLinks, topTags } from "@client/features/recipes/recipe-tags";
@@ -84,7 +84,7 @@ export function Sidebar({
 // The recipe planned for today, unless it's been deleted.
 function useTodaysRecipe() {
   const recipes = useRecipes();
-  const today = dayKey(new Date());
+  const today = useToday();
   const meal = usePlannedMeals().find(({ date }) => date === today);
   return meal && recipes.find(({ id }) => id === meal.recipeId);
 }

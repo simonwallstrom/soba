@@ -18,7 +18,8 @@ import {
 import { Dialog, DialogClose } from "@client/components/ui/dialog";
 import { toast } from "@client/components/ui/toast";
 import { planMeal, unplanMeals, usePlannedMeals } from "@client/features/meal-plan/meal-plan-data";
-import { dayKey, getWeek } from "@client/features/meal-plan/weeks";
+import { useToday } from "@client/features/meal-plan/use-today";
+import { dateOfKey, dayKey, getWeek } from "@client/features/meal-plan/weeks";
 import { useRecipes } from "@client/features/recipes/recipe-data";
 import type { PlannedMealRow } from "@shared/meal-plan";
 import { useState } from "react";
@@ -92,8 +93,7 @@ function DaySearch({
   const titles = new Map(recipes.map((entry) => [entry.id, entry.title]));
   const plan = new Map(rows.map((row) => [row.date, row]));
 
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const today = dateOfKey(useToday());
   const days = new Map<string, PlanDay>();
   const weeks: PlanWeek[] = [];
   const needle = normalize(query);

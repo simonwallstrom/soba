@@ -19,7 +19,7 @@ import { Dialog, DialogClose } from "@client/components/ui/dialog";
 import { HashtagIcon, ServingFoodIcon } from "@client/components/ui/icons";
 import { ImagePlaceholder, ImageThumbnail } from "@client/components/ui/image-thumbnail";
 import { usePlannedMeals } from "@client/features/meal-plan/meal-plan-data";
-import { dayKey } from "@client/features/meal-plan/weeks";
+import { useToday } from "@client/features/meal-plan/use-today";
 import type { RecipeListEntry } from "@client/features/recipes/recipe-list";
 import { compareNames } from "@client/features/recipes/recipe-tags";
 import { mealHistory } from "@shared/meal-plan";
@@ -105,7 +105,7 @@ function RecipeSearch({
   onPick: (recipeId: string) => void;
 }) {
   const [query, setQuery] = useState("");
-  const today = dayKey(new Date());
+  const today = useToday();
   const { lastEaten, nextPlanned } = mealHistory(usePlannedMeals(), today);
   const byId = new Map(entries.map((entry) => [entry.recipe.id, entry]));
   const sorted = entries.toSorted((left, right) =>
