@@ -6,7 +6,6 @@ import { plannedMeals, recipes } from "../db/schema";
 const mealColumns = {
   date: plannedMeals.date,
   recipeId: plannedMeals.recipeId,
-  suggestionId: plannedMeals.suggestionId,
   plannedBy: plannedMeals.plannedBy,
   plannedAt: plannedMeals.plannedAt,
 };
@@ -22,7 +21,7 @@ export async function listMeals(householdId: string) {
 export async function planMeals(
   householdId: string,
   userId: string,
-  meals: { date: string; recipeId: string; suggestionId: string | null }[],
+  meals: { date: string; recipeId: string }[],
 ) {
   const db = getDatabase();
   const recipeIds = [...new Set(meals.map((meal) => meal.recipeId))];
@@ -40,7 +39,6 @@ export async function planMeals(
       target: [plannedMeals.householdId, plannedMeals.date],
       set: {
         recipeId: sql`excluded.recipe_id`,
-        suggestionId: sql`excluded.suggestion_id`,
         plannedBy: sql`excluded.planned_by`,
         plannedAt: sql`excluded.planned_at`,
       },

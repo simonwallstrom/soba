@@ -1,1 +1,0 @@
-ALTER TABLE `recipe` ADD `profile_checked_at` integer;

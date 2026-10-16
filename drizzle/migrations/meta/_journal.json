@@ -5,43 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1790691192473,
-      "tag": "0000_dizzy_ironclad",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1791190196546,
-      "tag": "0001_household_settings",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1791225494301,
-      "tag": "0002_recipe_imports",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1791832890579,
-      "tag": "0003_recipes_and_meal_plan",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1791898691901,
-      "tag": "0004_recipe_profile_checked_at",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1791988589846,
-      "tag": "0005_household_languages_en_sv",
+      "when": 1792142176861,
+      "tag": "0000_initial",
       "breakpoints": true
     }
   ]

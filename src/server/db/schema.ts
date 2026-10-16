@@ -1,6 +1,5 @@
 import type { HouseholdLanguage, HouseholdUnits } from "@shared/household";
 import type { ImportedRecipe } from "@shared/recipe-import";
-import type { RecipeBase, RecipeEffort, RecipeProtein } from "@shared/recipe-profile";
 import type { RecipeSection } from "@shared/recipes";
 import { sql } from "drizzle-orm";
 import {
@@ -94,6 +93,209 @@ export const verifications = sqliteTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
+// OAuth, for MCP clients like Claude. Better Auth's JWT and MCP plugins own these tables
+// (see src/server/auth/auth.ts). Its adapter stores lists and JSON as text in SQLite.
+
+// Keys that sign access tokens.
+export const jwks = sqliteTable("jwks", {
+  id: text().primaryKey(),
+  publicKey: text("public_key").notNull(),
+  privateKey: text("private_key").notNull(),
+  createdAt: timestamp("created_at").notNull(),
+  expiresAt: timestamp("expires_at"),
+  alg: text(),
+  crv: text(),
+});
+
+// Apps that registered themselves to ask for access, such as Claude.
+export const oauthClients = sqliteTable(
+  "oauth_client",
+  {
+    id: text().primaryKey(),
+    clientId: text("client_id").notNull(),
+    clientSecret: text("client_secret"),
+    clientDiscoveryId: text("client_discovery_id"),
+    disabled: integer({ mode: "boolean" }).default(false),
+    skipConsent: integer("skip_consent", { mode: "boolean" }),
+    enableEndSession: integer("enable_end_session", { mode: "boolean" }),
+    subjectType: text("subject_type"),
+    scopes: text(),
+    clientCredentialsScopes: text("client_credentials_scopes"),
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at"),
+    updatedAt: timestamp("updated_at"),
+    name: text(),
+    uri: text(),
+    icon: text(),
+    contacts: text(),
+    tos: text(),
+    policy: text(),
+    softwareId: text("software_id"),
+    softwareVersion: text("software_version"),
+    softwareStatement: text("software_statement"),
+    redirectUris: text("redirect_uris").notNull(),
+    postLogoutRedirectUris: text("post_logout_redirect_uris"),
+    backchannelLogoutUri: text("backchannel_logout_uri"),
+    backchannelLogoutSessionRequired: integer("backchannel_logout_session_required", {
+      mode: "boolean",
+    }),
+    tokenEndpointAuthMethod: text("token_endpoint_auth_method"),
+    applicationType: text("application_type"),
+    jwks: text(),
+    jwksUri: text("jwks_uri"),
+    grantTypes: text("grant_types"),
+    responseTypes: text("response_types"),
+    requirePKCE: integer("require_pkce", { mode: "boolean" }),
+    dpopBoundAccessTokens: integer("dpop_bound_access_tokens", { mode: "boolean" }).default(false),
+    referenceId: text("reference_id"),
+    metadata: text(),
+  },
+  (table) => [
+    uniqueIndex("oauth_client_client_id_unique").on(table.clientId),
+    index("oauth_client_user_id_idx").on(table.userId),
+  ],
+);
+
+// APIs that tokens are issued for. The MCP plugin adds /mcp when the Worker starts.
+export const oauthResources = sqliteTable(
+  "oauth_resource",
+  {
+    id: text().primaryKey(),
+    identifier: text().notNull(),
+    name: text().notNull(),
+    accessTokenTtl: integer("access_token_ttl"),
+    refreshTokenTtl: integer("refresh_token_ttl"),
+    signingAlgorithm: text("signing_algorithm"),
+    signingKeyId: text("signing_key_id"),
+    allowedScopes: text("allowed_scopes"),
+    customClaims: text("custom_claims"),
+    dpopBoundAccessTokensRequired: integer("dpop_bound_access_tokens_required", {
+      mode: "boolean",
+    }).default(false),
+    disabled: integer({ mode: "boolean" }).default(false),
+    createdAt: timestamp("created_at"),
+    updatedAt: timestamp("updated_at"),
+    policyVersion: integer("policy_version").default(1),
+    metadata: text(),
+  },
+  (table) => [uniqueIndex("oauth_resource_identifier_unique").on(table.identifier)],
+);
+
+export const oauthClientResources = sqliteTable(
+  "oauth_client_resource",
+  {
+    id: text().primaryKey(),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => oauthClients.clientId, { onDelete: "cascade" }),
+    resourceId: text("resource_id")
+      .notNull()
+      .references(() => oauthResources.identifier, { onDelete: "cascade" }),
+    metadata: text(),
+    createdAt: timestamp("created_at"),
+  },
+  (table) => [
+    index("oauth_client_resource_client_id_idx").on(table.clientId),
+    index("oauth_client_resource_resource_id_idx").on(table.resourceId),
+  ],
+);
+
+export const oauthRefreshTokens = sqliteTable(
+  "oauth_refresh_token",
+  {
+    id: text().primaryKey(),
+    token: text().notNull(),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => oauthClients.clientId, { onDelete: "cascade" }),
+    sessionId: text("session_id").references(() => sessions.id, { onDelete: "set null" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    referenceId: text("reference_id"),
+    authorizationCodeId: text("authorization_code_id"),
+    resources: text(),
+    requestedUserInfoClaims: text("requested_user_info_claims"),
+    expiresAt: timestamp("expires_at"),
+    createdAt: timestamp("created_at"),
+    revoked: timestamp("revoked"),
+    rotatedAt: timestamp("rotated_at"),
+    rotationReplayResponse: text("rotation_replay_response"),
+    rotationReplayExpiresAt: timestamp("rotation_replay_expires_at"),
+    authTime: timestamp("auth_time"),
+    confirmation: text(),
+    scopes: text().notNull(),
+  },
+  (table) => [
+    uniqueIndex("oauth_refresh_token_token_unique").on(table.token),
+    index("oauth_refresh_token_client_id_idx").on(table.clientId),
+    index("oauth_refresh_token_session_id_idx").on(table.sessionId),
+    index("oauth_refresh_token_user_id_idx").on(table.userId),
+    index("oauth_refresh_token_authorization_code_id_idx").on(table.authorizationCodeId),
+  ],
+);
+
+export const oauthAccessTokens = sqliteTable(
+  "oauth_access_token",
+  {
+    id: text().primaryKey(),
+    token: text(),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => oauthClients.clientId, { onDelete: "cascade" }),
+    sessionId: text("session_id").references(() => sessions.id, { onDelete: "set null" }),
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+    referenceId: text("reference_id"),
+    authorizationCodeId: text("authorization_code_id"),
+    resources: text(),
+    requestedUserInfoClaims: text("requested_user_info_claims"),
+    refreshId: text("refresh_id").references(() => oauthRefreshTokens.id, {
+      onDelete: "cascade",
+    }),
+    expiresAt: timestamp("expires_at"),
+    createdAt: timestamp("created_at"),
+    revoked: timestamp("revoked"),
+    confirmation: text(),
+    scopes: text().notNull(),
+  },
+  (table) => [
+    uniqueIndex("oauth_access_token_token_unique").on(table.token),
+    index("oauth_access_token_client_id_idx").on(table.clientId),
+    index("oauth_access_token_session_id_idx").on(table.sessionId),
+    index("oauth_access_token_user_id_idx").on(table.userId),
+    index("oauth_access_token_authorization_code_id_idx").on(table.authorizationCodeId),
+    index("oauth_access_token_refresh_id_idx").on(table.refreshId),
+  ],
+);
+
+// What each member agreed to share with each app.
+export const oauthConsents = sqliteTable(
+  "oauth_consent",
+  {
+    id: text().primaryKey(),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => oauthClients.clientId, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+    referenceId: text("reference_id"),
+    resources: text(),
+    requestedUserInfoClaims: text("requested_user_info_claims"),
+    scopes: text().notNull(),
+    createdAt: timestamp("created_at"),
+    updatedAt: timestamp("updated_at"),
+  },
+  (table) => [
+    index("oauth_consent_client_id_idx").on(table.clientId),
+    index("oauth_consent_user_id_idx").on(table.userId),
+  ],
+);
+
+// Client assertion IDs already used, so none can be replayed.
+export const oauthClientAssertions = sqliteTable("oauth_client_assertion", {
+  id: text().primaryKey(),
+  expiresAt: timestamp("expires_at").notNull(),
+});
+
 export const households = sqliteTable("household", {
   id: text().primaryKey(),
   name: text().notNull(),
@@ -168,7 +370,7 @@ export const recipeImports = sqliteTable(
   (table) => [index("recipe_import_user_id_idx").on(table.userId)],
 );
 
-// A household's recipes. Deleting one takes its tags, favorites, profile, and planned meals too.
+// A household's recipes. Deleting one takes its tags, favorites, and planned meals too.
 export const recipes = sqliteTable(
   "recipe",
   {
@@ -190,9 +392,6 @@ export const recipes = sqliteTable(
     updatedBy: text("updated_by").notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
-    // When a read for the recipe's profile last began, whether or not it worked. See
-    // src/server/recipe-profile/profiles.ts.
-    profileCheckedAt: timestamp("profile_checked_at"),
   },
   (table) => [index("recipe_household_id_idx").on(table.householdId)],
 );
@@ -245,21 +444,6 @@ export const favorites = sqliteTable(
   ],
 );
 
-// What meal suggestions know about a recipe; see @shared/recipe-profile.
-export const recipeProfiles = sqliteTable("recipe_profile", {
-  recipeId: text("recipe_id")
-    .primaryKey()
-    .references(() => recipes.id, { onDelete: "cascade" }),
-  isDinner: integer("is_dinner", { mode: "boolean" }).notNull(),
-  base: text().$type<RecipeBase>().notNull(),
-  protein: text().$type<RecipeProtein>().notNull(),
-  effort: text().$type<RecipeEffort>().notNull(),
-  isTreat: integer("is_treat", { mode: "boolean" }).notNull(),
-  version: integer().notNull(),
-  sourceHash: text("source_hash").notNull(),
-  profiledAt: timestamp("profiled_at").notNull(),
-});
-
 // One dinner a day for each household, on local calendar dates like "2026-10-12".
 export const plannedMeals = sqliteTable(
   "planned_meal",
@@ -271,8 +455,6 @@ export const plannedMeals = sqliteTable(
     recipeId: text("recipe_id")
       .notNull()
       .references(() => recipes.id, { onDelete: "cascade" }),
-    // Set on suggested meals: the suggestion that planned it, for undoing it as a whole.
-    suggestionId: text("suggestion_id"),
     plannedBy: text("planned_by").notNull(),
     plannedAt: timestamp("planned_at").notNull(),
   },

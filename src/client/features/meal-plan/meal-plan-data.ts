@@ -10,7 +10,6 @@ const storedPlan = v.array(
   v.object({
     date: v.string(),
     recipeId: v.string(),
-    suggestionId: v.nullable(v.string()),
     plannedBy: v.string(),
     plannedAt: v.pipe(
       v.string(),
@@ -36,16 +35,15 @@ export function usePlannedMeals() {
   return mealPlanData.useData();
 }
 
-type MealToPlan = { date: string; recipeId: string; suggestionId?: string | null | undefined };
+type MealToPlan = { date: string; recipeId: string };
 
 // Plans a dinner for each day, replacing any already there.
 export function planMeals(userId: string, meals: readonly MealToPlan[]) {
   if (meals.length === 0) return;
   const plannedAt = new Date();
-  const rows = meals.map(({ date, recipeId, suggestionId }) => ({
+  const rows = meals.map(({ date, recipeId }) => ({
     date,
     recipeId,
-    suggestionId: suggestionId ?? null,
     plannedBy: userId,
     plannedAt,
   }));
@@ -54,19 +52,14 @@ export function planMeals(userId: string, meals: readonly MealToPlan[]) {
     () =>
       api["meal-plan"].$put({
         json: {
-          meals: rows.map(({ date, recipeId, suggestionId }) => ({
-            date,
-            recipeId,
-            ...(suggestionId ? { suggestionId } : {}),
-          })),
+          meals: rows.map(({ date, recipeId }) => ({ date, recipeId })),
         },
       }),
   );
 }
 
-// Plans a recipe for a day, keeping the suggestion `from` was part of, if any.
-export function planMeal(userId: string, date: string, recipeId: string, from?: PlannedMealRow) {
-  planMeals(userId, [{ date, recipeId, suggestionId: from?.suggestionId }]);
+export function planMeal(userId: string, date: string, recipeId: string) {
+  planMeals(userId, [{ date, recipeId }]);
 }
 
 export function unplanMeals(dates: readonly string[]) {
@@ -96,7 +89,7 @@ export function removeMeal(userId: string, meal: PlannedMealRow, title: string |
     title: title ? `Removed ${title}` : "Removed from the plan",
     actionProps: {
       children: "Undo",
-      onClick: () => planMeal(userId, meal.date, meal.recipeId, meal),
+      onClick: () => planMeal(userId, meal.date, meal.recipeId),
     },
   });
 }

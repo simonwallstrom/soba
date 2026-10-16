@@ -43,7 +43,7 @@ const dbFile = sqliteFiles("d1/miniflare-D1DatabaseObject").find((file) =>
 );
 if (!dbFile) fail("No local database found. Run `bun run db:migrate:local` and sign in first.");
 const db = new Database(dbFile);
-// Deleting a recipe takes its tags, profile, and planned meals with it.
+// Deleting a recipe takes its tags and planned meals with it.
 db.run("PRAGMA foreign_keys = ON");
 
 const email = process.argv[2];
@@ -97,21 +97,6 @@ db.transaction(() => {
     for (const tagId of recipe.tagIds) {
       db.run("INSERT INTO recipe_tag (recipe_id, tag_id) VALUES (?, ?)", [recipe.id, tagId]);
     }
-    const { profile } = recipe;
-    db.run(
-      "INSERT INTO recipe_profile (recipe_id, is_dinner, base, protein, effort, is_treat, version, source_hash, profiled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [
-        recipe.id,
-        profile.isDinner,
-        profile.base,
-        profile.protein,
-        profile.effort,
-        profile.isTreat,
-        profile.version,
-        profile.sourceHash,
-        recipe.createdAt.getTime(),
-      ],
-    );
   }
   for (const meal of meals) {
     db.run(

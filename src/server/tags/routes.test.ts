@@ -18,10 +18,6 @@ await mock.module(new URL("../auth/auth.ts", import.meta.url).pathname, () => ({
 await mock.module(new URL("../db/client.ts", import.meta.url).pathname, () => ({
   getDatabase: () => db,
 }));
-// Saving recipes reads them for meal suggestions; these tests don't need that.
-await mock.module(new URL("../recipe-profile/profiles.ts", import.meta.url).pathname, () => ({
-  profileRecipe: async () => {},
-}));
 const { tagRoutes } = await import("./routes");
 const { recipeRoutes } = await import("../recipes/routes");
 

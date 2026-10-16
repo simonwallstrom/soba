@@ -1,5 +1,3 @@
-import type { RecipeProfile } from "./recipe-profile";
-
 // Ingredients and instructions: plain-text lines, optionally grouped under headings.
 export type RecipeSection = { heading?: string | undefined; items: string[] };
 
@@ -19,8 +17,6 @@ export type Recipe = {
   ingredients: RecipeSection[];
   instructions: RecipeSection[];
   tagIds: string[];
-  // What meal suggestions know about the recipe, once a model has read it.
-  profile: RecipeProfile | null;
   // User IDs; names and photos come from the household's members.
   createdBy: string;
   updatedBy: string;

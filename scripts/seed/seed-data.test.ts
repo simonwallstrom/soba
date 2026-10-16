@@ -1,11 +1,5 @@
 import { describe, expect, test } from "bun:test";
 
-import {
-  recipeProfileSource,
-  recipeProfileSourceHash,
-  recipeProfileVersion,
-} from "@shared/recipe-profile";
-
 import { sampleRecipes } from "./sample-recipes";
 import { sampleHouseholdData } from "./seed-data";
 
@@ -23,14 +17,6 @@ describe("sampleHouseholdData", () => {
     for (const [index, recipe] of recipes.entries()) {
       expect(recipe.createdBy).toBe("user-1");
       expect(recipe.tagIds.map((id) => tagNames.get(id))).toEqual([...sampleRecipes[index]!.tags]);
-    }
-  });
-
-  // Otherwise the app reads every sample recipe with a model as soon as it opens.
-  test("profiles every recipe as the app would read it", () => {
-    for (const recipe of recipes) {
-      expect(recipe.profile.version).toBe(recipeProfileVersion);
-      expect(recipe.profile.sourceHash).toBe(recipeProfileSourceHash(recipeProfileSource(recipe)));
     }
   });
 

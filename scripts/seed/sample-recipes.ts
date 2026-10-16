@@ -1,4 +1,3 @@
-import type { RecipeProfileAnswers } from "@shared/recipe-profile";
 import type { RecipeSection } from "@shared/recipes";
 
 // Sample recipes for trying the app, ported from the cookbase seed.
@@ -10,8 +9,6 @@ export type SampleRecipe = {
   imageUrl?: string;
   createdAt: string;
   tags: readonly string[];
-  // What a model would have read from the recipe for meal suggestions.
-  profile: RecipeProfileAnswers;
   ingredients: readonly RecipeSection[];
   instructions: readonly RecipeSection[];
 };
@@ -26,13 +23,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/31581242/pexels-photo-31581242.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-03-14T18:30:00.000Z",
     tags: ["Italian", "Dairy", "Pasta", "Involved"],
-    profile: {
-      isDinner: true,
-      base: "pasta",
-      protein: "vegetarian",
-      effort: "involved",
-      isTreat: false,
-    },
     ingredients: [
       {
         heading: "Tomatsås",
@@ -90,7 +80,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/1279330/pexels-photo-1279330.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-03-21T17:05:00.000Z",
     tags: ["Italian", "Pork", "Egg", "Pasta"],
-    profile: { isDinner: true, base: "pasta", protein: "pork", effort: "quick", isTreat: false },
     ingredients: [
       {
         items: [
@@ -125,13 +114,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/17989471/pexels-photo-17989471.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-04-02T16:45:00.000Z",
     tags: ["Swedish", "Beef", "Pork", "Potato", "Involved"],
-    profile: {
-      isDinner: true,
-      base: "potato",
-      protein: "beef",
-      effort: "involved",
-      isTreat: false,
-    },
     ingredients: [
       {
         heading: "Köttbullar",
@@ -191,7 +173,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/35017893/pexels-photo-35017893.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-04-11T17:20:00.000Z",
     tags: ["Swedish", "Pork", "Potato"],
-    profile: { isDinner: true, base: "potato", protein: "pork", effort: "normal", isTreat: false },
     ingredients: [
       {
         heading: "Smet",
@@ -230,7 +211,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/14515086/pexels-photo-14515086.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-04-23T18:00:00.000Z",
     tags: ["Nordic", "Fish", "Quick"],
-    profile: { isDinner: true, base: "potato", protein: "fish", effort: "quick", isTreat: false },
     ingredients: [
       {
         items: [
@@ -268,7 +248,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/7353487/pexels-photo-7353487.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-05-05T17:30:00.000Z",
     tags: ["Fusion", "Chicken", "Rice"],
-    profile: { isDinner: true, base: "rice", protein: "chicken", effort: "normal", isTreat: false },
     ingredients: [
       {
         items: [
@@ -306,13 +285,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/3296683/pexels-photo-3296683.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-05-14T12:10:00.000Z",
     tags: ["Lunch", "Bread"],
-    profile: {
-      isDinner: true,
-      base: "bread",
-      protein: "vegetarian",
-      effort: "normal",
-      isTreat: false,
-    },
     ingredients: [
       {
         items: [
@@ -348,13 +320,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/754959/pexels-photo-754959.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-05-22T08:15:00.000Z",
     tags: ["Breakfast", "Swedish", "Egg", "Dairy"],
-    profile: {
-      isDinner: true,
-      base: "other",
-      protein: "vegetarian",
-      effort: "quick",
-      isTreat: false,
-    },
     ingredients: [
       {
         items: [
@@ -390,7 +355,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/15434316/pexels-photo-15434316.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-05-30T17:40:00.000Z",
     tags: ["Mexican", "Beef", "Tortilla"],
-    profile: { isDinner: true, base: "other", protein: "beef", effort: "normal", isTreat: true },
     ingredients: [
       {
         heading: "Färs",
@@ -441,13 +405,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-06-04T17:55:00.000Z",
     tags: ["Dairy", "Rice", "Quick"],
-    profile: {
-      isDinner: true,
-      base: "rice",
-      protein: "vegetarian",
-      effort: "quick",
-      isTreat: false,
-    },
     ingredients: [
       {
         items: [
@@ -484,13 +441,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/2097090/pexels-photo-2097090.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-06-12T17:25:00.000Z",
     tags: ["Swedish", "Fish", "Shellfish", "Potato", "Involved"],
-    profile: {
-      isDinner: true,
-      base: "potato",
-      protein: "fish",
-      effort: "involved",
-      isTreat: false,
-    },
     ingredients: [
       {
         heading: "Gratäng",
@@ -538,7 +488,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/2474661/pexels-photo-2474661.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-06-20T16:10:00.000Z",
     tags: ["American", "Beef", "Legumes", "Rice"],
-    profile: { isDinner: true, base: "rice", protein: "beef", effort: "involved", isTreat: false },
     ingredients: [
       {
         items: [
@@ -577,13 +526,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/2629780/pexels-photo-2629780.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-07-01T18:20:00.000Z",
     tags: ["Italian", "Dairy", "Rice", "Involved"],
-    profile: {
-      isDinner: true,
-      base: "rice",
-      protein: "vegetarian",
-      effort: "involved",
-      isTreat: false,
-    },
     ingredients: [
       {
         items: [
@@ -621,7 +563,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/16845657/pexels-photo-16845657.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-07-09T17:00:00.000Z",
     tags: ["Italian", "Beef", "Pork", "Pasta", "Involved"],
-    profile: { isDinner: true, base: "pasta", protein: "beef", effort: "normal", isTreat: false },
     ingredients: [
       {
         items: [
@@ -660,13 +601,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/14892628/pexels-photo-14892628.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-09-06T14:30:00.000Z",
     tags: ["Fika", "Dessert", "Baking", "Swedish", "Oats"],
-    profile: {
-      isDinner: false,
-      base: "other",
-      protein: "vegetarian",
-      effort: "normal",
-      isTreat: false,
-    },
     ingredients: [
       {
         heading: "Fyllning",
@@ -697,13 +631,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/1126359/pexels-photo-1126359.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-09-20T10:00:00.000Z",
     tags: ["Fika", "Dessert", "Baking", "Swedish", "Bread", "Involved"],
-    profile: {
-      isDinner: false,
-      base: "bread",
-      protein: "vegetarian",
-      effort: "involved",
-      isTreat: false,
-    },
     ingredients: [
       {
         heading: "Deg",
@@ -754,13 +681,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/4050487/pexels-photo-4050487.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-08-03T07:45:00.000Z",
     tags: ["Breakfast", "Baking", "Bread", "Involved"],
-    profile: {
-      isDinner: false,
-      base: "bread",
-      protein: "vegetarian",
-      effort: "involved",
-      isTreat: false,
-    },
     ingredients: [
       {
         items: ["1 dl aktiv surdegsgrund", "4 dl vatten", "500 g vetemjöl special", "2 tsk salt"],
@@ -786,7 +706,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/16201174/pexels-photo-16201174.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-08-19T17:15:00.000Z",
     tags: ["Swedish", "Pork", "Rice", "Quick"],
-    profile: { isDinner: true, base: "rice", protein: "pork", effort: "quick", isTreat: false },
     ingredients: [
       {
         items: [
@@ -821,13 +740,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/3296683/pexels-photo-3296683.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-10-02T12:00:00.000Z",
     tags: ["Lunch", "French", "Potato"],
-    profile: {
-      isDinner: true,
-      base: "potato",
-      protein: "vegetarian",
-      effort: "normal",
-      isTreat: false,
-    },
     ingredients: [
       {
         items: [
@@ -862,13 +774,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
       "https://images.pexels.com/photos/2338407/pexels-photo-2338407.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=600&w=800",
     createdAt: "2025-10-11T16:30:00.000Z",
     tags: ["Mediterranean", "Chicken", "Potato", "Involved"],
-    profile: {
-      isDinner: true,
-      base: "potato",
-      protein: "chicken",
-      effort: "involved",
-      isTreat: false,
-    },
     ingredients: [
       {
         items: [
@@ -900,7 +805,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2025-06-13T16:50:00.000Z",
     tags: ["Italian", "Pork", "Dairy"],
-    profile: { isDinner: true, base: "bread", protein: "pork", effort: "involved", isTreat: true },
     ingredients: [
       {
         heading: "Deg",
@@ -942,7 +846,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2025-06-20T17:15:00.000Z",
     tags: ["American", "Beef"],
-    profile: { isDinner: true, base: "bread", protein: "beef", effort: "normal", isTreat: true },
     ingredients: [
       {
         heading: "Burgare",
@@ -983,7 +886,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2025-07-04T16:30:00.000Z",
     tags: ["Swedish", "Pork", "Potato", "Quick"],
-    profile: { isDinner: true, base: "potato", protein: "pork", effort: "quick", isTreat: false },
     ingredients: [
       {
         items: [
@@ -1013,7 +915,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2025-07-18T16:00:00.000Z",
     tags: ["Swedish", "Pork", "Egg"],
-    profile: { isDinner: true, base: "other", protein: "pork", effort: "normal", isTreat: false },
     ingredients: [
       {
         items: [
@@ -1043,13 +944,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2025-08-02T14:00:00.000Z",
     tags: ["Swedish", "Beef", "Potato", "Involved"],
-    profile: {
-      isDinner: true,
-      base: "potato",
-      protein: "beef",
-      effort: "involved",
-      isTreat: false,
-    },
     ingredients: [
       {
         items: [
@@ -1081,7 +975,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2025-08-15T16:15:00.000Z",
     tags: ["Swedish", "Fish", "Potato"],
-    profile: { isDinner: true, base: "potato", protein: "fish", effort: "normal", isTreat: false },
     ingredients: [
       {
         items: [
@@ -1111,7 +1004,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2025-08-29T16:20:00.000Z",
     tags: ["Japanese", "Chicken", "Rice", "Quick"],
-    profile: { isDinner: true, base: "rice", protein: "chicken", effort: "quick", isTreat: false },
     ingredients: [
       {
         items: [
@@ -1141,7 +1033,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2025-09-12T16:10:00.000Z",
     tags: ["Asian", "Pork", "Rice", "Quick"],
-    profile: { isDinner: true, base: "rice", protein: "pork", effort: "quick", isTreat: false },
     ingredients: [
       {
         items: [
@@ -1171,13 +1062,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2025-09-26T16:00:00.000Z",
     tags: ["Indian", "Legumes", "Rice"],
-    profile: {
-      isDinner: true,
-      base: "rice",
-      protein: "vegetarian",
-      effort: "normal",
-      isTreat: false,
-    },
     ingredients: [
       {
         items: [
@@ -1209,7 +1093,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2025-10-10T16:30:00.000Z",
     tags: ["Asian", "Fish", "Rice", "Quick"],
-    profile: { isDinner: true, base: "rice", protein: "fish", effort: "quick", isTreat: false },
     ingredients: [
       {
         items: [
@@ -1240,7 +1123,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2025-10-24T16:00:00.000Z",
     tags: ["Swedish", "Chicken", "Rice"],
-    profile: { isDinner: true, base: "rice", protein: "chicken", effort: "normal", isTreat: false },
     ingredients: [
       {
         items: [
@@ -1272,7 +1154,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2025-11-07T16:45:00.000Z",
     tags: ["Italian", "Fish", "Pasta", "Quick"],
-    profile: { isDinner: true, base: "pasta", protein: "fish", effort: "quick", isTreat: false },
     ingredients: [
       {
         items: [
@@ -1301,7 +1182,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2025-11-21T16:30:00.000Z",
     tags: ["Italian", "Chicken", "Pasta", "Quick"],
-    profile: { isDinner: true, base: "pasta", protein: "chicken", effort: "quick", isTreat: false },
     ingredients: [
       {
         items: [
@@ -1329,13 +1209,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2025-12-05T16:40:00.000Z",
     tags: ["Italian", "Dairy", "Pasta", "Quick"],
-    profile: {
-      isDinner: true,
-      base: "pasta",
-      protein: "vegetarian",
-      effort: "quick",
-      isTreat: false,
-    },
     ingredients: [
       {
         items: [
@@ -1364,7 +1237,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2026-01-09T16:30:00.000Z",
     tags: ["Asian", "Shellfish", "Pasta", "Quick"],
-    profile: { isDinner: true, base: "pasta", protein: "fish", effort: "quick", isTreat: false },
     ingredients: [
       {
         items: [
@@ -1393,7 +1265,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2026-01-23T16:00:00.000Z",
     tags: ["Swedish", "Pork", "Pasta", "Egg"],
-    profile: { isDinner: true, base: "pasta", protein: "pork", effort: "normal", isTreat: false },
     ingredients: [
       {
         items: [
@@ -1422,7 +1293,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2026-02-06T16:30:00.000Z",
     tags: ["French", "Fish", "Shellfish", "Bread"],
-    profile: { isDinner: true, base: "bread", protein: "fish", effort: "normal", isTreat: false },
     ingredients: [
       {
         items: [
@@ -1454,7 +1324,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2026-02-20T15:00:00.000Z",
     tags: ["Swedish", "Pork", "Egg", "Involved"],
-    profile: { isDinner: true, base: "bread", protein: "pork", effort: "involved", isTreat: false },
     ingredients: [
       { heading: "Pajdeg", items: ["3 dl vetemjöl", "125 g smör", "2 msk vatten"] },
       {
@@ -1486,13 +1355,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2026-03-06T16:15:00.000Z",
     tags: ["Middle Eastern", "Legumes"],
-    profile: {
-      isDinner: true,
-      base: "other",
-      protein: "vegetarian",
-      effort: "normal",
-      isTreat: false,
-    },
     ingredients: [
       {
         heading: "Falafel",
@@ -1527,13 +1389,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2026-03-20T16:50:00.000Z",
     tags: ["French", "Egg", "Dairy", "Quick"],
-    profile: {
-      isDinner: true,
-      base: "other",
-      protein: "vegetarian",
-      effort: "quick",
-      isTreat: false,
-    },
     ingredients: [
       {
         items: [
@@ -1562,13 +1417,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2026-04-03T16:00:00.000Z",
     tags: ["Mediterranean", "Chicken"],
-    profile: {
-      isDinner: true,
-      base: "other",
-      protein: "chicken",
-      effort: "normal",
-      isTreat: false,
-    },
     ingredients: [
       {
         items: [
@@ -1599,7 +1447,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2026-04-17T16:30:00.000Z",
     tags: ["Mexican", "Chicken", "Tortilla"],
-    profile: { isDinner: true, base: "other", protein: "chicken", effort: "normal", isTreat: true },
     ingredients: [
       {
         items: [
@@ -1630,7 +1477,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2026-05-01T16:15:00.000Z",
     tags: ["Middle Eastern", "Beef", "Bread"],
-    profile: { isDinner: true, base: "bread", protein: "beef", effort: "normal", isTreat: true },
     ingredients: [
       {
         items: [
@@ -1661,7 +1507,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2026-05-15T16:40:00.000Z",
     tags: ["Swedish", "Fish", "Potato", "Quick"],
-    profile: { isDinner: true, base: "potato", protein: "fish", effort: "quick", isTreat: false },
     ingredients: [
       {
         items: [
@@ -1690,7 +1535,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 4,
     createdAt: "2026-05-29T16:00:00.000Z",
     tags: ["Swedish", "Beef", "Potato"],
-    profile: { isDinner: true, base: "potato", protein: "beef", effort: "normal", isTreat: false },
     ingredients: [
       {
         items: [
@@ -1720,13 +1564,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 8,
     createdAt: "2026-06-12T13:00:00.000Z",
     tags: ["Fika", "Dessert", "Baking", "Swedish"],
-    profile: {
-      isDinner: false,
-      base: "other",
-      protein: "vegetarian",
-      effort: "normal",
-      isTreat: false,
-    },
     ingredients: [
       {
         items: [
@@ -1756,13 +1593,6 @@ export const sampleRecipes: readonly SampleRecipe[] = [
     servings: 2,
     createdAt: "2026-06-26T07:00:00.000Z",
     tags: ["Breakfast", "Oats", "Dairy", "Quick"],
-    profile: {
-      isDinner: false,
-      base: "other",
-      protein: "vegetarian",
-      effort: "quick",
-      isTreat: false,
-    },
     ingredients: [
       {
         items: [

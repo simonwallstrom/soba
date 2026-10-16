@@ -17,7 +17,7 @@ function Privacy() {
         </p>
       }
       title="Privacy policy"
-      updated="15 October 2026"
+      updated="16 October 2026"
     >
       <LegalSection id="who-we-are" title="Who runs Soba">
         <p>
@@ -55,9 +55,8 @@ function Privacy() {
       <LegalSection id="how-we-use-it" title="How we use it">
         <p>
           Only to run Soba for you: to log you in, show your household its recipes and meal plan,
-          import recipes, suggest meals, and keep the service secure. The legal basis is our
-          agreement with you to provide the service, and our legitimate interest in keeping it
-          secure.
+          import recipes, and keep the service secure. The legal basis is our agreement with you to
+          provide the service, and our legitimate interest in keeping it secure.
         </p>
         <p>
           Your recipes are never used to train AI models, and we don’t sell or share your data for
@@ -69,8 +68,7 @@ function Privacy() {
         <p>A few providers process data for us, only to run the service:</p>
         <ul>
           <li>
-            <strong>Cloudflare</strong> hosts Soba and stores its database and photos. Its AI
-            service reads saved recipes to help suggest meals.
+            <strong>Cloudflare</strong> hosts Soba and stores its database and photos.
           </li>
           <li>
             <strong>Google</strong> handles logging in.

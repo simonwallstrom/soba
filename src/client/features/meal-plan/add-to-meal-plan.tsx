@@ -125,8 +125,7 @@ function DaySearch({
       description: recipe.title,
       actionProps: {
         children: "Undo",
-        onClick: () =>
-          previous ? planMeal(userId, key, previous.recipeId, previous) : unplanMeals([key]),
+        onClick: () => (previous ? planMeal(userId, key, previous.recipeId) : unplanMeals([key])),
       },
     });
   }

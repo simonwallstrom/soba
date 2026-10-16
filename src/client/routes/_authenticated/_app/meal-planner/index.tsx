@@ -5,7 +5,6 @@ import { toast } from "@client/components/ui/toast";
 import { useMembersById } from "@client/features/household/members";
 import { MealPicker } from "@client/features/meal-plan/meal-picker";
 import {
-  mealPlanData,
   moveMeal,
   planMeal,
   planMeals,
@@ -15,10 +14,8 @@ import {
 } from "@client/features/meal-plan/meal-plan-data";
 import { dayKey, isPast } from "@client/features/meal-plan/weeks";
 import { useRecipes, useTags } from "@client/features/recipes/recipe-data";
-import { guessProfile } from "@client/features/recipes/recipe-profile";
 import { groupTagsByRecipe, recipeTagLinks } from "@client/features/recipes/recipe-tags";
 import { formatMetaTitle } from "@client/lib/meta";
-import type { PlannedMealRow } from "@shared/meal-plan";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
@@ -26,7 +23,6 @@ import { PlannedDay } from "./-components/planned-day";
 import { WeekHeader } from "./-components/week-header";
 import { clearableDays, copyMeals, getPlannerWeeks } from "./-meal-plan";
 import type { PlannerWeek } from "./-meal-plan";
-import { nextShuffle, shuffleOptions, suggestWeek } from "./-suggest";
 
 export const Route = createFileRoute("/_authenticated/_app/meal-planner/")({
   staticData: { breadcrumbs: [{ label: "Meal planner" }], placesOwnScroll: true },
@@ -81,10 +77,6 @@ function MealPlanner() {
   const plan = new Map(
     rows.filter((row) => entriesById.has(row.recipeId)).map((row) => [row.date, row]),
   );
-  // Recipes a model hasn't read yet are guessed from their title and tags.
-  const profiles = new Map(
-    entries.map((entry) => [entry.recipe.id, entry.recipe.profile ?? guessProfile(entry)]),
-  );
   // Past weeks can't change, so the weeks are worked out once.
   const [{ weeks, currentWeekIndex }] = useState(() => getPlannerWeeks(today, plan));
   const [isCurrentWeekVisible, setIsCurrentWeekVisible] = useState(true);
@@ -114,42 +106,8 @@ function MealPlanner() {
     setDroppedOn(plan.has(to) ? [from, to] : [to]);
   }
 
-  // The week's open days fill in at once; shuffle any day you don't like, or undo the lot.
-  function suggest(week: PlannerWeek) {
-    const id = crypto.randomUUID();
-    const suggested = suggestWeek(week, { plan, profiles, today });
-    if (suggested.length === 0) return;
-    planMeals(
-      user.id,
-      suggested.map(({ date, recipeId }) => ({ date, recipeId, suggestionId: id })),
-    );
-    toast.add({
-      title: `Suggested ${suggested.length} ${suggested.length === 1 ? "meal" : "meals"} for week ${week.number}`,
-      description: "Shuffle a day for something similar.",
-      actionProps: {
-        children: "Undo",
-        // Takes back the days still holding this suggestion, leaving ones changed since.
-        onClick: () =>
-          unplanMeals(
-            (mealPlanData.read() ?? [])
-              .filter((row) => row.suggestionId === id)
-              .map((row) => row.date),
-          ),
-      },
-    });
-  }
-
   // The picker keeps its day after closing, so it can show it while it animates out.
   const [picker, setPicker] = useState<{ date?: Date; open: boolean }>({ open: false });
-
-  // Shuffling browses recipes like a suggested meal, round to where it started; it teaches the
-  // planner nothing, since people shuffle for ideas and often keep the first pick.
-  function shuffler(week: PlannerWeek, date: Date, meal: PlannedMealRow | undefined) {
-    if (!meal?.suggestionId || isPast(date, today)) return undefined;
-    const options = shuffleOptions(week, date, { plan, profiles, today });
-    const recipeId = nextShuffle(options, meal.recipeId);
-    return recipeId ? () => planMeal(user.id, meal.date, recipeId, meal) : undefined;
-  }
 
   function copy(from: PlannerWeek, to: PlannerWeek) {
     const copies = copyMeals(from, to, plan, today);
@@ -213,12 +171,10 @@ function MealPlanner() {
             <section className="col-span-full grid grid-cols-subgrid" key={week.offset}>
               <WeekHeader
                 canClear={openDays.some((date) => mealOn(date))}
-                canSuggest={openDays.some((date) => !mealOn(date))}
                 copyTargets={weeks.filter((other) => other.offset >= 0 && other !== week)}
                 hasMeals={week.days.some((date) => mealOn(date))}
                 onClear={() => clear(week)}
                 onCopyTo={(target) => copy(week, target)}
-                onSuggest={() => suggest(week)}
                 week={week}
               />
               <div className="col-span-full grid grid-cols-subgrid px-2 pt-1 pb-2 lg:px-3 lg:pb-3">
@@ -238,7 +194,6 @@ function MealPlanner() {
                         meal &&
                         removeMeal(user.id, meal, entriesById.get(meal.recipeId)?.recipe.title)
                       }
-                      onShuffle={shuffler(week, date, meal)}
                       wasDroppedOn={droppedOn.includes(dayKey(date))}
                     />
                   );

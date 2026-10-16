@@ -1,4 +1,4 @@
-import { bindings, defineConfig, exports, triggers } from "cf/config";
+import { bindings, defineConfig, exports } from "cf/config";
 
 export default defineConfig({
   worker: {
@@ -10,11 +10,9 @@ export default defineConfig({
     workersDev: false,
     previewUrls: false,
     observability: { enabled: true },
-    // Reads recipes whose profile is missing or out of date. See src/server/recipe-profile.
-    triggers: [triggers.scheduled({ schedule: "*/5 * * * *" })],
     assets: {
       notFoundHandling: "single-page-application",
-      runWorkerFirst: ["/", "/api/*"],
+      runWorkerFirst: ["/", "/api/*", "/.well-known/*", "/mcp"],
     },
     exports: {
       // Finishes recipe imports in the background. See src/server/recipe-import.
@@ -39,9 +37,11 @@ export default defineConfig({
         namespace: "1002",
         simple: { limit: 10, period: 60 },
       }),
-      // Workers AI, for Clef. See src/server/recipe-profile. Models only run on Cloudflare, so
-      // local dev calls them remotely, which needs a Cloudflare login.
-      AI: bindings.ai({ dev: { remote: true } }),
+      // MCP requests, keyed by member. See src/server/mcp.
+      MCP_RATE_LIMITER: bindings.rateLimit({
+        namespace: "1003",
+        simple: { limit: 120, period: 60 },
+      }),
       ASSETS: bindings.assets(),
       BETTER_AUTH_SECRET: bindings.secret(),
       BETTER_AUTH_URL: bindings.secret(),

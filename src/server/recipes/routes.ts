@@ -7,7 +7,6 @@ import { requireHousehold } from "../household/middleware";
 import type { HouseholdEnv } from "../household/middleware";
 import { validateJson } from "../lib/validate";
 import { deleteRecipePhoto } from "../photos/photo";
-import { profileRecipe } from "../recipe-profile/profiles";
 import {
   createRecipe,
   deleteRecipe,
@@ -62,8 +61,7 @@ function recipeInput({
 const notFound = { error: "Recipe not found" };
 
 // The household's recipes, tags, and the member's favorites. The app generates recipe and tag
-// IDs, so it can show a new recipe before the server has answered. A saved recipe is read for
-// meal suggestions once the response is on its way; see docs/ai-and-meal-planning.md.
+// IDs, so it can show a new recipe before the server has answered.
 export const recipeRoutes = new Hono<HouseholdEnv>()
   .use(requireSession, requireHousehold)
   .get("/", async (c) => {
@@ -81,7 +79,6 @@ export const recipeRoutes = new Hono<HouseholdEnv>()
         imageUrl: photoId ? recipePhotoUrl(photoId) : null,
       });
       if (!created) return c.json({ error: "This recipe is already saved" }, 409);
-      c.executionCtx.waitUntil(profileRecipe(c.env, id));
       return c.json({ ok: true }, 201);
     },
   )
@@ -104,7 +101,6 @@ export const recipeRoutes = new Hono<HouseholdEnv>()
       c.executionCtx.waitUntil(
         deleteRecipePhoto(c.env.PHOTOS, c.get("membership").id, updated.unusedImageUrl),
       );
-      c.executionCtx.waitUntil(profileRecipe(c.env, c.req.param("id")));
       return c.json({ ok: true }, 200);
     },
   )

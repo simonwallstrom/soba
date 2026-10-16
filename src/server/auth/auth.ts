@@ -1,12 +1,27 @@
+import { mcp } from "@better-auth/mcp";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, getOAuthState } from "better-auth/api";
 import { getCookies, getSessionCookie } from "better-auth/cookies";
 import { betterAuth } from "better-auth/minimal";
+import { jwt } from "better-auth/plugins/jwt";
 import { env } from "cloudflare:workers";
 import { serialize } from "hono/utils/cookie";
 
 import { getDatabase } from "../db/client";
-import { accounts, sessions, users, verifications } from "../db/schema";
+import {
+  accounts,
+  jwks,
+  oauthAccessTokens,
+  oauthClientAssertions,
+  oauthClientResources,
+  oauthClients,
+  oauthConsents,
+  oauthRefreshTokens,
+  oauthResources,
+  sessions,
+  users,
+  verifications,
+} from "../db/schema";
 import { findInvite } from "../household/household";
 import { cleanUserUpdate, isAllowlisted, normalizeEmail, signUpName } from "./policy";
 
@@ -28,6 +43,23 @@ async function assertCanSignUp(email: string) {
   });
 }
 
+// MCP clients like Claude register themselves, send the member through Google login and the
+// consent page, and call /mcp with the access token. See src/server/mcp.
+function mcpPlugin() {
+  return mcp({
+    resource: mcpResource(),
+    loginPage: "/",
+    consentPage: "/oauth/consent",
+    allowDynamicClientRegistration: true,
+    allowUnauthenticatedClientRegistration: true,
+    // Most MCP clients don't say what kind of app they are. Local ones, like Claude Code, return
+    // to http://localhost, which only native apps may use.
+    clientRegistrationDefaultApplicationType: "infer",
+    // Only registration creates apps; members can't create or change them by hand.
+    clientPrivileges: ({ action }) => action === "read" || action === "list",
+  });
+}
+
 function createAuth() {
   return betterAuth({
     baseURL: env.BETTER_AUTH_URL,
@@ -40,8 +72,24 @@ function createAuth() {
     },
     database: drizzleAdapter(getDatabase(), {
       provider: "sqlite",
-      schema: { account: accounts, session: sessions, user: users, verification: verifications },
+      schema: {
+        account: accounts,
+        session: sessions,
+        user: users,
+        verification: verifications,
+        jwks,
+        oauthClient: oauthClients,
+        oauthResource: oauthResources,
+        oauthClientResource: oauthClientResources,
+        oauthRefreshToken: oauthRefreshTokens,
+        oauthAccessToken: oauthAccessTokens,
+        oauthConsent: oauthConsents,
+        oauthClientAssertion: oauthClientAssertions,
+      },
     }),
+    // The JWT plugin's session-to-JWT endpoint; MCP clients get tokens through OAuth instead.
+    disabledPaths: ["/token"],
+    plugins: [jwt(), mcpPlugin()],
     databaseHooks: {
       user: {
         create: {
@@ -73,9 +121,14 @@ function createAuth() {
   });
 }
 
+/** The MCP endpoint's URL, which access tokens are issued for. */
+export function mcpResource() {
+  return `${env.BETTER_AUTH_URL}/mcp`;
+}
+
 let auth: ReturnType<typeof createAuth> | undefined;
 
-function getAuth() {
+export function getAuth() {
   return (auth ??= createAuth());
 }
 

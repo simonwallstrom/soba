@@ -79,7 +79,7 @@ export function MealPlannerSidebar({
       title: replaced ? `Replaced ${replaced}` : "Replaced the meal",
       actionProps: {
         children: "Undo",
-        onClick: () => planMeal(userId, date, previous.recipeId, previous),
+        onClick: () => planMeal(userId, date, previous.recipeId),
       },
     });
   }

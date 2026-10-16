@@ -1,6 +1,5 @@
 import { describe, expect, mock, test } from "bun:test";
 
-import { recipeProfileVersion } from "@shared/recipe-profile";
 import type { ExecutionContext } from "hono";
 
 import { addHousehold, createMemoryDatabase } from "../../../scripts/testing/memory-database";
@@ -21,7 +20,6 @@ await mock.module(new URL("../db/client.ts", import.meta.url).pathname, () => ({
 }));
 const { recipeRoutes } = await import("./routes");
 const { mealPlanRoutes } = await import("../meal-plan/routes");
-const { profileStaleRecipes } = await import("../recipe-profile/profiles");
 const { claimImport, saveImportedRecipe } = await import("../recipe-import/imports");
 
 type Routes = {
@@ -33,8 +31,6 @@ type Routes = {
   ) => Response | Promise<Response>;
 };
 
-// Clef, which reads each saved recipe once the response is on its way.
-const clef = { reads: 0, isDown: false };
 // Photo keys the routes deleted from the bucket.
 const deletedPhotos: string[] = [];
 // Just the bindings the routes reach.
@@ -42,22 +38,6 @@ const env = {
   PHOTOS: {
     delete: async (keys: string[]) => void deletedPhotos.push(...keys),
   },
-  AI: {
-    run: async () => {
-      clef.reads += 1;
-      if (clef.isDown) throw new Error("Clef is down");
-      return {
-        answers: {
-          isDinner: { noul: 0.9 },
-          base: { choice: "pasta" },
-          protein: { choice: "vegetarian" },
-          effort: { score: 0.2 },
-          isTreat: { noul: 0.1 },
-        },
-      };
-    },
-  },
-  AI_GATEWAY_URL: "https://gateway.example/v1/account/default",
 };
 
 const background: Promise<unknown>[] = [];
@@ -94,7 +74,6 @@ type Collection = {
     imageUrl: string | null;
     tagIds: string[];
     updatedBy: string;
-    profile: { base: string; effort: string; version: number; sourceHash: string } | null;
   }[];
   tags: { id: string; name: string }[];
   favoriteIds: string[];
@@ -111,25 +90,20 @@ async function plan(user: string) {
   const response = await send(mealPlanRoutes, user, "GET", "/");
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   const body = (await response.json()) as {
-    meals: { date: string; recipeId: string; suggestionId: string | null }[];
+    meals: { date: string; recipeId: string; plannedBy: string }[];
   };
   return body.meals
-    .map(({ date, recipeId, suggestionId }) => day(date, recipeId, suggestionId))
+    .map(({ date, recipeId, plannedBy }) => day(date, recipeId, plannedBy))
     .toSorted((left, right) => left.localeCompare(right));
 }
 
-function day(date: string, recipeId: string, suggestionId: string | null = null) {
-  return `${date} ${recipeId} ${suggestionId}`;
+// Days are listed with who planned them, which moving keeps.
+function day(date: string, recipeId: string, plannedBy = "alice") {
+  return `${date} ${recipeId} ${plannedBy}`;
 }
 
-function meals(...days: [string, string, string?][]) {
-  return {
-    meals: days.map(([date, recipeId, suggestionId]) => ({
-      date,
-      recipeId,
-      ...(suggestionId ? { suggestionId } : {}),
-    })),
-  };
+function meals(...days: [string, string][]) {
+  return { meals: days.map(([date, recipeId]) => ({ date, recipeId })) };
 }
 
 const soba = "00000000-0000-4000-8000-000000000001";
@@ -245,18 +219,27 @@ describe("meal plan routes", () => {
       "bob",
       "PUT",
       "/",
-      meals(["2026-10-12", ramen, "s1"], ["2026-10-13", soba]),
+      meals(["2026-10-12", ramen], ["2026-10-13", soba]),
     );
     expect(response.status).toBe(200);
-    expect(await plan("alice")).toEqual([day("2026-10-12", ramen, "s1"), day("2026-10-13", soba)]);
+    expect(await plan("alice")).toEqual([
+      day("2026-10-12", ramen, "bob"),
+      day("2026-10-13", soba, "bob"),
+    ]);
   });
 
   test("moving a meal onto a planned day swaps the two, and onto an open day frees its own", async () => {
     await send(mealPlanRoutes, "alice", "POST", "/move", { from: "2026-10-12", to: "2026-10-13" });
-    expect(await plan("alice")).toEqual([day("2026-10-12", soba), day("2026-10-13", ramen, "s1")]);
+    expect(await plan("alice")).toEqual([
+      day("2026-10-12", soba, "bob"),
+      day("2026-10-13", ramen, "bob"),
+    ]);
     await send(mealPlanRoutes, "alice", "POST", "/move", { from: "2026-10-13", to: "2026-10-15" });
     await send(mealPlanRoutes, "alice", "POST", "/move", { from: "2026-10-20", to: "2026-10-12" });
-    expect(await plan("alice")).toEqual([day("2026-10-12", soba), day("2026-10-15", ramen, "s1")]);
+    expect(await plan("alice")).toEqual([
+      day("2026-10-12", soba, "bob"),
+      day("2026-10-15", ramen, "bob"),
+    ]);
   });
 
   test("another household's recipes can't be planned, and its plan stays its own", async () => {
@@ -275,62 +258,12 @@ describe("meal plan routes", () => {
 
   test("unplanning clears the days, and deleting a recipe takes its meals and favorites", async () => {
     await send(mealPlanRoutes, "alice", "POST", "/remove", { dates: ["2026-10-15"] });
-    expect(await plan("alice")).toEqual([day("2026-10-12", soba)]);
+    expect(await plan("alice")).toEqual([day("2026-10-12", soba, "bob")]);
     expect((await send(recipeRoutes, "alice", "DELETE", `/${soba}`)).status).toBe(200);
     expect(await plan("alice")).toEqual([]);
     const { recipes, favoriteIds } = await collection("alice");
     expect(recipes.map((recipe) => recipe.id)).toEqual([ramen]);
     expect(favoriteIds).toEqual([]);
-  });
-});
-
-async function profileOf(id: string) {
-  await settled();
-  const { recipes } = await collection("alice");
-  return recipes.find((recipe) => recipe.id === id)?.profile ?? null;
-}
-
-describe("recipe profiles", () => {
-  const pasta = "00000000-0000-4000-8000-000000000003";
-
-  test("a saved recipe is read after the response, and again only when its text changes", async () => {
-    await settled();
-    clef.reads = 0;
-    await send(recipeRoutes, "alice", "POST", "/", { ...fields, id: pasta, title: "Pasta" });
-    const first = await profileOf(pasta);
-    expect(first).toMatchObject({ base: "pasta", effort: "quick", version: recipeProfileVersion });
-    expect(clef.reads).toBe(1);
-
-    await send(recipeRoutes, "alice", "PUT", `/${pasta}`, {
-      ...fields,
-      title: "Pasta",
-      servings: 4,
-    });
-    expect(await profileOf(pasta)).toEqual(first);
-    expect(clef.reads).toBe(1);
-
-    await send(recipeRoutes, "alice", "PUT", `/${pasta}`, { ...fields, title: "Pasta al limone" });
-    expect((await profileOf(pasta))?.sourceHash).not.toBe(first?.sourceHash);
-    expect(clef.reads).toBe(2);
-  });
-
-  test("the catch-up reads what was never read, and retries a failed read an hour later", async () => {
-    // Ramen and pasta are current; a recipe saved some other way has never been read.
-    sqlite.run("UPDATE recipe SET profile_checked_at = NULL WHERE id = ?", [ramen]);
-    sqlite.run("DELETE FROM recipe_profile WHERE recipe_id = ?", [ramen]);
-    clef.reads = 0;
-    clef.isDown = true;
-    expect(await profileStaleRecipes(env)).toBe(1);
-    expect(await profileOf(ramen)).toBeNull();
-    expect(await profileStaleRecipes(env)).toBe(0);
-    expect(clef.reads).toBe(1);
-
-    clef.isDown = false;
-    const later = new Date(Date.now() + 2 * 60 * 60_000);
-    expect(await profileStaleRecipes(env, later)).toBe(1);
-    expect(await profileOf(ramen)).toMatchObject({ base: "pasta" });
-    expect(await profileStaleRecipes(env, later)).toBe(0);
-    expect(clef.reads).toBe(2);
   });
 });
 

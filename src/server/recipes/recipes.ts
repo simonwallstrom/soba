@@ -1,4 +1,3 @@
-import type { RecipeProfile } from "@shared/recipe-profile";
 import { normalizeTagName } from "@shared/recipes";
 import type { RecipeSection } from "@shared/recipes";
 import { and, desc, eq, inArray } from "drizzle-orm";
@@ -6,7 +5,7 @@ import type { BatchItem } from "drizzle-orm/batch";
 
 import { getDatabase } from "../db/client";
 import { isUniqueViolation } from "../db/errors";
-import { favorites, recipeProfiles, recipes, recipeTags, tags } from "../db/schema";
+import { favorites, recipes, recipeTags, tags } from "../db/schema";
 
 // What the recipe form saves. The last save wins, and leaving out the description or servings
 // clears them.
@@ -37,11 +36,11 @@ const recipeColumns = {
 };
 
 // Everything the app shows about a household's recipes, in one round trip: the recipes with
-// their tags and profiles, the household's tags, and the member's favorites, newest first.
+// their tags, the household's tags, and the member's favorites, newest first.
 export async function listRecipes(householdId: string, userId: string) {
   const db = getDatabase();
   const inHousehold = eq(recipes.householdId, householdId);
-  const [recipeRows, tagRows, links, profiles, favoriteRows] = await db.batch([
+  const [recipeRows, tagRows, links, favoriteRows] = await db.batch([
     db.select(recipeColumns).from(recipes).where(inHousehold),
     db
       .select({ id: tags.id, name: tags.name, createdAt: tags.createdAt })
@@ -51,20 +50,6 @@ export async function listRecipes(householdId: string, userId: string) {
       .select({ recipeId: recipeTags.recipeId, tagId: recipeTags.tagId })
       .from(recipeTags)
       .innerJoin(recipes, eq(recipeTags.recipeId, recipes.id))
-      .where(inHousehold),
-    db
-      .select({
-        recipeId: recipeProfiles.recipeId,
-        isDinner: recipeProfiles.isDinner,
-        base: recipeProfiles.base,
-        protein: recipeProfiles.protein,
-        effort: recipeProfiles.effort,
-        isTreat: recipeProfiles.isTreat,
-        version: recipeProfiles.version,
-        sourceHash: recipeProfiles.sourceHash,
-      })
-      .from(recipeProfiles)
-      .innerJoin(recipes, eq(recipeProfiles.recipeId, recipes.id))
       .where(inHousehold),
     db
       .select({ recipeId: favorites.recipeId })
@@ -80,14 +65,10 @@ export async function listRecipes(householdId: string, userId: string) {
     if (tagIds) tagIds.push(tagId);
     else tagIdsByRecipe.set(recipeId, [tagId]);
   }
-  const profilesByRecipe = new Map<string, RecipeProfile>(
-    profiles.map(({ recipeId, ...profile }) => [recipeId, profile]),
-  );
   return {
     recipes: recipeRows.map((recipe) => ({
       ...recipe,
       tagIds: tagIdsByRecipe.get(recipe.id) ?? [],
-      profile: profilesByRecipe.get(recipe.id) ?? null,
     })),
     tags: tagRows,
     favoriteIds: favoriteRows.map(({ recipeId }) => recipeId),
@@ -122,9 +103,13 @@ async function tagStatements(householdId: string, recipeId: string, input: Recip
   const statements: BatchItem<"sqlite">[] = [];
   if (newTags.length > 0) {
     statements.push(
-      db
-        .insert(tags)
-        .values(newTags.map(({ id, name }) => ({ id, householdId, name: normalizeTagName(name) }))),
+      db.insert(tags).values(
+        newTags.map(({ id, name }) => ({
+          id,
+          householdId,
+          name: normalizeTagName(name),
+        })),
+      ),
     );
   }
   if (tagIds.length > 0) {
@@ -143,9 +128,14 @@ export async function createRecipe(
   const { tagIds: _, newTags: __, ...fields } = input;
   try {
     await db.batch([
-      db
-        .insert(recipes)
-        .values({ id, householdId, ...fields, imageUrl, createdBy: userId, updatedBy: userId }),
+      db.insert(recipes).values({
+        id,
+        householdId,
+        ...fields,
+        imageUrl,
+        createdBy: userId,
+        updatedBy: userId,
+      }),
       ...(await tagStatements(householdId, id, input)),
     ]);
     return true;

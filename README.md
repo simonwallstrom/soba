@@ -6,7 +6,7 @@ Recipe organizer for families. A React SPA served by a Cloudflare Worker, with i
 
 - [Bun](https://bun.sh/) 1.4.2, the version in `packageManager`
 - A Google OAuth web client with `http://localhost:5173/api/auth/callback/google` as an authorized redirect URI
-- A Cloudflare account with an AI Gateway, for recipe imports and profiles. Workers AI runs remotely in local dev, so log in with the cf CLI first.
+- A Cloudflare account with an AI Gateway, for recipe imports.
 
 ## Get started
 
@@ -42,8 +42,6 @@ Until launch, schema changes replace `drizzle/migrations/0000_*.sql` instead of 
 | `bun run db:migrate:remote` | Apply D1 migrations to the deployed database                 |
 | `bun run db:seed`           | Reset local recipes, tags, and meal plan to the samples      |
 | `bun run import:compare`    | Compare models on recipe import sources                      |
-| `bun run profile:compare`   | Check Clef's recipe profiles against the labeled samples     |
-| `bun run suggest:simulate`  | Simulate weeks of meal suggestions for the sample household  |
 
 ## Deploy
 
@@ -61,12 +59,13 @@ Setup, one time:
 - **App:** React, TanStack Router and Query, Tailwind CSS
 - **API:** Hono RPC, Better Auth with Google, Valibot
 - **Platform:** Vite, Cloudflare Workers, D1, R2, Workflows
-- **AI:** Claude Sonnet and Workers AI's Clef, through AI Gateway
+- **AI:** Claude Sonnet, through AI Gateway
 - **Tooling:** Bun, TypeScript, Oxlint, Oxfmt, Lefthook, React Compiler
 
 ## Docs
 
 - [Household data](./docs/data.md): where recipes and the meal plan live, the API, and how the app reads and saves them
 - [Auth and households](./docs/auth-and-households.md): sign-up, invites, roles, and the client session cache
-- [AI and meal planning](./docs/ai-and-meal-planning.md): how recipes are imported and profiled, and how meal suggestions are scored
+- [Recipe imports](./docs/recipe-imports.md): how links and photos become recipes
+- [MCP](./docs/mcp.md): the MCP server for Claude, and how clients connect through OAuth
 - [Conventions](./docs/conventions.md): code organization, routes, and tooling

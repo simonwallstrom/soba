@@ -1,6 +1,6 @@
 import { MediaListItem } from "@client/components/particles/media-item";
 import { Button } from "@client/components/ui/button";
-import { Add01Icon, Cancel01Icon, ServingFoodIcon, ShuffleIcon } from "@client/components/ui/icons";
+import { Add01Icon, Cancel01Icon, ServingFoodIcon } from "@client/components/ui/icons";
 import { ImagePlaceholder } from "@client/components/ui/image-thumbnail";
 import { useDayDrop } from "@client/features/meal-plan/day-drop";
 import type { DayDrag } from "@client/features/meal-plan/day-drop";
@@ -29,7 +29,6 @@ export function PlannedDay({
   onChoose,
   onMoveMeal,
   onRemove,
-  onShuffle,
   wasDroppedOn,
 }: {
   date: Date;
@@ -44,7 +43,6 @@ export function PlannedDay({
   onMoveMeal: (from: string) => void;
   onRemove: () => void;
   // Steps a suggested meal to another like it; left out when there's nothing to shuffle to.
-  onShuffle: (() => void) | undefined;
   // Whether a drop just changed this day, which flashes to show where a meal landed.
   wasDroppedOn: boolean;
 }) {
@@ -84,7 +82,6 @@ export function PlannedDay({
           key={meal.recipeId}
           meal={meal}
           onRemove={onRemove}
-          onShuffle={onShuffle}
         />
       ) : isPast ? (
         <p className="p-3 text-olive-400 dark:text-olive-600">Nothing planned</p>
@@ -102,7 +99,6 @@ function MealItem({
   isPast,
   meal,
   onRemove,
-  onShuffle,
 }: {
   drag: DayDrag;
   entry: RecipeListEntry;
@@ -110,7 +106,6 @@ function MealItem({
   isPast: boolean;
   meal: PlannedMealRow;
   onRemove: () => void;
-  onShuffle: (() => void) | undefined;
 }) {
   const details = [author?.name, tags.map((tag) => tag.name).join(" ")].filter(Boolean);
   const { ref, isDragging } = useRecipeDrag(recipe, {
@@ -124,28 +119,15 @@ function MealItem({
       <MediaListItem
         actions={
           !isPast && (
-            <>
-              {onShuffle && (
-                <Button
-                  aria-label="Suggest another recipe"
-                  onClick={onShuffle}
-                  size="icon-sm"
-                  title="Shuffle"
-                  variant="ghost"
-                >
-                  <ShuffleIcon />
-                </Button>
-              )}
-              <Button
-                aria-label={`Remove ${recipe.title} from the plan`}
-                onClick={onRemove}
-                size="icon-sm"
-                title="Remove"
-                variant="ghost"
-              >
-                <Cancel01Icon />
-              </Button>
-            </>
+            <Button
+              aria-label={`Remove ${recipe.title} from the plan`}
+              onClick={onRemove}
+              size="icon-sm"
+              title="Remove"
+              variant="ghost"
+            >
+              <Cancel01Icon />
+            </Button>
           )
         }
         className={isDragging ? "opacity-40" : undefined}

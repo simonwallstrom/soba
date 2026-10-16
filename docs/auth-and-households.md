@@ -26,6 +26,8 @@ A new account takes its name and photo from Google, or the start of its email wh
 - **Settings:** language and units, used to translate and convert imported recipes. Any member can change them. A new household's defaults come from the browser's locale.
 - **Settings page:** your account and everything about the household (name, settings, members, the invite link, leaving or deleting) are on `/settings`. Groups can be linked to by hash, like `/settings#members` from the account menu's "Invite member" and `/settings#tags` from the sidebar.
 
+MCP clients like Claude sign members in through OAuth instead of a session cookie; see [MCP](./mcp.md).
+
 Routes are in `src/server/household/routes.ts` and queries in `src/server/household/household.ts`.
 
 ## Sessions on the server

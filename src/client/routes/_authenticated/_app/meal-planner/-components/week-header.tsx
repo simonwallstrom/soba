@@ -1,5 +1,5 @@
 import { Badge } from "@client/components/ui/badge";
-import { Button, buttonVariants } from "@client/components/ui/button";
+import { buttonVariants } from "@client/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,12 +9,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@client/components/ui/dropdown-menu";
-import {
-  Copy01Icon,
-  Delete02Icon,
-  MoreHorizontalIcon,
-  SparklesIcon,
-} from "@client/components/ui/icons";
+import { Copy01Icon, Delete02Icon, MoreHorizontalIcon } from "@client/components/ui/icons";
 import { cn } from "cn";
 
 import { formatWeekRange } from "../-meal-plan";
@@ -27,27 +22,21 @@ import type { PlannerWeek } from "../-meal-plan";
 // 8px corners, not the round ones used elsewhere, so they sit concentric in the label's 12px
 // corners, 4px in.
 //
-// Suggesting gets a button of its own while there are days to fill. The menu holds what acts on
-// planned meals, so an empty week goes without it.
+// The menu holds what acts on planned meals, so an empty week goes without it.
 export function WeekHeader({
   canClear,
-  canSuggest,
   copyTargets,
   hasMeals,
   onClear,
   onCopyTo,
-  onSuggest,
   week,
 }: {
   // Whether any meals are planned on days still ahead.
   canClear: boolean;
-  // Whether any days still ahead are open.
-  canSuggest: boolean;
   copyTargets: readonly PlannerWeek[];
   hasMeals: boolean;
   onClear: () => void;
   onCopyTo: (target: PlannerWeek) => void;
-  onSuggest: () => void;
   week: PlannerWeek;
 }) {
   return (
@@ -57,12 +46,6 @@ export function WeekHeader({
         <span className="truncate text-olive-500">{formatWeekRange(week)}</span>
         {week.offset === 0 && <Badge variant="primary">Current</Badge>}
         <div className="ml-auto flex shrink-0 items-center gap-1">
-          {canSuggest && (
-            <Button onClick={onSuggest} variant="ghost">
-              <SparklesIcon />
-              Suggest meals
-            </Button>
-          )}
           {hasMeals && (
             <DropdownMenu>
               <DropdownMenuTrigger

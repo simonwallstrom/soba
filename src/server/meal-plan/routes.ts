@@ -30,8 +30,6 @@ export const mealPlanRoutes = new Hono<HouseholdEnv>()
             v.object({
               date: dateSchema,
               recipeId: v.pipe(v.string(), v.maxLength(100)),
-              // The suggestion that planned it, for undoing it as a whole.
-              suggestionId: v.optional(v.pipe(v.string(), v.maxLength(100))),
             }),
           ),
           v.minLength(1),
@@ -41,11 +39,7 @@ export const mealPlanRoutes = new Hono<HouseholdEnv>()
     ),
     async (c) => {
       // The last plan for a day wins.
-      const byDate = new Map(
-        c.req
-          .valid("json")
-          .meals.map((meal) => [meal.date, { ...meal, suggestionId: meal.suggestionId ?? null }]),
-      );
+      const byDate = new Map(c.req.valid("json").meals.map((meal) => [meal.date, meal]));
       const planned = await planMeals(c.get("membership").id, c.get("user").id, [
         ...byDate.values(),
       ]);
@@ -56,7 +50,9 @@ export const mealPlanRoutes = new Hono<HouseholdEnv>()
   .post(
     "/remove",
     validateJson(
-      v.object({ dates: v.pipe(v.array(dateSchema), v.minLength(1), v.maxLength(maxDays)) }),
+      v.object({
+        dates: v.pipe(v.array(dateSchema), v.minLength(1), v.maxLength(maxDays)),
+      }),
     ),
     async (c) => {
       await unplanMeals(c.get("membership").id, c.req.valid("json").dates);

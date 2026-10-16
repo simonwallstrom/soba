@@ -1,6 +1,5 @@
 import { createHouseholdData } from "@client/features/household/data";
 import { api } from "@client/lib/api";
-import { recipeBases, recipeEfforts, recipeProteins } from "@shared/recipe-profile";
 import { normalizeTagName, recipePhotoUrl } from "@shared/recipes";
 import type { Recipe, RecipeSection, Tag } from "@shared/recipes";
 import * as v from "valibot";
@@ -30,17 +29,6 @@ export const storedCollection = v.object({
       ingredients: storedSections,
       instructions: storedSections,
       tagIds: v.array(v.string()),
-      profile: v.nullable(
-        v.object({
-          isDinner: v.boolean(),
-          base: v.picklist(recipeBases),
-          protein: v.picklist(recipeProteins),
-          effort: v.picklist(recipeEfforts),
-          isTreat: v.boolean(),
-          version: v.number(),
-          sourceHash: v.string(),
-        }),
-      ),
       createdBy: v.string(),
       updatedBy: v.string(),
       createdAt: storedDate,
@@ -144,7 +132,6 @@ export function createRecipe(
     ...recipeContent(fields),
     imageUrl: photoId ? recipePhotoUrl(photoId) : null,
     sourceUrl: null,
-    profile: null,
     createdBy: userId,
     updatedBy: userId,
     createdAt: at,

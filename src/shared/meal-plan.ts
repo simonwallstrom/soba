@@ -5,8 +5,6 @@ export const mealDatePattern = /^\d{4}-\d{2}-\d{2}$/u;
 export type PlannedMealRow = {
   date: string;
   recipeId: string;
-  // Set on suggested meals: the suggestion that planned it, for undoing it as a whole.
-  suggestionId: string | null;
   plannedBy: string;
   plannedAt: Date;
 };
@@ -30,7 +28,7 @@ export function withMealsUnplanned(
 }
 
 // Moves a day's meal to another day. A meal already there swaps to the first day, so nothing is
-// lost, and both keep who planned them and the suggestion they came from.
+// lost, and both keep who planned them.
 export function withMealMoved(plan: readonly PlannedMealRow[], from: string, to: string) {
   const moving = plan.find((meal) => meal.date === from);
   if (!moving || from === to) return [...plan];
@@ -40,4 +38,22 @@ export function withMealMoved(plan: readonly PlannedMealRow[], from: string, to:
     ...(swapping ? [{ ...swapping, date: from }] : []),
     { ...moving, date: to },
   ];
+}
+
+// When each recipe was last eaten, on a day before `today`, and when it's next planned, from
+// `today` on. Days are keys like "2026-10-12", so they compare as strings.
+export function mealHistory(
+  plan: readonly Pick<PlannedMealRow, "date" | "recipeId">[],
+  today: string,
+) {
+  const lastEaten = new Map<string, string>();
+  const nextPlanned = new Map<string, string>();
+  for (const { date, recipeId } of plan) {
+    if (date < today) {
+      if (date > (lastEaten.get(recipeId) ?? "")) lastEaten.set(recipeId, date);
+    } else if (date < (nextPlanned.get(recipeId) ?? "9999-12-31")) {
+      nextPlanned.set(recipeId, date);
+    }
+  }
+  return { lastEaten, nextPlanned };
 }

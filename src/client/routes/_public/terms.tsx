@@ -15,7 +15,7 @@ function Terms() {
         </p>
       }
       title="Terms of use"
-      updated="15 October 2026"
+      updated="16 October 2026"
     >
       <LegalSection id="the-service" title="The service">
         <p>
@@ -52,7 +52,7 @@ function Terms() {
         <p>
           The recipes, photos, and notes you add are yours. You give us permission to store,
           process, and show them to your household, only to run Soba. That includes reading them
-          with AI to import recipes and suggest meals.
+          with AI to import recipes.
         </p>
         <p>
           Only add content you have the right to use. Importing a recipe from a website is for your

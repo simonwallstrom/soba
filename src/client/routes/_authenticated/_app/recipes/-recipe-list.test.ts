@@ -20,7 +20,6 @@ function recipe(id: string, title: string, overrides: Partial<Recipe> = {}): Rec
     createdAt: date,
     updatedAt: date,
     tagIds: [],
-    profile: null,
     ...overrides,
   };
 }

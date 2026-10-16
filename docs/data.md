@@ -1,6 +1,6 @@
 # Household data
 
-Each household's recipes, tags, favorites, recipe profiles, and meal plan live in D1, beside users and households (`src/server/db/schema.ts`). Every client reads and writes them through the same API, so the web app, and later an iOS app or MCP tools, share one set of endpoints.
+Each household's recipes, tags, favorites, and meal plan live in D1, beside users and households (`src/server/db/schema.ts`). Every client reads and writes them through the same API, so the web app, and later an iOS app or MCP tools, share one set of endpoints.
 
 The goal is still speed, not offline use: the app keeps the household's data in memory, reads from that copy, and shows a change before the server has answered. It expects a connection. Don't build offline-only flows.
 
@@ -8,9 +8,9 @@ The goal is still speed, not offline use: the app keeps the household's data in 
 
 | Route                                       | What it does                                                       |
 | ------------------------------------------- | ------------------------------------------------------------------ |
-| `GET /api/recipes`                          | Recipes with tag IDs and profiles, the tags, and your favorite IDs |
+| `GET /api/recipes`                          | Recipes with tag IDs, the tags, and your favorite IDs              |
 | `POST /api/recipes`, `PUT /api/recipes/:id` | Save a recipe, with any new tags it uses. The last save wins       |
-| `DELETE /api/recipes/:id`                   | Delete a recipe, with its favorites, profile, and planned meals    |
+| `DELETE /api/recipes/:id`                   | Delete a recipe, with its favorites and planned meals              |
 | `PUT`/`DELETE /api/recipes/:id/favorite`    | Favorite or unfavorite it, for the signed-in member                |
 | `POST /api/tags`, `PUT /api/tags/:id`       | Add or rename a tag. A name another tag has, in any case, is a 409 |
 | `POST /api/tags/:id/merge`                  | Move a tag's recipes to another tag (`into`) and delete it         |
@@ -37,6 +37,10 @@ Routes are in `src/server/recipes/`, `src/server/tags/`, and `src/server/meal-pl
 - **After saving,** the data is fetched again, and a change stops being applied once a fetch that began after it was saved comes back. A fetch can bring a change back while it still shows, so write `update` to give the same result then: set values rather than toggling or appending.
 - **A failed save** removes the change and shows a toast. The cached copy was never edited, so nothing needs rolling back.
 - **Other members' changes** arrive when the data is refetched: after your own change, when the app regains focus, or on the next visit. Nothing is pushed.
+
+## Planning meals
+
+Members plan dinners by hand: pick a recipe for a day, drag meals between days, or copy a week. Before you type, the recipe picker (`features/meal-plan/meal-picker.tsx`) lists recipes last eaten 3 weeks ago or more, and not planned again, first, longest ago first. Each row says when the recipe was last eaten, or when it's planned next. `mealHistory` in `@shared/meal-plan` works this out, for the picker and the MCP tools alike. The app doesn't guess at a household's tastes; Claude plans meals through MCP.
 
 How the recipe list is shown (view, sort, visible details) is saved per device in `localStorage` (`features/recipes/list-settings.ts`), not on the server.
 

@@ -7,22 +7,38 @@ import { rateLimit } from "./auth/middleware";
 import { isAllowlisted } from "./auth/policy";
 import { getMembership } from "./household/household";
 import { householdRoutes, inviteRoutes } from "./household/routes";
+import { mcpRoutes } from "./mcp/routes";
 import { mealPlanRoutes } from "./meal-plan/routes";
 import { photoRoutes } from "./photos/routes";
 import { recipeImportRoutes } from "./recipe-import/routes";
-import { profileStaleRecipes } from "./recipe-profile/profiles";
 import { recipeRoutes } from "./recipes/routes";
 import { tagRoutes } from "./tags/routes";
 
 export { RecipeImportWorkflow } from "./recipe-import/workflow";
 
+// OAuth endpoints that MCP clients call from their own servers. They authenticate the client
+// and code, never a cookie, so a cross-site request can't act as a member through them.
+const oauthClientPaths = new Set([
+  "/api/auth/oauth2/register",
+  "/api/auth/oauth2/token",
+  "/api/auth/oauth2/revoke",
+  "/api/auth/oauth2/introspect",
+]);
+
 const app = new Hono<{ Bindings: Env }>()
-  .use("/api/*", csrf({ origin: (origin, c) => origin === new URL(c.env.BETTER_AUTH_URL).origin }))
+  .use("/api/*", (c, next) =>
+    oauthClientPaths.has(c.req.path)
+      ? next()
+      : csrf({
+          origin: (origin) => origin === new URL(c.env.BETTER_AUTH_URL).origin,
+        })(c, next),
+  )
   .use("/api/auth/*", rateLimit)
   .use("/api/invites/*", rateLimit)
   .get("/", async (c) => {
     c.header("Cache-Control", "no-store");
-    if (getSessionCookie(c.req.raw)) return c.redirect("/recipes", 302);
+    // A signed `sig` is an MCP client's login request, which must reach the start page.
+    if (getSessionCookie(c.req.raw) && !c.req.query("sig")) return c.redirect("/recipes", 302);
     const asset = await c.env.ASSETS.fetch(c.req.raw);
     const response = new Response(asset.body, asset);
     response.headers.set("Cache-Control", "no-store");
@@ -59,13 +75,10 @@ const app = new Hono<{ Bindings: Env }>()
   .route("/api/recipes", recipeRoutes)
   .route("/api/tags", tagRoutes)
   .route("/api/meal-plan", mealPlanRoutes)
-  .on(["GET", "POST"], "/api/auth/*", (c) => handleAuth(c.req.raw));
+  .on(["GET", "POST"], "/api/auth/*", (c) => handleAuth(c.req.raw))
+  // OAuth discovery for MCP clients, served by Better Auth. See src/server/mcp.
+  .get("/.well-known/*", (c) => handleAuth(c.req.raw))
+  .route("/mcp", mcpRoutes);
 
 export type AppType = typeof app;
-export default {
-  fetch: app.fetch,
-  // Every few minutes; see the trigger in cloudflare.config.ts.
-  scheduled(_controller, env, ctx) {
-    ctx.waitUntil(profileStaleRecipes(env));
-  },
-} satisfies ExportedHandler<Env>;
+export default { fetch: app.fetch } satisfies ExportedHandler<Env>;

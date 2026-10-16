@@ -2,7 +2,6 @@ import { WorkflowEntrypoint } from "cloudflare:workers";
 import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
 
 import { deletePhotos, detectPhotoType, maxPhotoBytes, photoKey, savePhoto } from "../photos/photo";
-import { profileRecipe } from "../recipe-profile/profiles";
 import { ExtractionError, extractRecipe, ModelBusyError } from "./extract";
 import type { ImportSettings, Photo, Source } from "./extract";
 import { getImport, saveImportedRecipe, updateImport } from "./imports";
@@ -86,8 +85,6 @@ export class RecipeImportWorkflow extends WorkflowEntrypoint<Env, RecipeImportPa
           await deletePhotos(this.env.PHOTOS, saved.householdId, saved.unusedPhotoIds);
         }
       });
-      // For meal suggestions. A failed read is left to the catch-up.
-      await step.do("profile recipe", () => profileRecipe(this.env, importId));
     } catch (error) {
       // Retries ran out, or something unexpected broke.
       console.error("Recipe import failed", importId, error);

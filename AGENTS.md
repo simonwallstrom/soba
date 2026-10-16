@@ -6,9 +6,11 @@ Soba is a recipe organizer for families: a React SPA served by a Cloudflare Work
 - Follow [docs/conventions.md](./docs/conventions.md) for all code.
 - Reads and writes should feel instant: the app reads from its in-memory copy and shows changes before the server answers. A connection is required. Don't add offline-only flows.
 - Soba is pre-launch, with no users or data worth keeping. Resetting local or production data is fine.
+- Migrations are append-only: add one with `bun run db:generate`, never edit one that's applied. Before launch they may be squashed into a new initial migration, with production reset to match; never after.
 
 Read the matching doc before changing these areas:
 
-- Recipes, tags, favorites, the meal plan, or how the app reads and saves them: [docs/data.md](./docs/data.md)
+- Recipes, tags, favorites, the meal plan and its recipe picker, or how the app reads and saves them: [docs/data.md](./docs/data.md)
 - Auth, sessions, households, or invites: [docs/auth-and-households.md](./docs/auth-and-households.md)
-- Recipe imports, profiles, or meal suggestions: [docs/ai-and-meal-planning.md](./docs/ai-and-meal-planning.md)
+- Recipe imports: [docs/recipe-imports.md](./docs/recipe-imports.md)
+- The MCP server, or OAuth for MCP clients: [docs/mcp.md](./docs/mcp.md)

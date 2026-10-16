@@ -1,14 +1,8 @@
-import {
-  recipeProfileSource,
-  recipeProfileSourceHash,
-  recipeProfileVersion,
-} from "@shared/recipe-profile";
-
 import { sampleRecipes } from "./sample-recipes";
 
-// A month of dinners with the habits a real family has, so suggestions have something to learn
-// from: fish early in the week, tacos most Fridays, and something slower on Sundays. Each
-// weekday lists a dinner per week, oldest first; null leaves the day unplanned.
+// A month of dinners with the habits a real family has, so the meal plan has a history: fish early
+// in the week, tacos most Fridays, and something slower on Sundays. Each weekday lists a dinner
+// per week, oldest first; null leaves the day unplanned.
 const sampleDinners: readonly (readonly (string | null)[])[] = [
   ["Ugnsbakad lax med dill", "Fiskgratäng med potatismos", "Ugnsbakad lax med dill", null],
   ["Korv stroganoff", "Kycklinggryta med curry", "Halloumistroganoff", "Chili con carne"],
@@ -68,7 +62,7 @@ export function sampleDinnerHistory(now: Date) {
   );
 }
 
-// Every sample recipe with its tags and profile, and a month of dinners, all added by one user.
+// Every sample recipe with its tags, and a month of dinners, all added by one user.
 export function sampleHouseholdData(userId: string, now = new Date()) {
   const tagIds = new Map(
     [...new Set(sampleRecipes.flatMap((recipe) => recipe.tags))].map((name) => [
@@ -76,16 +70,11 @@ export function sampleHouseholdData(userId: string, now = new Date()) {
       crypto.randomUUID(),
     ]),
   );
-  const recipes = sampleRecipes.map(({ tags, createdAt, profile, imageUrl, ...recipe }) => ({
+  const recipes = sampleRecipes.map(({ tags, createdAt, imageUrl, ...recipe }) => ({
     ...recipe,
     id: crypto.randomUUID(),
     imageUrl: imageUrl ?? null,
     tagIds: tags.flatMap((name) => tagIds.get(name) ?? []),
-    profile: {
-      ...profile,
-      version: recipeProfileVersion,
-      sourceHash: recipeProfileSourceHash(recipeProfileSource(recipe)),
-    },
     createdBy: userId,
     createdAt: new Date(createdAt),
   }));
