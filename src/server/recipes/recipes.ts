@@ -84,6 +84,16 @@ export async function getRecipe(householdId: string, id: string) {
   return recipe ?? null;
 }
 
+// The household's recipe that was imported from a page, if any.
+export async function findRecipeBySource(householdId: string, sourceUrl: string) {
+  const [recipe] = await getDatabase()
+    .select({ id: recipes.id, title: recipes.title })
+    .from(recipes)
+    .where(and(eq(recipes.householdId, householdId), eq(recipes.sourceUrl, sourceUrl)))
+    .limit(1);
+  return recipe ?? null;
+}
+
 // The statements that save a recipe's tags: any new ones it uses, then its links. Tag IDs that
 // are neither new nor the household's own are dropped, such as a tag deleted meanwhile.
 async function tagStatements(householdId: string, recipeId: string, input: RecipeInput) {
@@ -122,7 +132,12 @@ async function tagStatements(householdId: string, recipeId: string, input: Recip
 export async function createRecipe(
   householdId: string,
   userId: string,
-  { id, imageUrl, ...input }: RecipeInput & { id: string; imageUrl: string | null },
+  {
+    id,
+    imageUrl,
+    sourceUrl = null,
+    ...input
+  }: RecipeInput & { id: string; imageUrl: string | null; sourceUrl?: string | null },
 ) {
   const db = getDatabase();
   const { tagIds: _, newTags: __, ...fields } = input;
@@ -133,6 +148,7 @@ export async function createRecipe(
         householdId,
         ...fields,
         imageUrl,
+        sourceUrl,
         createdBy: userId,
         updatedBy: userId,
       }),

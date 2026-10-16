@@ -1,21 +1,42 @@
 # MCP
 
-Soba is an MCP server, so Claude and other MCP clients can work with a household's recipes and meal plan. The server is `/mcp` on the same Worker as the app. The plan, including the write tools still to come, is in [issue #2](https://github.com/simonwallstrom/soba/issues/2).
+Soba is an MCP server, so Claude and other MCP clients can work with a household's recipes and meal plan. The server is `/mcp` on the same Worker as the app. The plan is in [issue #2](https://github.com/simonwallstrom/soba/issues/2).
 
 ## Tools
 
-All read-only so far, and all scoped to the member's household:
+All scoped to the member's household:
 
-| Tool             | What it answers                                                                                                |
-| ---------------- | -------------------------------------------------------------------------------------------------------------- |
-| `get_household`  | Name, members, language and units, recipe count, and every tag                                                 |
-| `search_recipes` | Recipes matching words in the title, description, ingredients, or tags, or one tag; all of them without either |
-| `get_recipe`     | One recipe in full, with who added it                                                                          |
-| `get_meal_plan`  | Planned dinners between two dates, past ones included; the last 8 weeks and next 2 by default                  |
+| Tool             | What it does                                                                                  |
+| ---------------- | --------------------------------------------------------------------------------------------- |
+| `get_household`  | Name, members, language and units, recipe count, and tags with their recipe counts            |
+| `search_recipes` | Recipes matching words or a tag, or all of them; with `full`, their whole text too            |
+| `get_recipe`     | One recipe in full, with who added it                                                         |
+| `get_meal_plan`  | Planned dinners between two dates, past ones included; the last 8 weeks and next 2 by default |
+| `create_recipe`  | Saves a new recipe, such as one Claude read from a link or photos                             |
+| `update_recipe`  | Changes only the fields given                                                                 |
+| `delete_recipe`  | Deletes a recipe, with its photo and planned days                                             |
+| `plan_meals`     | Plans dinners on up to 14 days, replacing what's there, and says what it replaced             |
+| `clear_days`     | Removes the dinners on up to 14 days                                                          |
+| `create_tag`     | Adds a tag, when the member wants one                                                         |
+| `rename_tag`     | Renames a tag on every recipe                                                                 |
+| `merge_tags`     | Moves a tag's recipes to another tag and deletes it                                           |
+| `delete_tag`     | Deletes a tag; its recipes stay                                                               |
 
-Search results say when each recipe was last eaten and when it's next planned, and the meal plan says who planned each day, so Claude can plan around the household's habits. Results link to the app, and search ignores case and accents.
+Search is how Claude reads in bulk: by default results are compact, and with `full` they carry each recipe's description, ingredients, and steps, up to 50 at a time, so Claude can read a week's candidates in one call. Search results say when each recipe was last eaten and when it's next planned, and the meal plan says who planned each day, so Claude can plan around the household's habits. Results link to the app, and search ignores case and accents.
 
-The server's instructions name the household and the language and units its recipes are written in.
+The server's instructions name the household and the language and units its recipes are written in. An **Import recipe** prompt (`import_recipe`) asks Claude to save a recipe from a link or attached photos.
+
+### Writing recipes
+
+Members import recipes with their own Claude rather than through Soba's import: Claude reads the page or photos and calls `create_recipe`. Its description carries the same writing rules as the import model's prompt (`recipeWritingRules` in `src/server/recipe-import/extract.ts`), for the household's language and units, so recipes read the same either way.
+
+- **Limits** are the recipe form's own, like a 60-character title, and are errors Claude can fix and retry, never silent clipping.
+- **Tags:** recipes get only the household's existing tags, matched by name. Names it doesn't have are left out and listed in the answer. `create_tag` adds one when the member wants it, so an import never invents tags. The tag tools take names, as Claude sees them in `get_household`, and use the same functions as Settings.
+- **Duplicates:** a recipe already saved from the same `sourceUrl` is refused unless Claude passes `allowDuplicate`.
+- **Photos:** a tool call's arguments are JSON the model writes, so a photo the member attached in Claude can't reach a tool. `imageUrl` takes a photo on the web instead, such as the page's main image, and Soba downloads it into the household's photos (`downloadPhoto`, shared with link imports), so recipes never depend on another site. When the download fails the recipe saves without it, or keeps its photo, and the answer says why. Replacing or clearing an uploaded photo deletes it from the bucket, as the app does. `get_recipe` only says whether there is a photo, since photo URLs need a member's session.
+- **The meal plan:** days before yesterday can't change. Meals Claude plans count as the member's own.
+- **Annotations:** every tool that changes or removes data is marked destructive, so clients may ask before running it; only `create_recipe` and `create_tag` aren't. A recipe page could ask Claude to delete things, so `delete_recipe`'s description tells Claude to delete only when the member asks, after confirming the title.
+- The open app shows changes when it next refetches, such as when it regains focus.
 
 ## Connecting
 

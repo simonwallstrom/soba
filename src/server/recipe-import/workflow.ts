@@ -1,11 +1,12 @@
 import { WorkflowEntrypoint } from "cloudflare:workers";
 import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
 
-import { deletePhotos, detectPhotoType, maxPhotoBytes, photoKey, savePhoto } from "../photos/photo";
+import { downloadPhoto } from "../photos/download";
+import { deletePhotos, detectPhotoType, photoKey } from "../photos/photo";
 import { ExtractionError, extractRecipe, ModelBusyError } from "./extract";
 import type { ImportSettings, Photo, Source } from "./extract";
 import { getImport, saveImportedRecipe, updateImport } from "./imports";
-import { browserUserAgent, fetchRecipePage, PageError, readLimited } from "./page";
+import { fetchRecipePage, PageError } from "./page";
 import type { RecipePage } from "./page";
 
 export type RecipeImportParams = { importId: string; settings: ImportSettings };
@@ -117,26 +118,15 @@ export class RecipeImportWorkflow extends WorkflowEntrypoint<Env, RecipeImportPa
 
   // Saves the image a recipe page shares itself with, as the imported recipe's photo.
   private async saveSharedImage(row: { householdId: string; userId: string }, imageUrl: string) {
-    const response = await fetch(imageUrl, {
-      headers: { "User-Agent": browserUserAgent, Accept: "image/webp,image/jpeg,image/png" },
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!response.ok) {
-      // The recipe still imports without its image, so this only shows in the logs.
-      console.warn("Could not download the shared image", imageUrl, response.status);
-      return null;
-    }
-    // One byte over the limit tells a photo that is too large from one that just fits.
-    const bytes = await readLimited(response, maxPhotoBytes + 1);
-    if (bytes.byteLength > maxPhotoBytes) return null;
-    const type = detectPhotoType(bytes);
-    if (!type) return null;
-    return savePhoto(
+    const result = await downloadPhoto(
       this.env.PHOTOS,
       { householdId: row.householdId, uploadedBy: row.userId },
-      bytes,
-      type,
+      imageUrl,
     );
+    if ("photoId" in result) return result.photoId;
+    // The recipe still imports without its image, so this only shows in the logs.
+    console.warn("Could not download the shared image", imageUrl, result.error);
+    return null;
   }
 }
 

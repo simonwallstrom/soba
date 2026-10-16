@@ -56,24 +56,38 @@ const unitInstructions: Record<HouseholdUnits, string> = {
   us: `Convert every amount to US customary units: cups, tablespoons, teaspoons, ounces, pounds, inches, and °F. Keep amounts that are already US units. Round converted amounts to practical kitchen measures, such as ⅓ cup or 1 ½ tbsp.`,
 };
 
-function systemPrompt({ language, units, tagNames }: ImportSettings) {
+// How a recipe card is written for a household: its language and units, then what goes in each
+// field. Imports send this to the model that reads a page or photos, and the MCP server gives it
+// to Claude for writing recipes itself.
+export function recipeWritingRules({ language, units }: Omit<ImportSettings, "tagNames">) {
   const languageName =
     householdLanguages.find((option) => option.value === language)?.label ?? "English";
+  return {
+    language: `Write everything in ${languageName} (language code "${language}"), whatever language the source uses. Translate naturally, as a native cookbook writer would. Name ingredients the way they are sold where that language is spoken, for example "vispgrädde" rather than a literal translation of "heavy cream" for Swedish. When an ingredient has no common local equivalent, keep it and give the closest substitute in parentheses.`,
+    units: unitInstructions[units],
+    fields: [
+      `title: a plain dish name in sentence case, at most ${recipeTitleMaxLength} characters, such as "Chewy chocolate chip cookies". Use the source's title as a starting point, but drop site names, "recipe", "the best", "easy", and other promotional words. If the source has no title, name the dish from its ingredients and method.`,
+      `description: one or two short, plain sentences on what the dish is and when you would make it, at most ${Math.round(recipeDescriptionMaxLength * 0.75)} characters. Write it fresh rather than copying the source's introduction. No exclamation marks.`,
+      `servings: the number of servings or portions as an integer, or null if the source does not say.`,
+      `ingredients: one item per ingredient line, amount first, such as "2 dl vispgrädde", so the app can scale amounts to other servings. Write amounts as digits, never words ("2 ägg", not "två ägg"); fractions as ½, ¼, ¾, ⅓, or ⅔, or as decimals in the language's notation (such as "2,5 dl" in Swedish); and ranges with an en dash ("2–3"). Give packs as count, then size, such as "2 x 400 g krossade tomater". Put words like "about" after the amount or leave them out, never before it. Ingredients without an amount, such as "salt to taste", are fine as they are. Use a section heading only when the source groups ingredients (such as "Sauce" or "Topping"); otherwise one section with a null heading.`,
+      `instructions: one item per step, without step numbers. Use headings the same way as for ingredients.`,
+    ],
+  };
+}
+
+function systemPrompt({ language, units, tagNames }: ImportSettings) {
+  const rules = recipeWritingRules({ language, units });
   return `You turn recipes from web pages and photos into clean recipe cards for a family recipe app.
 
-Write everything in ${languageName} (language code "${language}"), whatever language the source uses. Translate naturally, as a native cookbook writer would. Name ingredients the way they are sold where that language is spoken, for example "vispgrädde" rather than a literal translation of "heavy cream" for Swedish. When an ingredient has no common local equivalent, keep it and give the closest substitute in parentheses.
+${rules.language}
 
-${unitInstructions[units]}
+${rules.units}
 
 Be faithful to the source otherwise: keep every ingredient and step, and do not add, remove, or adapt anything beyond the translation and conversion above. Leave out life stories, ads, nutrition facts, and reader comments.
 
 Fields:
 - isRecipe: false when the source holds no recipe; fill the other fields with empty values then.
-- title: a plain dish name in sentence case, at most ${recipeTitleMaxLength} characters, such as "Chewy chocolate chip cookies". Use the source's title as a starting point, but drop site names, "recipe", "the best", "easy", and other promotional words. If the source has no title, name the dish from its ingredients and method.
-- description: one or two short, plain sentences on what the dish is and when you would make it, at most ${Math.round(recipeDescriptionMaxLength * 0.75)} characters. Write it fresh rather than copying the source's introduction. No exclamation marks.
-- servings: the number of servings or portions as an integer, or null if the source does not say.
-- ingredients: one item per ingredient line, amount first, such as "2 dl vispgrädde", so the app can scale amounts to other servings. Write amounts as digits, never words ("2 ägg", not "två ägg"); fractions as ½, ¼, ¾, ⅓, or ⅔, or as decimals in the language's notation (such as "2,5 dl" in Swedish); and ranges with an en dash ("2–3"). Give packs as count, then size, such as "2 x 400 g krossade tomater". Put words like "about" after the amount or leave them out, never before it. Ingredients without an amount, such as "salt to taste", are fine as they are. Use a section heading only when the source groups ingredients (such as "Sauce" or "Topping"); otherwise one section with a null heading.
-- instructions: one item per step, without step numbers. Use headings the same way as for ingredients.
+${rules.fields.map((field) => `- ${field}`).join("\n")}
 - tags: only names from this list, exactly as written, that clearly apply to the recipe. Most recipes need none or one; leave it empty when unsure. Never invent a tag.
 Tags: ${tagNames.length > 0 ? JSON.stringify(tagNames) : "(none, so always leave tags empty)"}
 

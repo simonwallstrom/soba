@@ -32,6 +32,7 @@ export const mcpRoutes = new Hono<McpEnv>()
         appUrl: new URL(c.env.BETTER_AUTH_URL).origin,
         // Calendar dates are the household's own; UTC is close enough to pick the default range.
         today: new Date().toISOString().slice(0, 10),
+        photos: c.env.PHOTOS,
       }),
     ).fetch(c.req.raw),
   );

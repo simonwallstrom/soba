@@ -20,7 +20,7 @@ export function addDays(date: string, days: number) {
   return day.toISOString().slice(0, 10);
 }
 
-function weekday(date: string) {
+export function weekday(date: string) {
   return weekdays[new Date(`${date}T00:00:00Z`).getUTCDay()];
 }
 
@@ -56,15 +56,31 @@ export async function getHousehold(household: Household, userId: string) {
     units: household.units,
     members: members.map(({ id, name, role }) => ({ name, role, isYou: id === userId })),
     recipeCount: recipes.length,
-    tags,
+    tags: tags.map((name) => ({
+      name,
+      recipes: recipes.filter((recipe) => recipe.tags.includes(name)).length,
+    })),
   };
 }
+
+// Full recipes are long, so a search returns at most this many of them at once.
+export const maxFullRecipes = 50;
 
 export async function searchRecipes(
   household: Household,
   userId: string,
   { appUrl, today }: { appUrl: string; today: string },
-  { query, tag, limit }: { query?: string | undefined; tag?: string | undefined; limit: number },
+  {
+    query,
+    tag,
+    limit,
+    full = false,
+  }: {
+    query?: string | undefined;
+    tag?: string | undefined;
+    limit: number;
+    full?: boolean | undefined;
+  },
 ) {
   const [{ recipes }, meals] = await Promise.all([
     loadRecipes(household, userId),
@@ -94,9 +110,13 @@ export async function searchRecipes(
         a.recipe.title.localeCompare(b.recipe.title, "sv-SE"),
     );
 
+  const shown = matches.slice(0, full ? Math.min(limit, maxFullRecipes) : limit);
   return {
     total: matches.length,
-    recipes: matches.slice(0, limit).map(({ recipe }) => ({
+    ...(shown.length < matches.length && {
+      note: `Showing ${shown.length} of ${matches.length}. Narrow the search, or raise the limit${full ? ` (at most ${maxFullRecipes} with full)` : ""}.`,
+    }),
+    recipes: shown.map(({ recipe }) => ({
       id: recipe.id,
       title: recipe.title,
       tags: recipe.tags,
@@ -104,6 +124,11 @@ export async function searchRecipes(
       lastEaten: lastEaten.get(recipe.id) ?? null,
       nextPlanned: nextPlanned.get(recipe.id) ?? null,
       url: `${appUrl}/recipes/${recipe.id}`,
+      ...(full && {
+        description: recipe.description,
+        ingredients: recipe.ingredients,
+        instructions: recipe.instructions,
+      }),
     })),
   };
 }
@@ -126,6 +151,8 @@ export async function getRecipe(household: Household, userId: string, appUrl: st
     ingredients: recipe.ingredients,
     instructions: recipe.instructions,
     sourceUrl: recipe.sourceUrl,
+    // Photos need a member's session to load, so Claude only learns whether there is one.
+    hasPhoto: recipe.imageUrl !== null,
     createdBy: memberName(recipe.createdBy),
     createdAt: recipe.createdAt,
     updatedAt: recipe.updatedAt,
