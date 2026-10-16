@@ -10,6 +10,8 @@ export default defineConfig({
     workersDev: false,
     previewUrls: false,
     observability: { enabled: true },
+    // None. Spelled out, since leaving the key out keeps whatever schedules the Worker had.
+    triggers: [],
     assets: {
       notFoundHandling: "single-page-application",
       runWorkerFirst: ["/", "/api/*", "/.well-known/*", "/mcp"],
