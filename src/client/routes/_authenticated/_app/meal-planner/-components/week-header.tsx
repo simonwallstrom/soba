@@ -54,13 +54,13 @@ export function WeekHeader({
               >
                 <MoreHorizontalIcon />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="min-w-56">
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
                     <Copy01Icon />
                     Copy to…
                   </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="w-60">
+                  <DropdownMenuSubContent className="min-w-60">
                     {copyTargets.map((target) => (
                       <DropdownMenuItem key={target.offset} onClick={() => onCopyTo(target)}>
                         <span className="font-medium">Week {target.number}</span>

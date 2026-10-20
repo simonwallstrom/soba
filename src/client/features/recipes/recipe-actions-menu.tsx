@@ -58,7 +58,7 @@ export function RecipeActionsMenu({
         >
           <MoreHorizontalIcon />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuContent align="end" className="min-w-52">
           <DropdownMenuGroup>
             <DropdownMenuItem render={<Link params={{ recipeId }} to="/recipes/$recipeId/edit" />}>
               <FileEditIcon />

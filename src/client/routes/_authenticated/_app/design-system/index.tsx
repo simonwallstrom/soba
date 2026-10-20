@@ -255,7 +255,7 @@ function DesignSystem() {
           <div className="flex flex-wrap gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger className={buttonVariants()}>Items</DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
+              <DropdownMenuContent className="min-w-56">
                 <DropdownMenuGroup>
                   <DropdownMenuLabel>Recipe</DropdownMenuLabel>
                   <DropdownMenuItem>
@@ -268,7 +268,7 @@ function DesignSystem() {
                       <Icons.Calendar03Icon />
                       Add to meal plan
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="w-48">
+                    <DropdownMenuSubContent className="min-w-48">
                       <DropdownMenuItem>Måndag</DropdownMenuItem>
                       <DropdownMenuItem>Tisdag</DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -290,7 +290,7 @@ function DesignSystem() {
 
             <DropdownMenu>
               <DropdownMenuTrigger className={buttonVariants()}>Checkbox items</DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
+              <DropdownMenuContent className="min-w-56">
                 <DropdownMenuGroup>
                   <DropdownMenuLabel>Show metadata</DropdownMenuLabel>
                   <DropdownMenuCheckboxItem defaultChecked>Meal type</DropdownMenuCheckboxItem>
@@ -304,7 +304,7 @@ function DesignSystem() {
 
             <DropdownMenu>
               <DropdownMenuTrigger className={buttonVariants()}>Radio items</DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
+              <DropdownMenuContent className="min-w-56">
                 <DropdownMenuGroup>
                   <DropdownMenuLabel>Sort recipes by</DropdownMenuLabel>
                   <DropdownMenuRadioGroup defaultValue="name">

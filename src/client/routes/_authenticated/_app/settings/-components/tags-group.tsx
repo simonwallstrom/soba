@@ -387,7 +387,7 @@ function TagRow({
         >
           <MoreHorizontalIcon />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuContent align="end" className="min-w-48">
           <DropdownMenuItem onClick={edit.start}>
             <FileEditIcon />
             Rename
