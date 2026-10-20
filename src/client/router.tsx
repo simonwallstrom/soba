@@ -12,9 +12,12 @@ function restoresScroll({ location }: { location: ParsedLocation }): boolean {
 export const router = createRouter({
   routeTree,
   defaultPreload: "intent",
-  // App pages scroll inside the layout's main element, not the window.
+  // App and public pages scroll inside their layouts, not the window.
   scrollRestoration: restoresScroll,
-  scrollToTopSelectors: ['[data-scroll-restoration-id="app-content"]'],
+  scrollToTopSelectors: [
+    '[data-scroll-restoration-id="app-content"]',
+    '[data-scroll-restoration-id="public-content"]',
+  ],
 });
 
 // One item in the app header's trail. A component label can read data, like a recipe's title.

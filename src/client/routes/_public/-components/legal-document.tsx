@@ -22,7 +22,7 @@ export function LegalDocument({
         <p className="text-sm text-olive-500">Last updated {updated}</p>
       </header>
       {/* Pulled out by its padding on wider screens, so its text lines up with the title. */}
-      <div className="rounded-xl bg-olive-100 p-5 text-pretty text-olive-800 sm:-mx-5 dark:bg-olive-900 dark:text-olive-200">
+      <div className="rounded-xl bg-olive-50 p-5 text-pretty text-olive-800 sm:-mx-5 dark:bg-olive-900 dark:text-olive-200">
         {summary}
       </div>
       <div className="flex flex-col gap-10 [counter-reset:section]">{children}</div>

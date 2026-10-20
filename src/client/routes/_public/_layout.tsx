@@ -6,7 +6,7 @@ export const Route = createFileRoute("/_public")({ component: PublicLayout });
 const footerLinkStyles = "hover:text-olive-900 focus-visible:outline-2 dark:hover:text-olive-200";
 
 // Long reads, like the terms and privacy policy: one comfortable column, with the logo leading
-// home and the other documents linked below.
+// home and the documents linked below, with home again.
 function PublicLayout() {
   return (
     // The document never scrolls (see index.html), so the page scrolls itself.
@@ -25,6 +25,9 @@ function PublicLayout() {
           <Outlet />
         </main>
         <footer className="flex flex-wrap gap-x-4 gap-y-2 border-t pt-6 text-sm font-medium text-olive-600 dark:text-olive-400">
+          <Link className={footerLinkStyles} to="/">
+            Home
+          </Link>
           <Link className={footerLinkStyles} to="/terms">
             Terms of use
           </Link>
