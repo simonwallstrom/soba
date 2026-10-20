@@ -80,7 +80,12 @@ export function AccountMenu({
 
         <DropdownMenuSeparator />
 
+        {/* Settings, then shortcuts to its groups, so Settings stays put for members too. */}
         <DropdownMenuGroup>
+          <DropdownMenuItem render={<Link to={destinations.settings.to} />}>
+            <Settings01Icon />
+            {destinations.settings.label}
+          </DropdownMenuItem>
           {household.role === "owner" && (
             <DropdownMenuItem render={<Link hash="members" to="/settings" />}>
               <UserAdd01Icon />
@@ -90,10 +95,6 @@ export function AccountMenu({
           <DropdownMenuItem render={<Link hash="assistants" to="/settings" />}>
             <SparklesIcon />
             AI assistants
-          </DropdownMenuItem>
-          <DropdownMenuItem render={<Link to={destinations.settings.to} />}>
-            <Settings01Icon />
-            {destinations.settings.label}
           </DropdownMenuItem>
           <DropdownMenuItem render={<Link to="/terms" />}>
             <LegalDocument01Icon />
