@@ -31,6 +31,7 @@ import { Suspense, useState } from "react";
 
 import { AssistantsGroup } from "./-components/assistants-group";
 import { ConfirmDialog } from "./-components/confirm-dialog";
+import { DevicesGroup, devicesOptions } from "./-components/devices-group";
 import { EditableTextRow } from "./-components/editable-text-row";
 import { InviteLinkRow } from "./-components/invite-link-row";
 import { ProfileRow } from "./-components/profile-row";
@@ -46,9 +47,10 @@ import { TimeZoneField } from "./-components/time-zone-field";
 import { renameUser, sendHouseholdRequest, updateHousehold } from "./-settings-requests";
 
 export const Route = createFileRoute("/_authenticated/_app/settings/")({
-  // Starts the members and assistants requests without blocking navigation.
+  // Starts the members, devices, and assistants requests without blocking navigation.
   loader: () => {
     void queryClient.prefetchQuery(householdOptions);
+    void queryClient.prefetchQuery(devicesOptions);
     void queryClient.prefetchQuery(connectionsOptions);
   },
   staticData: { breadcrumbs: [{ label: "Settings" }] },
@@ -113,6 +115,8 @@ function Settings() {
             </p>
           )}
         </SettingsGroup>
+
+        <DevicesGroup />
 
         <AssistantsGroup />
 

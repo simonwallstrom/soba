@@ -160,7 +160,7 @@ export async function getSession(headers: Headers, options: GetSessionOptions = 
       }),
     );
   }
-  return session ? { user: session.user } : null;
+  return session ? { user: session.user, sessionId: session.session.id } : null;
 }
 
 export function handleAuth(request: Request): Promise<Response> {

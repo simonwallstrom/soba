@@ -24,7 +24,7 @@ A new account takes its name and photo from Google, or the start of its email wh
 - **Leaving:** a member can leave at any time. The owner can't be removed and can leave only by deleting the household once nobody else is in it.
 - **Name:** only the owner can rename the household.
 - **Settings:** language and units, used to translate and convert imported recipes, and a time zone, which tells the MCP server what day it is for the household. The app itself uses each device's date. Any member can change them. A new household's defaults come from the creator's browser; the time zone isn't asked for during onboarding, so it's shown in Settings for anyone who signed up away from home.
-- **Settings page:** your account and everything about the household (name, settings, members, the invite link, leaving or deleting) are on `/settings`. Groups can be linked to by hash, like `/settings#members` from the account menu's "Invite member" and `/settings#tags` from the sidebar.
+- **Settings page:** your account, your devices, and everything about the household (name, settings, members, the invite link, leaving or deleting) are on `/settings`. Groups can be linked to by hash, like `/settings#members` from the account menu's "Invite member" and `/settings#tags` from the sidebar.
 
 MCP clients like Claude sign members in through OAuth instead of a session cookie; see [MCP](./mcp.md).
 
@@ -40,6 +40,7 @@ Hiding it, or finishing every step, sets `checklist_hidden_at` on the member, so
 
 - Sessions last 30 days and refresh daily.
 - A signed cookie cache holds session data for 5 minutes, so most requests skip D1.
+- **Devices:** Settings lists the member's sessions and logs out others (`src/server/auth/devices.ts`). It reads and deletes session rows in D1, not through Better Auth's `list-sessions`, which refuses sessions older than a day, and session tokens never reach the client. A device logged out keeps working until its cookie cache expires, up to 5 minutes.
 - `requireSession` and `requireHousehold` middleware authorize API routes. Every protected request is checked on the server; the client's session is only a UI cache.
 - `/api/*` rejects cross-origin requests (CSRF), and auth and invite routes are rate-limited by IP.
 

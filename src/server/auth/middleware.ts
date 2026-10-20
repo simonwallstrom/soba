@@ -4,7 +4,7 @@ import { getSession } from "./auth";
 
 type SessionUser = NonNullable<Awaited<ReturnType<typeof getSession>>>["user"];
 
-export type SessionEnv = { Bindings: Env; Variables: { user: SessionUser } };
+export type SessionEnv = { Bindings: Env; Variables: { user: SessionUser; sessionId: string } };
 
 export const requireSession = createMiddleware<SessionEnv>(async (c, next) => {
   const session = await getSession(c.req.raw.headers, {
@@ -12,6 +12,7 @@ export const requireSession = createMiddleware<SessionEnv>(async (c, next) => {
   });
   if (!session) return c.json({ error: "Log in first" }, 401);
   c.set("user", session.user);
+  c.set("sessionId", session.sessionId);
   return next();
 });
 

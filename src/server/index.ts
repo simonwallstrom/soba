@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { csrf } from "hono/csrf";
 
 import { getSession, handleAuth } from "./auth/auth";
+import { deviceRoutes } from "./auth/device-routes";
 import { rateLimit } from "./auth/middleware";
 import { isAllowlisted } from "./auth/policy";
 import { getMembership } from "./household/household";
@@ -70,6 +71,7 @@ const app = new Hono<{ Bindings: Env }>()
     return c.body(null, 204);
   })
   .route("/api/connections", connectionRoutes)
+  .route("/api/devices", deviceRoutes)
   .route("/api/household", householdRoutes)
   .route("/api/invites", inviteRoutes)
   .route("/api/photos", photoRoutes)
