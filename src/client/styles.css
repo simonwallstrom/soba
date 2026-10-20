@@ -26,6 +26,11 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  /* Selected text takes the muted yellow of scaled ingredients, in fields and on the page alike. */
+  ::selection {
+    @apply bg-amber-200/60 dark:bg-amber-300/20;
+  }
+
   /* Touch screens are held closer and read smaller, so text steps up a size: 16px and 14px. */
   @media (pointer: coarse) {
     :root {

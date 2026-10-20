@@ -1,15 +1,14 @@
 // Shared class lists that keep the form controls, popups, and menu items in step.
 
-// Placeholder and text selection colors for anything you can type into.
-export const textEntryStyles =
-  "placeholder:text-olive-400 selection:bg-olive-800 selection:text-olive-50 dark:placeholder:text-olive-600 dark:selection:bg-olive-200 dark:selection:text-olive-950";
+// Placeholder colors for anything you can type into.
+export const textEntryStyles = "placeholder:text-olive-400 dark:placeholder:text-olive-600";
 
 // Text fields and select-like triggers; callers add their own size and padding.
 export const controlStyles = [
   // Base
   "min-w-0 rounded-lg border border-black/18 bg-white dark:border-white/15 dark:bg-white/5",
 
-  // Placeholder and selection
+  // Placeholder
   textEntryStyles,
 
   // Focus
@@ -37,7 +36,7 @@ export const choiceStyles = [
 
 // Focus and invalid states for a standalone checkbox or radio.
 export const choiceFocusStyles = [
-  "outline-none focus-visible:outline-2 focus-visible:outline-offset-2",
+  "focus-visible:outline-2 focus-visible:outline-offset-2",
   "aria-invalid:border-red-500 aria-invalid:outline-red-500 dark:aria-invalid:border-red-400 dark:aria-invalid:outline-red-400",
   "data-invalid:border-red-500 data-invalid:outline-red-500 dark:data-invalid:border-red-400 dark:data-invalid:outline-red-400",
 ];
@@ -76,7 +75,7 @@ export const popupSeparatorStyles = "-mx-1 my-1 h-[0.5px] bg-black/15 dark:bg-wh
 // Small square icon buttons inside other controls. Inset 4px from a `rounded-lg` (12px) control,
 // so `rounded-md` (8px) keeps the corners concentric.
 export const inlineButtonStyles = [
-  "inline-flex size-6 shrink-0 items-center justify-center rounded-md outline-none",
+  "inline-flex size-6 shrink-0 items-center justify-center rounded-md",
   "hover:bg-black/5 active:bg-black/10 dark:hover:bg-white/6 dark:active:bg-white/10",
   "focus-visible:outline-2 focus-visible:-outline-offset-1",
   "disabled:pointer-events-none disabled:opacity-50",

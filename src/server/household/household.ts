@@ -1,6 +1,6 @@
 import { MAX_HOUSEHOLD_MEMBERS } from "@shared/household";
 import type { HouseholdLanguage, HouseholdUnits } from "@shared/household";
-import { and, count, eq, ne } from "drizzle-orm";
+import { and, count, eq, isNotNull, ne } from "drizzle-orm";
 
 import { getDatabase } from "../db/client";
 import { isUniqueViolation } from "../db/errors";
@@ -16,6 +16,7 @@ export type Membership = HouseholdSettings & {
   id: string;
   name: string;
   role: "owner" | "member";
+  checklistHidden: boolean;
 };
 
 export async function getMembership(userId: string): Promise<Membership | null> {
@@ -27,12 +28,20 @@ export async function getMembership(userId: string): Promise<Membership | null> 
       language: households.language,
       units: households.units,
       timeZone: households.timeZone,
+      checklistHidden: isNotNull(householdMembers.checklistHiddenAt).mapWith(Boolean),
     })
     .from(householdMembers)
     .innerJoin(households, eq(householdMembers.householdId, households.id))
     .where(eq(householdMembers.userId, userId))
     .limit(1);
   return membership ?? null;
+}
+
+export async function hideChecklist(userId: string) {
+  await getDatabase()
+    .update(householdMembers)
+    .set({ checklistHiddenAt: new Date() })
+    .where(eq(householdMembers.userId, userId));
 }
 
 export async function isMember(userId: string, householdId: string) {

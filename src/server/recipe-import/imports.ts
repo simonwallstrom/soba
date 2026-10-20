@@ -1,9 +1,9 @@
 import type { ImportedRecipe, RecipeImportStatus } from "@shared/recipe-import";
 import { recipePhotoUrl } from "@shared/recipes";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, ne } from "drizzle-orm";
 
 import { getDatabase } from "../db/client";
-import { recipeImports, recipes, recipeTags, tags } from "../db/schema";
+import { favorites, recipeImports, recipes, recipeTags, tags } from "../db/schema";
 
 export type RecipeImportRow = typeof recipeImports.$inferSelect;
 
@@ -66,6 +66,7 @@ export async function updateImport(
 // Saves a finished import as a recipe under the import's ID, with the household's tags that match
 // by name, and marks the import ready for the member's app to announce. Safe to run twice. Returns
 // the source photos the recipe doesn't use, or null when the import was dismissed meanwhile.
+// The household's first recipe becomes the member's favorite, so Favorites starts with an example.
 export async function saveImportedRecipe(id: string, recipe: ImportedRecipe) {
   const db = getDatabase();
   const row = await getImport(id);
@@ -83,6 +84,11 @@ export async function saveImportedRecipe(id: string, recipe: ImportedRecipe) {
       return match ? [match.id] : [];
     }),
   );
+  const [otherRecipe] = await db
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(and(eq(recipes.householdId, row.householdId), ne(recipes.id, id)))
+    .limit(1);
   await db.batch([
     db
       .insert(recipes)
@@ -103,6 +109,14 @@ export async function saveImportedRecipe(id: string, recipe: ImportedRecipe) {
     ...[...tagIds].map((tagId) =>
       db.insert(recipeTags).values({ recipeId: id, tagId }).onConflictDoNothing(),
     ),
+    ...(otherRecipe
+      ? []
+      : [
+          db
+            .insert(favorites)
+            .values({ userId: row.userId, recipeId: id, favoritedAt: new Date() })
+            .onConflictDoNothing(),
+        ]),
     db
       .update(recipeImports)
       .set({ status: "ready", recipe, error: null, updatedAt: new Date() })

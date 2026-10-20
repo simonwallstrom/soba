@@ -30,6 +30,12 @@ MCP clients like Claude sign members in through OAuth instead of a session cooki
 
 Routes are in `src/server/household/routes.ts` and queries in `src/server/household/household.ts`.
 
+## Get started checklist
+
+New members get a "Get started" checklist (`features/get-started/checklist.tsx`) at the bottom of the sidebar. Phones have no sidebar, so there the same card sits above the tab bar, on the tabs themselves, folded until it's opened. Each step is ticked off from the member's own data, never by clicking it: a recipe they created, a dinner they planned, an assistant they connected. Only the owner can invite, so only the owner's list has "Create your household" and "Invite your family", which is done once someone joins (the invite link is on from the start, so it can't count).
+
+Hiding it, or finishing every step, sets `checklist_hidden_at` on the member, so it's gone on every device. The session carries it as `household.checklistHidden`. Finishing shows "You're all set" until the member moves on.
+
 ## Sessions on the server
 
 - Sessions last 30 days and refresh daily.

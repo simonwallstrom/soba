@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@client/components/ui/select";
+import { connectionsOptions } from "@client/features/assistants/connections";
 import { getInitials, householdOptions } from "@client/features/household/members";
 import type { HouseholdMember } from "@client/features/household/members";
 import { api } from "@client/lib/api";
@@ -28,7 +29,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Suspense, useState } from "react";
 
-import { AssistantsGroup, connectionsOptions } from "./-components/assistants-group";
+import { AssistantsGroup } from "./-components/assistants-group";
 import { ConfirmDialog } from "./-components/confirm-dialog";
 import { EditableTextRow } from "./-components/editable-text-row";
 import { InviteLinkRow } from "./-components/invite-link-row";
@@ -239,7 +240,7 @@ function Settings() {
                   >
                     <MoreHorizontalIcon />
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuContent align="end" className="min-w-52">
                     <DropdownMenuItem
                       onClick={() => {
                         setRemoving(member);

@@ -232,7 +232,7 @@ function FilterChip({ field, ...props }: FilterProps & { field: RecipeFilterFiel
         <DropdownMenu>
           <DropdownMenuTrigger
             aria-label={`Edit filter, ${summary}`}
-            className="rounded-full outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
+            className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             {summary}
           </DropdownMenuTrigger>

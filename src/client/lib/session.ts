@@ -30,6 +30,8 @@ const snapshotSchema = v.object({
       units: v.optional(v.picklist(householdUnits.map((units) => units.value)), "metric"),
       // Snapshots saved before households had a time zone.
       timeZone: v.optional(v.string(), "UTC"),
+      // Snapshots saved before the "Get started" checklist.
+      checklistHidden: v.optional(v.boolean(), false),
     }),
   ),
   canCreateHousehold: v.boolean(),

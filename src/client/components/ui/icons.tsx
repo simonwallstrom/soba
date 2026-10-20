@@ -573,3 +573,11 @@ export function Plug01Icon(props: IconProps) {
     </Icon>
   );
 }
+
+export function ViewOffIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M22 8C22 8 18 14 12 14C6 14 2 8 2 8M15 13.5L16.5 16M20 11L22 13M2 13L4 11M9 13.5L7.5 16" />
+    </Icon>
+  );
+}

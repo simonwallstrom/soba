@@ -2,11 +2,12 @@ import { Button } from "@client/components/ui/button";
 import { Add01Icon, ChevronRightIcon, Plug01Icon } from "@client/components/ui/icons";
 import { Input } from "@client/components/ui/input";
 import { toast } from "@client/components/ui/toast";
+import { connectionsOptions } from "@client/features/assistants/connections";
+import type { Connection } from "@client/features/assistants/connections";
 import { api } from "@client/lib/api";
 import { queryClient } from "@client/lib/query";
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "cn";
-import type { InferResponseType } from "hono/client";
 import { useState } from "react";
 import type { ReactNode } from "react";
 
@@ -19,17 +20,6 @@ import {
   settingsButtonRowStyles,
   settingsRowStyles,
 } from "./settings-group";
-
-type Connection = InferResponseType<typeof api.connections.$get, 200>["connections"][number];
-
-export const connectionsOptions = queryOptions({
-  queryKey: ["connections"],
-  queryFn: async ({ signal }) => {
-    const response = await api.connections.$get({}, { init: { signal } });
-    if (!response.ok) throw new Error(`API returned ${response.status}`);
-    return (await response.json()).connections;
-  },
-});
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" });
 

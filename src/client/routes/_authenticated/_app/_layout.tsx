@@ -82,7 +82,7 @@ function AppLayout() {
           {/* A page's side panel lays out as if it were a direct child of the section. */}
           <div className="contents" ref={setAsideSlot} />
         </section>
-        <MobileNav />
+        <MobileNav household={household} user={user} />
       </div>
     </RecipeSearchRequestProvider>
   );

@@ -1,6 +1,7 @@
 import { Collapsible } from "@base-ui/react/collapsible";
 import { CaretUpIcon, File02Icon, HashtagIcon, SobaLogo } from "@client/components/ui/icons";
 import { ScrollArea } from "@client/components/ui/scroll-area";
+import { GetStartedChecklist } from "@client/features/get-started/checklist";
 import { usePlannedMeals } from "@client/features/meal-plan/meal-plan-data";
 import { useToday } from "@client/features/meal-plan/use-today";
 import { useCookingProgress } from "@client/features/recipes/cooking-session";
@@ -32,8 +33,9 @@ export function Sidebar({
   household,
   user,
 }: {
-  user: ComponentProps<typeof AccountMenu>["user"];
-  household: ComponentProps<typeof AccountMenu>["household"];
+  user: ComponentProps<typeof AccountMenu>["user"] & { id: string };
+  household: ComponentProps<typeof AccountMenu>["household"] &
+    ComponentProps<typeof GetStartedChecklist>["household"];
 }) {
   return (
     <aside className="hidden min-h-0 flex-col py-1.5 lg:flex">
@@ -74,6 +76,10 @@ export function Sidebar({
           </Suspense>
         </div>
       </ScrollArea>
+      {/* Kept in view below the shortcuts, however many there are. */}
+      <Suspense fallback={null}>
+        <GetStartedChecklist className="mx-3 mb-1" household={household} user={user} />
+      </Suspense>
       <div className="grid shrink-0 px-3 py-2">
         <AccountMenu household={household} user={user} />
       </div>
@@ -221,7 +227,7 @@ function ShortcutSection({
   return (
     <nav aria-label={label} className="p-2">
       <Collapsible.Root defaultOpen>
-        <Collapsible.Trigger className="group mx-1 flex h-6 items-center gap-1.5 rounded-md px-2 text-sm font-medium text-olive-500 outline-none hover:bg-olive-200 hover:text-olive-800 focus-visible:outline-2 focus-visible:outline-offset-1 dark:hover:bg-olive-900/50 dark:hover:text-olive-200">
+        <Collapsible.Trigger className="group mx-1 flex h-6 items-center gap-1.5 rounded-md px-2 text-sm font-medium text-olive-500 hover:bg-olive-200 hover:text-olive-800 focus-visible:outline-2 focus-visible:outline-offset-1 dark:hover:bg-olive-900/50 dark:hover:text-olive-200">
           <span>{title}</span>
           <CaretUpIcon className="rotate-90 transition-transform duration-100 group-data-panel-open:rotate-180" />
         </Collapsible.Trigger>

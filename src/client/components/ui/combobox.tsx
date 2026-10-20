@@ -331,7 +331,7 @@ export function ComboboxChip({
       {showRemove && (
         <ComboboxPrimitive.ChipRemove
           aria-label="Remove item"
-          className="inline-flex size-5 shrink-0 items-center justify-center rounded-sm opacity-70 outline-none hover:bg-black/8 hover:opacity-100 focus-visible:outline-2 focus-visible:-outline-offset-1 dark:hover:bg-white/10"
+          className="inline-flex size-5 shrink-0 items-center justify-center rounded-sm opacity-70 hover:bg-black/8 hover:opacity-100 focus-visible:outline-2 focus-visible:-outline-offset-1 dark:hover:bg-white/10"
           data-slot="combobox-chip-remove"
         >
           <Cancel01Icon className="size-3.5" />

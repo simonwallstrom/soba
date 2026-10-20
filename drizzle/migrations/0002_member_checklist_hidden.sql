@@ -1,0 +1,1 @@
+ALTER TABLE `household_member` ADD `checklist_hidden_at` integer;

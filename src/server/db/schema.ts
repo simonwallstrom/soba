@@ -318,6 +318,8 @@ export const householdMembers = sqliteTable(
       .notNull()
       .references(() => households.id, { onDelete: "cascade" }),
     role: text({ enum: ["owner", "member"] }).notNull(),
+    // When the member finished or hid the "Get started" checklist.
+    checklistHiddenAt: timestamp("checklist_hidden_at"),
     createdAt: createdAt(),
   },
   (table) => [index("household_member_household_id_idx").on(table.householdId)],

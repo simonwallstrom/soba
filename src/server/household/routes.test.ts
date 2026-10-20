@@ -85,3 +85,12 @@ test("members can't switch the invite link", async () => {
   expect((await send("bob", "DELETE", "/invite")).status).toBe(403);
   expect((await send("bob", "POST", "/invite")).status).toBe(403);
 });
+
+test("members hide their own checklist, for good", async () => {
+  const { getMembership } = await import("./household");
+  expect((await getMembership("bob"))?.checklistHidden).toBe(false);
+
+  expect((await send("bob", "POST", "/checklist/hide")).status).toBe(200);
+  expect((await getMembership("bob"))?.checklistHidden).toBe(true);
+  expect((await getMembership("alice"))?.checklistHidden).toBe(false);
+});

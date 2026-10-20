@@ -21,6 +21,7 @@ const cached: Session = {
     language: "en",
     units: "metric",
     timeZone: "Europe/Stockholm",
+    checklistHidden: false,
   },
   canCreateHousehold: false,
 };

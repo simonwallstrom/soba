@@ -12,6 +12,7 @@ import {
   deleteInvite,
   findInvite,
   getInviteToken,
+  hideChecklist,
   joinHousehold,
   leaveHousehold,
   listMembers,
@@ -108,6 +109,11 @@ export const householdRoutes = new Hono<SessionEnv>()
   .delete("/members/:userId", requireHousehold, requireOwner, async (c) => {
     const removed = await removeMember(c.get("membership").id, c.req.param("userId"));
     if (!removed) return c.json({ error: "Member not found" }, 404);
+    return c.json({ ok: true }, 200);
+  })
+  // For good, on every device: the "Get started" checklist, hidden or finished.
+  .post("/checklist/hide", requireHousehold, async (c) => {
+    await hideChecklist(c.get("user").id);
     return c.json({ ok: true }, 200);
   })
   .post("/leave", requireHousehold, async (c) => {

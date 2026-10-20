@@ -11,6 +11,6 @@ Soba is a recipe organizer for families: a React SPA served by a Cloudflare Work
 Read the matching doc before changing these areas:
 
 - Recipes, tags, favorites, the meal plan and its recipe picker, or how the app reads and saves them: [docs/data.md](./docs/data.md)
-- Auth, sessions, households, or invites: [docs/auth-and-households.md](./docs/auth-and-households.md)
+- Auth, sessions, households, invites, or the "Get started" checklist: [docs/auth-and-households.md](./docs/auth-and-households.md)
 - Recipe imports: [docs/recipe-imports.md](./docs/recipe-imports.md)
 - The MCP server, or OAuth for MCP clients: [docs/mcp.md](./docs/mcp.md)
