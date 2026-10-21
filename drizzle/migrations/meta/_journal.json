@@ -22,6 +22,13 @@
       "when": 1792497428875,
       "tag": "0002_member_checklist_hidden",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1792579286999,
+      "tag": "0003_recipe_sharing",
+      "breakpoints": true
     }
   ]
 }

@@ -263,9 +263,13 @@ function Settings() {
           {isOwner && (
             <InviteLinkRow
               inviteUrl={data?.inviteUrl}
+              onReset={async () => {
+                const reset = await sendHouseholdRequest(() => api.household.invite.reset.$post());
+                if (reset) await refreshMembers();
+              }}
               onSwitch={async (on) => {
                 const switched = await sendHouseholdRequest(() =>
-                  on ? api.household.invite.$post() : api.household.invite.$delete(),
+                  on ? api.household.invite.$put() : api.household.invite.$delete(),
                 );
                 if (switched) await refreshMembers();
               }}

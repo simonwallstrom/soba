@@ -1,23 +1,25 @@
 import { AppHeaderActions } from "@client/components/particles/app-header-actions";
 import { Button } from "@client/components/ui/button";
-import { ServingFoodIcon, StarIcon } from "@client/components/ui/icons";
-import { ImagePlaceholder } from "@client/components/ui/image-thumbnail";
+import { Share08Icon, StarIcon } from "@client/components/ui/icons";
+import { WithTooltip } from "@client/components/ui/tooltip";
 import { useMembersById } from "@client/features/household/members";
 import { AddToMealPlanDialog } from "@client/features/meal-plan/add-to-meal-plan";
 import { RecipeActionsMenu } from "@client/features/recipes/recipe-actions-menu";
+import { decimalSeparatorFor, RecipeContent } from "@client/features/recipes/recipe-content";
 import {
   deleteRecipe as saveRecipeDeleted,
   useFavorites,
   useRecipe as useRecipeById,
   useTags,
 } from "@client/features/recipes/recipe-data";
+import { RecipeHeader } from "@client/features/recipes/recipe-header";
 import { compareNames } from "@client/features/recipes/recipe-tags";
+import { ShareRecipeDialog } from "@client/features/recipes/share-recipe-dialog";
 import { formatMetaTitle } from "@client/lib/meta";
 import type { Recipe } from "@shared/recipes";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { RecipeContent } from "./-components/recipe-content";
 import { RecipeByline, RecipeTagLinks } from "./-components/recipe-meta";
 import { RecipeNotFound } from "./-components/recipe-not-found";
 
@@ -45,6 +47,7 @@ function RecipeDetail() {
   const membersById = useMembersById();
   const { favoriteIds, toggleFavorite } = useFavorites();
   const [isPlanning, setIsPlanning] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
 
   // A wrong link, or a recipe deleted while open, perhaps on another device.
   if (!recipe) return <RecipeNotFound />;
@@ -65,22 +68,21 @@ function RecipeDetail() {
     <>
       <title>{formatMetaTitle(recipe.title)}</title>
       <AppHeaderActions>
-        {/* Favoriting belongs with the name; editing is rare enough for the menu. Phones show a
-            back link instead of the title, so there the star stays beside the menu. */}
-        <FavoriteButton
-          className="lg:mr-auto"
-          isFavorite={isFavorite}
-          onToggle={() => toggleFavorite(recipe.id)}
-        />
+        {/* Favoriting and sharing belong with the name; editing is rare enough for the menu.
+            Phones show a back link instead of the title, so there they stay beside the menu. */}
+        <FavoriteButton isFavorite={isFavorite} onToggle={() => toggleFavorite(recipe.id)} />
+        <ShareButton isShared={recipe.isShared} onClick={() => setIsSharing(true)} />
         <RecipeActionsMenu
           className="-mr-2"
           isFavorite={isFavorite}
           onAddToMealPlan={() => setIsPlanning(true)}
           onDelete={() => void deleteRecipe(recipe.id)}
+          onShare={() => setIsSharing(true)}
           onToggleFavorite={() => toggleFavorite(recipe.id)}
           recipeId={recipe.id}
           recipeTitle={recipe.title}
           size="icon"
+          tooltip="More actions"
         />
       </AppHeaderActions>
       <AddToMealPlanDialog
@@ -89,46 +91,19 @@ function RecipeDetail() {
         recipe={recipe}
         userId={user.id}
       />
+      <ShareRecipeDialog onOpenChange={setIsSharing} open={isSharing} recipe={recipe} />
       <article className="mx-auto flex max-w-5xl flex-col gap-5 p-5 lg:gap-12 lg:p-12">
-        {/* The photo leads on small screens and sits beside the text on large ones. */}
-        <header className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,28rem)] lg:items-center lg:gap-16">
-          {recipe.imageUrl ? (
-            <div className="relative -mx-5 -mt-5 lg:col-start-2 lg:row-start-1 lg:m-0">
-              <img
-                alt={recipe.title}
-                className="aspect-5/4 w-full object-cover lg:rounded-xl"
-                decoding="async"
-                height="1100"
-                src={recipe.imageUrl}
-                width="1200"
-              />
-              {/* The hairline other images have, once the photo stops running edge to edge. */}
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-xl ring-[0.5px] ring-black/20 ring-inset max-lg:hidden dark:ring-white/20"
-              />
-            </div>
-          ) : (
-            <ImagePlaceholder className="aspect-5/4 w-full rounded-xl max-lg:hidden lg:col-start-2 lg:row-start-1 [&_svg]:size-12">
-              <ServingFoodIcon />
-            </ImagePlaceholder>
-          )}
-          <div className="flex flex-col gap-3 lg:col-start-1 lg:row-start-1">
-            <RecipeByline author={author} createdAt={recipe.createdAt} />
-            <h1 className="font-serif text-3xl text-balance">{recipe.title}</h1>
-            {recipe.description && (
-              <p className="max-w-xl text-base text-pretty text-olive-600 dark:text-olive-400">
-                {recipe.description}
-              </p>
-            )}
-            <div className="mt-3 empty:hidden">
-              <RecipeTagLinks tags={recipeTags} />
-            </div>
-          </div>
-        </header>
+        <RecipeHeader
+          byline={<RecipeByline author={author} createdAt={recipe.createdAt} />}
+          description={recipe.description}
+          imageUrl={recipe.imageUrl}
+          title={recipe.title}
+        >
+          <RecipeTagLinks tags={recipeTags} />
+        </RecipeHeader>
 
         <RecipeContent
-          decimalSeparator={decimalSeparator(household.language)}
+          decimalSeparator={decimalSeparatorFor(household.language)}
           ingredients={recipe.ingredients}
           instructions={recipe.instructions}
           key={recipe.id}
@@ -137,13 +112,6 @@ function RecipeDetail() {
         />
       </article>
     </>
-  );
-}
-
-function decimalSeparator(language: string) {
-  return (
-    new Intl.NumberFormat(language).formatToParts(1.5).find(({ type }) => type === "decimal")
-      ?.value ?? "."
   );
 }
 
@@ -157,19 +125,46 @@ function FavoriteButton({
   onToggle: () => void;
 }) {
   return (
-    <Button
-      aria-label="Favorite"
-      aria-pressed={isFavorite}
-      className={className}
-      onClick={onToggle}
-      size="icon"
-      variant="ghost"
-    >
-      {/* Filled and yellow once favorited, like stars elsewhere. */}
-      <StarIcon
-        className={isFavorite ? "text-amber-400 dark:text-amber-300" : undefined}
-        fill={isFavorite ? "currentColor" : "none"}
-      />
-    </Button>
+    <WithTooltip label={isFavorite ? "Remove from favorites" : "Add to favorites"}>
+      <Button
+        aria-label="Favorite"
+        aria-pressed={isFavorite}
+        className={className}
+        onClick={onToggle}
+        size="icon"
+        variant="ghost"
+      >
+        {/* Quiet like the share button beside it, then filled and yellow once favorited, like stars
+          elsewhere. */}
+        <StarIcon
+          className={
+            isFavorite ? "text-amber-400 dark:text-amber-300" : "text-olive-600 dark:text-olive-400"
+          }
+          fill={isFavorite ? "currentColor" : "none"}
+        />
+      </Button>
+    </WithTooltip>
+  );
+}
+
+// Quiet like the header's other actions, and filled while anyone with the link can view the
+// recipe. Not yellow, which says favorite beside it.
+function ShareButton({ isShared, onClick }: { isShared: boolean; onClick: () => void }) {
+  return (
+    <WithTooltip label="Share recipe">
+      <Button
+        aria-label={isShared ? "Share recipe, shared with a link" : "Share recipe"}
+        className="lg:mr-auto"
+        onClick={onClick}
+        size="icon"
+        variant="ghost"
+      >
+        {/* One dot on the left and two on the right weigh it right of center, so it moves back. */}
+        <Share08Icon
+          className="-translate-x-px text-olive-600 dark:text-olive-400"
+          fill={isShared ? "currentColor" : "none"}
+        />
+      </Button>
+    </WithTooltip>
   );
 }

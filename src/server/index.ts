@@ -14,6 +14,9 @@ import { mealPlanRoutes } from "./meal-plan/routes";
 import { photoRoutes } from "./photos/routes";
 import { recipeImportRoutes } from "./recipe-import/routes";
 import { recipeRoutes } from "./recipes/routes";
+import { sharedRecipePage } from "./recipes/shared-page";
+import { sharedRecipePreview } from "./recipes/shared-preview";
+import { sharedRecipeRoutes } from "./recipes/shared-routes";
 import { tagRoutes } from "./tags/routes";
 
 export { RecipeImportWorkflow } from "./recipe-import/workflow";
@@ -46,6 +49,8 @@ const app = new Hono<{ Bindings: Env }>()
     response.headers.set("Cache-Control", "no-store");
     return response;
   })
+  .get("/r/:token", sharedRecipePage)
+  .get("/r/:token/og.jpg", sharedRecipePreview)
   .get("/api/me", async (c) => {
     c.header("Cache-Control", "private, no-store");
     const session = await getSession(c.req.raw.headers, {
@@ -77,6 +82,7 @@ const app = new Hono<{ Bindings: Env }>()
   .route("/api/photos", photoRoutes)
   .route("/api/recipe-import", recipeImportRoutes)
   .route("/api/recipes", recipeRoutes)
+  .route("/api/public/recipes", sharedRecipeRoutes)
   .route("/api/tags", tagRoutes)
   .route("/api/meal-plan", mealPlanRoutes)
   .on(["GET", "POST"], "/api/auth/*", (c) => handleAuth(c.req.raw))

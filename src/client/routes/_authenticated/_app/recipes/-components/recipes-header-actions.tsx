@@ -19,6 +19,7 @@ import {
   LinkSquare02Icon,
   Sorting03Icon,
 } from "@client/components/ui/icons";
+import { WithTooltip } from "@client/components/ui/tooltip";
 import { recipeDetails } from "@shared/recipes";
 import type { RecipeDetail, RecipeSort, RecipeView } from "@shared/recipes";
 import { Link } from "@tanstack/react-router";
@@ -63,13 +64,14 @@ export function RecipesHeaderActions({
       {listControls}
       {listControls && <div className={cn(dividerClassName, "max-lg:hidden")} />}
       <DropdownMenu>
-        <DropdownMenuTrigger
-          aria-label="New recipe"
-          className={buttonVariants({ size: "icon", variant: "ghost" })}
-          title="New recipe"
-        >
-          <Add01Icon />
-        </DropdownMenuTrigger>
+        <WithTooltip>
+          <DropdownMenuTrigger
+            aria-label="New recipe"
+            className={buttonVariants({ size: "icon", variant: "ghost" })}
+          >
+            <Add01Icon />
+          </DropdownMenuTrigger>
+        </WithTooltip>
         <DropdownMenuContent align="end" className="min-w-52">
           <DropdownMenuItem render={<Link to="/recipes/new" />}>
             <FileEditIcon />
@@ -87,17 +89,19 @@ export function RecipesHeaderActions({
       </DropdownMenu>
       <div className="hidden items-center lg:flex">
         {!listControls && <div className={dividerClassName} />}
-        <Button
-          aria-controls="meal-planner-sidebar"
-          aria-expanded={isMealPlannerOpen}
-          aria-label={isMealPlannerOpen ? "Close meal planner" : "Open meal planner"}
-          data-pressed={isMealPlannerOpen || undefined}
-          onClick={() => onMealPlannerOpenChange(!isMealPlannerOpen)}
-          size="icon"
-          variant="ghost"
-        >
-          <Calendar03Icon />
-        </Button>
+        <WithTooltip>
+          <Button
+            aria-controls="meal-planner-sidebar"
+            aria-expanded={isMealPlannerOpen}
+            aria-label={isMealPlannerOpen ? "Close meal planner" : "Open meal planner"}
+            data-pressed={isMealPlannerOpen || undefined}
+            onClick={() => onMealPlannerOpenChange(!isMealPlannerOpen)}
+            size="icon"
+            variant="ghost"
+          >
+            <Calendar03Icon />
+          </Button>
+        </WithTooltip>
       </div>
     </div>
   );
@@ -121,13 +125,14 @@ export function RecipesDisplayMenu({
 }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        aria-label="Display settings"
-        className={buttonVariants({ size: "icon", variant: "ghost" })}
-        title="Display"
-      >
-        <Sorting03Icon />
-      </DropdownMenuTrigger>
+      <WithTooltip label="Display">
+        <DropdownMenuTrigger
+          aria-label="Display settings"
+          className={buttonVariants({ size: "icon", variant: "ghost" })}
+        >
+          <Sorting03Icon />
+        </DropdownMenuTrigger>
+      </WithTooltip>
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuGroup>
           <DropdownMenuLabel>View</DropdownMenuLabel>

@@ -2,6 +2,7 @@ import { MediaListItem } from "@client/components/particles/media-item";
 import { Button } from "@client/components/ui/button";
 import { Add01Icon, Cancel01Icon, ServingFoodIcon } from "@client/components/ui/icons";
 import { ImagePlaceholder } from "@client/components/ui/image-thumbnail";
+import { WithTooltip } from "@client/components/ui/tooltip";
 import { useDayDrop } from "@client/features/meal-plan/day-drop";
 import type { DayDrag } from "@client/features/meal-plan/day-drop";
 import { mealDragData } from "@client/features/meal-plan/meal-drag";
@@ -119,15 +120,16 @@ function MealItem({
       <MediaListItem
         actions={
           !isPast && (
-            <Button
-              aria-label={`Remove ${recipe.title} from the plan`}
-              onClick={onRemove}
-              size="icon-sm"
-              title="Remove"
-              variant="ghost"
-            >
-              <Cancel01Icon />
-            </Button>
+            <WithTooltip label="Remove">
+              <Button
+                aria-label={`Remove ${recipe.title} from the plan`}
+                onClick={onRemove}
+                size="icon-sm"
+                variant="ghost"
+              >
+                <Cancel01Icon />
+              </Button>
+            </WithTooltip>
           )
         }
         className={isDragging ? "opacity-40" : undefined}

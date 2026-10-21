@@ -1,11 +1,12 @@
 import { MediaGridItem, MediaItems, MediaListItem } from "@client/components/particles/media-item";
 import { Badge } from "@client/components/ui/badge";
-import { ServingFoodIcon } from "@client/components/ui/icons";
+import { ServingFoodIcon, Share08Icon, StarIcon } from "@client/components/ui/icons";
 import type { HouseholdMember } from "@client/features/household/members";
 import type { Recipe, RecipeDetail, RecipeView, Tag } from "@shared/recipes";
 import { Fragment } from "react";
 import type { ReactNode } from "react";
 
+import { useFavorites } from "./recipe-data";
 import { useRecipeDrag } from "./recipe-drag";
 
 // A recipe with what its list item shows. The author is missing until members load.
@@ -44,12 +45,21 @@ export function RecipeList({
   view: RecipeView;
 }) {
   const Details = view === "grid" ? RecipeGridDetails : RecipeListDetails;
+  const { favoriteIds } = useFavorites();
   return (
     <MediaItems view={view}>
       {entries.map((entry) => (
         <RecipeItem
           actions={renderActions(entry)}
-          badge={newIds?.has(entry.recipe.id) && <Badge variant="primary">New</Badge>}
+          badge={
+            <>
+              <RecipeMarks
+                isFavorite={favoriteIds.has(entry.recipe.id)}
+                isShared={entry.recipe.isShared}
+              />
+              {newIds?.has(entry.recipe.id) && <Badge variant="primary">New</Badge>}
+            </>
+          }
           canDrag={canDrag}
           details={<Details entry={entry} {...detailsProps} />}
           isHighlighted={highlightedIds?.has(entry.recipe.id)}
@@ -89,6 +99,28 @@ function RecipeItem({
       ref={ref}
       title={recipe.title}
     />
+  );
+}
+
+// After the title: a star for the member's favorites, in the yellow the recipe's page uses, and a
+// quieter mark while anyone with the link can view it.
+function RecipeMarks({ isFavorite, isShared }: { isFavorite: boolean; isShared: boolean }) {
+  if (!isFavorite && !isShared) return null;
+  return (
+    <span className="flex shrink-0 items-center gap-1 [&_svg]:size-3.5">
+      {isFavorite && (
+        <>
+          <StarIcon className="text-amber-400 dark:text-amber-300" fill="currentColor" />
+          <span className="sr-only">Favorite</span>
+        </>
+      )}
+      {isShared && (
+        <>
+          <Share08Icon className="text-olive-400 dark:text-olive-500" fill="currentColor" />
+          <span className="sr-only">Shared with a link</span>
+        </>
+      )}
+    </span>
   );
 }
 

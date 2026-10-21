@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@client/components/ui/select";
+import { WithTooltip } from "@client/components/ui/tooltip";
 import { householdOptions } from "@client/features/household/members";
 import { api } from "@client/lib/api";
 import { signOut } from "@client/lib/auth";
@@ -258,7 +259,7 @@ function InviteStep({ householdName }: { householdName: string }) {
   useEffect(() => {
     if (!isLinkOff) return;
     void api.household.invite
-      .$post()
+      .$put()
       .then(() => queryClient.invalidateQueries({ queryKey: householdOptions.queryKey }));
   }, [isLinkOff]);
   const [copied, setCopied] = useState(false);
@@ -304,15 +305,17 @@ function InviteStep({ householdName }: { householdName: string }) {
             </Button>
           ) : (
             // Just the icon, which turns to a check, so the field keeps its width.
-            <Button
-              aria-label={copied ? "Copied" : "Copy link"}
-              className="shrink-0 rounded-lg"
-              disabled={!inviteUrl}
-              onClick={() => void copy()}
-              size="icon"
-            >
-              {copied ? <CheckIcon /> : <Copy01Icon />}
-            </Button>
+            <WithTooltip>
+              <Button
+                aria-label={copied ? "Copied" : "Copy link"}
+                className="shrink-0 rounded-lg"
+                disabled={!inviteUrl}
+                onClick={() => void copy()}
+                size="icon"
+              >
+                {copied ? <CheckIcon /> : <Copy01Icon />}
+              </Button>
+            </WithTooltip>
           )}
         </div>
         <p className="text-sm text-olive-500 dark:text-olive-400">

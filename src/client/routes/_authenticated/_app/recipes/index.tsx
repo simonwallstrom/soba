@@ -29,6 +29,7 @@ import {
   groupTagsByRecipe,
   recipeTagLinks,
 } from "@client/features/recipes/recipe-tags";
+import { ShareRecipeDialog } from "@client/features/recipes/share-recipe-dialog";
 import { formatMetaTitle } from "@client/lib/meta";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -81,6 +82,9 @@ function Recipes() {
   const [planning, setPlanning] = useState<{ open: boolean; recipe?: RecipeListEntry["recipe"] }>({
     open: false,
   });
+  // Kept by ID, so the dialog shows the link as it changes, not as it was when opened.
+  const [sharing, setSharing] = useState<{ open: boolean; recipeId?: string }>({ open: false });
+  const sharedRecipe = recipes.find((recipe) => recipe.id === sharing.recipeId);
   useEffect(() => onRecipeImported((id) => setPinnedIds((ids) => [id, ...ids])), []);
   const entries = pinFirst(
     filterRecipes(recipes, tagsByRecipe, search, sort, favoriteIds),
@@ -106,7 +110,7 @@ function Recipes() {
   }
 
   function clearFilters() {
-    changeSearch({ q: "", tags: [], authors: [], favorites: false });
+    changeSearch({ q: "", tags: [], authors: [], favorites: false, shared: false });
   }
 
   const filterProps = {
@@ -115,6 +119,7 @@ function Recipes() {
     filters: search,
     onChange: changeFilter,
     onFavoritesChange: (favorites: boolean) => changeSearch({ favorites }),
+    onSharedChange: (shared: boolean) => changeSearch({ shared }),
   };
 
   return (
@@ -209,6 +214,7 @@ function Recipes() {
                 isFavorite={favoriteIds.has(recipe.id)}
                 onAddToMealPlan={() => setPlanning({ open: true, recipe })}
                 onDelete={() => void deleteRecipe(recipe.id)}
+                onShare={() => setSharing({ open: true, recipeId: recipe.id })}
                 onToggleFavorite={() => toggleFavorite(recipe.id)}
                 recipeId={recipe.id}
                 recipeTitle={recipe.title}
@@ -232,6 +238,13 @@ function Recipes() {
         recipe={planning.recipe}
         userId={user.id}
       />
+      {sharedRecipe && (
+        <ShareRecipeDialog
+          onOpenChange={(open) => setSharing((current) => ({ ...current, open }))}
+          open={sharing.open}
+          recipe={sharedRecipe}
+        />
+      )}
     </>
   );
 }

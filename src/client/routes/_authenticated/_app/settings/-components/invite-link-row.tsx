@@ -2,19 +2,23 @@ import { Button } from "@client/components/ui/button";
 import { CheckIcon, Copy01Icon, UserAdd01Icon } from "@client/components/ui/icons";
 import { Input } from "@client/components/ui/input";
 import { Switch } from "@client/components/ui/switch";
+import { WithTooltip } from "@client/components/ui/tooltip";
 import { cn } from "cn";
 import { useState } from "react";
 
 import { SettingsRowIcon, settingsRowStyles } from "./settings-group";
 
 // The household's invite link, switched on while family members are joining. Switching it off
-// deletes the link, and switching it on or resetting makes a new one, so old links stop working.
+// stops the link working, and switching it on brings the same link back; resetting makes a new
+// one, so the old link stops working for good.
 export function InviteLinkRow({
   inviteUrl,
+  onReset,
   onSwitch,
 }: {
   // Undefined until the household loads.
   inviteUrl: string | null | undefined;
+  onReset: () => Promise<void>;
   onSwitch: (on: boolean) => Promise<void>;
 }) {
   const [pending, setPending] = useState<"on" | "off" | "reset" | null>(null);
@@ -28,7 +32,7 @@ export function InviteLinkRow({
     setPending(next);
     setCopied(false);
     setJustReset(false);
-    await onSwitch(next !== "off");
+    await (next === "reset" ? onReset() : onSwitch(next === "on"));
     setPending(null);
     if (next === "reset") {
       setJustReset(true);
@@ -79,15 +83,17 @@ export function InviteLinkRow({
                 value={pending ? "" : (inviteUrl ?? "")}
               />
               {/* Just the icon, which turns to a check, so the field keeps its width. */}
-              <Button
-                aria-label={copied ? "Copied" : "Copy link"}
-                className="shrink-0 rounded-lg"
-                disabled={!inviteUrl || pending !== null}
-                onClick={() => void copy()}
-                size="icon"
-              >
-                {copied ? <CheckIcon /> : <Copy01Icon />}
-              </Button>
+              <WithTooltip>
+                <Button
+                  aria-label={copied ? "Copied" : "Copy link"}
+                  className="shrink-0 rounded-lg"
+                  disabled={!inviteUrl || pending !== null}
+                  onClick={() => void copy()}
+                  size="icon"
+                >
+                  {copied ? <CheckIcon /> : <Copy01Icon />}
+                </Button>
+              </WithTooltip>
             </div>
             {justReset ? (
               <output className="text-sm text-olive-500">

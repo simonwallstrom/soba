@@ -20,7 +20,7 @@ A new account takes its name and photo from Google, or the start of its email wh
 ## Households
 
 - **Roles:** the creator is the `owner`, and everyone who joins is a `member`. A household holds at most 20 members.
-- **Invites:** each household has at most one invite link, on when it's created. Only the owner can switch it off, which deletes it, or on or reset, which makes a new token, so an old link never works again.
+- **Invites:** each household has one invite link, on when it's created. Only the owner can switch it off or on, which keeps its token, so switching it back on brings the same link back, or reset it, which makes a new token, so the old link never works again.
 - **Leaving:** a member can leave at any time. The owner can't be removed and can leave only by deleting the household once nobody else is in it.
 - **Name:** only the owner can rename the household.
 - **Settings:** language and units, used to translate and convert imported recipes, and a time zone, which tells the MCP server what day it is for the household. The app itself uses each device's date. Any member can change them. A new household's defaults come from the creator's browser; the time zone isn't asked for during onboarding, so it's shown in Settings for anyone who signed up away from home.

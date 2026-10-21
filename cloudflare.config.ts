@@ -12,7 +12,7 @@ export default defineConfig({
     observability: { enabled: true },
     assets: {
       notFoundHandling: "single-page-application",
-      runWorkerFirst: ["/", "/api/*", "/.well-known/*", "/mcp"],
+      runWorkerFirst: ["/", "/r/*", "/api/*", "/.well-known/*", "/mcp"],
     },
     exports: {
       // Finishes recipe imports in the background. See src/server/recipe-import.
@@ -42,6 +42,13 @@ export default defineConfig({
         namespace: "1003",
         simple: { limit: 120, period: 60 },
       }),
+      // Shared recipes, which anyone can ask for; keyed by address. See src/server/recipes.
+      PUBLIC_RATE_LIMITER: bindings.rateLimit({
+        namespace: "1004",
+        simple: { limit: 60, period: 60 },
+      }),
+      // Resizes recipe photos, and turns WebP into JPEG, for shared recipes' link previews.
+      IMAGES: bindings.images(),
       ASSETS: bindings.assets(),
       BETTER_AUTH_SECRET: bindings.secret(),
       BETTER_AUTH_URL: bindings.secret(),

@@ -54,7 +54,7 @@ export function WelcomeLayout({ children, footer }: { children: ReactNode; foote
       {/* A one-off: a hairline ring and layered shadows, from tight to wide, so the card reads
           crisp up close and soft further out. In dark mode, the hairline, a glow along the top edge like
           the menus and popovers, and only a tight shadow. */}
-      <div className="flex w-full max-w-md flex-col gap-6 rounded-2xl bg-white p-6 shadow-[0_0_0_0.5px_rgb(0_0_0/0.14),0_1px_1px_rgb(0_0_0/0.03),0_2px_4px_rgb(0_0_0/0.03),0_8px_16px_-4px_rgb(0_0_0/0.05),0_24px_48px_-12px_rgb(0_0_0/0.1)] sm:p-8 dark:bg-olive-925 dark:shadow-[inset_0_0.5px_0_rgb(255_255_255/0.14),0_0_0_0.5px_rgb(255_255_255/0.1),0_1px_2px_rgb(0_0_0/0.3)]">
+      <div className="flex w-full max-w-md flex-col gap-6 rounded-2xl bg-white p-6 shadow-[0_0_0_0.5px_rgb(0_0_0/0.14),0_1px_1px_rgb(0_0_0/0.03),0_2px_4px_rgb(0_0_0/0.03),0_8px_16px_-4px_rgb(0_0_0/0.03),0_24px_48px_-12px_rgb(0_0_0/0.05)] sm:p-8 dark:bg-olive-925 dark:shadow-[inset_0_0.5px_0_rgb(255_255_255/0.14),0_0_0_0.5px_rgb(255_255_255/0.1),0_1px_2px_rgb(0_0_0/0.3)]">
         {children}
       </div>
       {footer && (
@@ -82,7 +82,7 @@ export function WelcomeHeader({
       {eyebrow && (
         <div className="flex items-center gap-2 text-sm font-medium text-olive-500">{eyebrow}</div>
       )}
-      <h1 className="font-serif text-3xl text-balance">{title}</h1>
+      <h1 className="font-serif text-3xl font-medium text-balance">{title}</h1>
       <p className="text-pretty text-olive-600 dark:text-olive-400">{description}</p>
     </header>
   );

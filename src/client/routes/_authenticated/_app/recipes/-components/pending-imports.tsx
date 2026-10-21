@@ -2,6 +2,7 @@ import { MediaGridItem, MediaItems, MediaListItem } from "@client/components/par
 import { Button } from "@client/components/ui/button";
 import { Cancel01Icon, ImageUploadIcon, LinkSquare02Icon } from "@client/components/ui/icons";
 import { toast } from "@client/components/ui/toast";
+import { WithTooltip } from "@client/components/ui/tooltip";
 import {
   dismissImport,
   importHost,
@@ -92,16 +93,17 @@ function PendingImportActions({
   }
 
   const dismiss = (
-    <Button
-      aria-label={item.status === "failed" ? "Dismiss" : "Cancel import"}
-      disabled={isBusy}
-      onClick={() => void run(() => dismissImport(item.id))}
-      size="icon-sm"
-      title={item.status === "failed" ? "Dismiss" : "Cancel import"}
-      variant="ghost"
-    >
-      <Cancel01Icon />
-    </Button>
+    <WithTooltip>
+      <Button
+        aria-label={item.status === "failed" ? "Dismiss" : "Cancel import"}
+        disabled={isBusy}
+        onClick={() => void run(() => dismissImport(item.id))}
+        size="icon-sm"
+        variant="ghost"
+      >
+        <Cancel01Icon />
+      </Button>
+    </WithTooltip>
   );
   if (item.status !== "failed") return dismiss;
 

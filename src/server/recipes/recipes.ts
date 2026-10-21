@@ -1,11 +1,11 @@
 import { normalizeTagName } from "@shared/recipes";
 import type { RecipeSection } from "@shared/recipes";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 
 import { getDatabase } from "../db/client";
 import { isUniqueViolation } from "../db/errors";
-import { favorites, recipes, recipeTags, tags } from "../db/schema";
+import { favorites, households, recipes, recipeTags, tags } from "../db/schema";
 
 // What the recipe form saves. The last save wins, and leaving out the description or servings
 // clears them.
@@ -29,6 +29,8 @@ const recipeColumns = {
   sourceUrl: recipes.sourceUrl,
   ingredients: recipes.ingredients,
   instructions: recipes.instructions,
+  shareToken: recipes.shareToken,
+  isShared: recipes.isShared,
   createdBy: recipes.createdBy,
   updatedBy: recipes.updatedBy,
   createdAt: recipes.createdAt,
@@ -128,7 +130,10 @@ async function tagStatements(householdId: string, recipeId: string, input: Recip
   return statements;
 }
 
-/** Returns false when a recipe or tag with one of the new IDs already exists. */
+/**
+ * Returns false when a recipe or tag with one of the new IDs already exists, or the household
+ * already saved the shared recipe it was copied from.
+ */
 export async function createRecipe(
   householdId: string,
   userId: string,
@@ -136,8 +141,14 @@ export async function createRecipe(
     id,
     imageUrl,
     sourceUrl = null,
+    copiedFrom = null,
     ...input
-  }: RecipeInput & { id: string; imageUrl: string | null; sourceUrl?: string | null },
+  }: RecipeInput & {
+    id: string;
+    imageUrl: string | null;
+    sourceUrl?: string | null;
+    copiedFrom?: string | null;
+  },
 ) {
   const db = getDatabase();
   const { tagIds: _, newTags: __, ...fields } = input;
@@ -149,6 +160,7 @@ export async function createRecipe(
         ...fields,
         imageUrl,
         sourceUrl,
+        copiedFrom,
         createdBy: userId,
         updatedBy: userId,
       }),
@@ -215,4 +227,58 @@ export async function setFavorite(recipeId: string, userId: string, isFavorite: 
       .delete(favorites)
       .where(and(eq(favorites.userId, userId), eq(favorites.recipeId, recipeId)));
   }
+}
+
+/**
+ * Shares the recipe, or makes it private again, keeping its link. Sharing for the first time
+ * gives it `token`, which the app made; `reset` replaces the link it has with `token`. Returns
+ * false for a recipe that isn't the household's, and "taken" for a token another recipe has.
+ */
+export async function setSharing(
+  householdId: string,
+  id: string,
+  sharing: { isShared: false } | { isShared: true; token: string; reset?: boolean },
+) {
+  const shareToken = !sharing.isShared
+    ? undefined
+    : sharing.reset
+      ? sharing.token
+      : sql`coalesce(${recipes.shareToken}, ${sharing.token})`;
+  try {
+    const [updated] = await getDatabase()
+      .update(recipes)
+      .set({ isShared: sharing.isShared, ...(shareToken && { shareToken }) })
+      .where(and(eq(recipes.id, id), eq(recipes.householdId, householdId)))
+      .returning({ id: recipes.id });
+    return updated !== undefined;
+  } catch (error) {
+    if (isUniqueViolation(error)) return "taken";
+    throw error;
+  }
+}
+
+// A shared recipe by its token, with what the shared page shows of its household.
+export async function findSharedRecipe(shareToken: string) {
+  const [recipe] = await getDatabase()
+    .select({
+      ...recipeColumns,
+      householdId: recipes.householdId,
+      householdName: households.name,
+      language: households.language,
+    })
+    .from(recipes)
+    .innerJoin(households, eq(recipes.householdId, households.id))
+    .where(and(eq(recipes.shareToken, shareToken), eq(recipes.isShared, true)))
+    .limit(1);
+  return recipe ?? null;
+}
+
+// The household's copy of a shared recipe, if it saved one.
+export async function findCopy(householdId: string, copiedFrom: string) {
+  const [recipe] = await getDatabase()
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(and(eq(recipes.householdId, householdId), eq(recipes.copiedFrom, copiedFrom)))
+    .limit(1);
+  return recipe?.id ?? null;
 }

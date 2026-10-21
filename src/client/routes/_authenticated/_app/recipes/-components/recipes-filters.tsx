@@ -16,12 +16,13 @@ import {
 } from "@client/components/ui/dropdown-menu";
 import {
   Cancel01Icon,
-  CheckIcon,
   FilterIcon,
   HashtagIcon,
+  Share08Icon,
   StarIcon,
   UserCircle02Icon,
 } from "@client/components/ui/icons";
+import { WithTooltip } from "@client/components/ui/tooltip";
 import type { HouseholdMember } from "@client/features/household/members";
 import type { Tag } from "@shared/recipes";
 import { useState } from "react";
@@ -67,6 +68,7 @@ type FilterProps = {
   filters: RecipeListFilters;
   onChange: (field: RecipeFilterField, ids: string[]) => void;
   onFavoritesChange: (favorites: boolean) => void;
+  onSharedChange: (shared: boolean) => void;
 };
 
 function getValueLabels(field: RecipeFilterField, { tags, members }: FilterProps) {
@@ -90,20 +92,23 @@ function valuesContentProps(field: RecipeFilterField) {
   };
 }
 
-// A searchable menu of fields, each opening a searchable submenu of its values, then favorites,
-// which is yes or no and so switches right there. Every menu highlights its first item, so Enter
+// A searchable menu of fields, each opening a searchable submenu of its values, then favorites
+// and shared, which are yes or no and so switch right there, keeping the menu open like the tag
+// checkboxes do. Their icon fills while on; the chips above the list show what's active, so the
+// menu shows no more. Every menu highlights its first item, so Enter
 // works before typing.
 export function RecipesFilter(props: FilterProps) {
   return (
     <DropdownMenuFilter autoHighlight="always">
       <DropdownMenu>
-        <DropdownMenuTrigger
-          aria-label="Filter recipes"
-          className={buttonVariants({ size: "icon", variant: "ghost" })}
-          title="Filter"
-        >
-          <FilterIcon />
-        </DropdownMenuTrigger>
+        <WithTooltip label="Filter">
+          <DropdownMenuTrigger
+            aria-label="Filter recipes"
+            className={buttonVariants({ size: "icon", variant: "ghost" })}
+          >
+            <FilterIcon />
+          </DropdownMenuTrigger>
+        </WithTooltip>
         <DropdownMenuContent
           align="end"
           className="w-56"
@@ -124,11 +129,18 @@ export function RecipesFilter(props: FilterProps) {
             </DropdownMenuFilter>
           ))}
           <DropdownMenuItem
+            closeOnClick={false}
             onClick={() => props.onFavoritesChange(props.filters.favorites !== true)}
           >
-            <StarIcon />
+            <StarIcon fill={props.filters.favorites === true ? "currentColor" : "none"} />
             Favorites
-            {props.filters.favorites === true && <CheckIcon className="ml-auto" />}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            closeOnClick={false}
+            onClick={() => props.onSharedChange(props.filters.shared !== true)}
+          >
+            <Share08Icon fill={props.filters.shared === true ? "currentColor" : "none"} />
+            Shared
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -177,6 +189,24 @@ function FilterValues({ field, ...props }: FilterProps & { field: RecipeFilterFi
   );
 }
 
+// The chip for a yes-or-no filter, like favorites: just its name, and a cross to clear it.
+function ToggleFilterChip({ label, onClear }: { label: string; onClear: () => void }) {
+  return (
+    <Badge className="h-7 gap-1 p-1 pl-2.5 pointer-coarse:h-8">
+      {label}
+      <Button
+        aria-label={`Clear ${label.toLowerCase()} filter`}
+        className="size-5 rounded-full pointer-coarse:size-6"
+        onClick={onClear}
+        size="icon-sm"
+        variant="ghost"
+      >
+        <Cancel01Icon />
+      </Button>
+    </Badge>
+  );
+}
+
 // A line of chips for the filters in use, above the list. It wraps on wider screens and scrolls
 // sideways on phones, staying one line tall. With several active, Clear removes them all, along
 // with the search.
@@ -185,7 +215,8 @@ export function ActiveRecipeFilters({ onClear, ...props }: FilterProps & { onCle
     (field) => (props.filters[field]?.length ?? 0) > 0,
   );
   const favorites = props.filters.favorites === true;
-  const activeCount = activeFields.length + (favorites ? 1 : 0);
+  const shared = props.filters.shared === true;
+  const activeCount = activeFields.length + (favorites ? 1 : 0) + (shared ? 1 : 0);
   if (activeCount === 0) return null;
 
   return (
@@ -196,19 +227,9 @@ export function ActiveRecipeFilters({ onClear, ...props }: FilterProps & { onCle
         <FilterChip {...props} field={field} key={field} />
       ))}
       {favorites && (
-        <Badge className="h-7 gap-1 p-1 pl-2.5 pointer-coarse:h-8">
-          Favorites
-          <Button
-            aria-label="Clear favorites filter"
-            className="size-5 rounded-full pointer-coarse:size-6"
-            onClick={() => props.onFavoritesChange(false)}
-            size="icon-sm"
-            variant="ghost"
-          >
-            <Cancel01Icon />
-          </Button>
-        </Badge>
+        <ToggleFilterChip label="Favorites" onClear={() => props.onFavoritesChange(false)} />
       )}
+      {shared && <ToggleFilterChip label="Shared" onClear={() => props.onSharedChange(false)} />}
       {activeCount > 1 && (
         <Button className="-mr-2 ml-auto shrink-0" onClick={onClear} size="sm" variant="ghost">
           Clear

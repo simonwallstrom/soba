@@ -6,5 +6,8 @@
 /images/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 
+/fonts/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
 /favicon-kana.svg
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800

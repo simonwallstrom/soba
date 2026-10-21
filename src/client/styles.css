@@ -1,7 +1,43 @@
 @import "tailwindcss";
+/* Lora, the wordmark's typeface, for headings: a variable font from 400 to 700, in its Latin
+   subset. Letters beyond it, like Polish ones, fall back to the serif below. */
+@font-face {
+  font-family: "Lora";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 700;
+  src: url("/fonts/lora.woff2") format("woff2");
+}
+
+/* Georgia, or Times New Roman where it's missing, resized to Lora's width and line height, so
+   headings keep their shape while Lora loads. Metrics from @capsizecss/metrics. */
+@font-face {
+  font-family: "Lora Fallback Georgia";
+  src: local("Georgia");
+  size-adjust: 104.98%;
+  ascent-override: 95.83%;
+  descent-override: 26.1%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Lora Fallback Times";
+  src: local("Times New Roman");
+  size-adjust: 115.2%;
+  ascent-override: 87.33%;
+  descent-override: 23.78%;
+  line-gap-override: 0%;
+}
 
 @theme {
   --color-olive-925: oklch(18.6% 0.008 107.2);
+
+  /* Black is a dark olive, so the faint fills, borders and rings drawn with it, like `bg-black/8`,
+     keep the olive tint on white. Olive-950 itself is too gray: at 8% its tint is gone. */
+  --color-black: oklch(25% 0.05 107);
+
+  /* Body text stays in the system's own sans, like the iOS app will. */
+  --font-serif: "Lora", "Lora Fallback Georgia", "Lora Fallback Times", ui-serif, serif;
 
   /* Body and small text take Tailwind's sm and xs sizes on desktop, and step up on touch screens. */
   --text-base: 0.875rem; /* 14px */

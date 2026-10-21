@@ -1,6 +1,7 @@
 import { WelcomeHeader, WelcomeLayout } from "@client/components/particles/welcome-layout";
 import { Button, buttonVariants } from "@client/components/ui/button";
 import { Toaster } from "@client/components/ui/toast";
+import { TooltipProvider } from "@client/components/ui/tooltip";
 import { formatMetaTitle } from "@client/lib/meta";
 import { watchSessionChanges } from "@client/lib/session";
 import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
@@ -21,10 +22,10 @@ function Root() {
     [],
   );
   return (
-    <>
+    <TooltipProvider>
       <Outlet />
       <Toaster />
-    </>
+    </TooltipProvider>
   );
 }
 

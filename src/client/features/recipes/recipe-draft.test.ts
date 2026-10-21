@@ -71,6 +71,8 @@ const recipe: Recipe = {
   servings: 2,
   imageUrl: null,
   sourceUrl: null,
+  shareToken: null,
+  isShared: false,
   ingredients: [{ heading: "Broth", items: ["Dashi"] }],
   instructions: [],
   createdBy: "user-1",
