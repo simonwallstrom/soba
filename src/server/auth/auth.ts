@@ -128,8 +128,17 @@ export function mcpResource() {
 
 let auth: ReturnType<typeof createAuth> | undefined;
 
+// Better Auth sets itself up on first use, reading D1 as it does. A Worker can't finish a
+// request's reads once that request is canceled, so an instance is shared only after its setup
+// finishes: one stuck in a canceled request would otherwise hang every later one.
 export function getAuth() {
-  return (auth ??= createAuth());
+  if (auth) return auth;
+  const created = createAuth();
+  created.$context.then(
+    () => (auth ??= created),
+    () => {},
+  );
+  return created;
 }
 
 type GetSessionOptions = {
