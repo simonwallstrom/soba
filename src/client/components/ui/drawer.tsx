@@ -17,11 +17,12 @@ export function DrawerClose(props: DrawerPrimitive.Close.Props) {
   return <DrawerPrimitive.Close data-slot="drawer-close" {...props} />;
 }
 
-// Matches the dialog's, so a dialog keeps its close button in the same place as a drawer.
+// Matches the dialog's, so a dialog keeps its close button in the same place as a drawer. Its
+// icon is centered on the title's line, with its right edge on the content's, at either button size.
 const closeButton = (
   <Button
     aria-label="Close"
-    className="absolute top-2 right-2 text-olive-500 dark:text-olive-400"
+    className="absolute top-4 right-4 text-olive-500 dark:text-olive-400 pointer-coarse:top-3 pointer-coarse:right-3"
     size="icon"
     variant="ghost"
   />
@@ -50,7 +51,7 @@ export function DrawerContent({
         >
           <DrawerPrimitive.Popup
             className={cn(
-              "relative -mb-12 flex max-h-[calc(100dvh-env(safe-area-inset-top)-var(--drawer-keyboard-inset,0px))] min-h-0 w-full flex-col gap-6 rounded-t-2xl border-[0.5px] border-b-0 border-black/40 bg-white px-6 pt-6 pb-[calc(4.5rem+max(0px,env(safe-area-inset-bottom)-var(--drawer-keyboard-inset,0px)))] text-olive-900 outline-none sm:max-w-lg",
+              "relative -mb-12 flex max-h-[calc(100dvh-env(safe-area-inset-top)-var(--drawer-keyboard-inset,0px))] min-h-0 w-full flex-col gap-6 rounded-t-2xl border-[0.5px] border-b-0 border-black/40 bg-white px-6 pt-5.5 pb-[calc(4.5rem+max(0px,env(safe-area-inset-bottom)-var(--drawer-keyboard-inset,0px)))] text-olive-900 outline-none sm:max-w-lg",
               "translate-y-(--drawer-swipe-movement-y) transition-transform duration-450 ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 data-swiping:select-none data-ending-style:translate-y-[calc(100%-3rem+2px)] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-starting-style:translate-y-[calc(100%-3rem+2px)]",
               "before:pointer-events-none before:absolute before:inset-0 before:rounded-t-[calc(var(--radius-2xl)-0.5px)] before:shadow-md before:content-['']",
               "dark:border-white/12 dark:bg-olive-900 dark:text-olive-100 dark:before:inset-[-0.5px] dark:before:rounded-t-2xl dark:before:inset-shadow-[0_0.5px_0_var(--color-white)]/14 dark:before:shadow-black/40",

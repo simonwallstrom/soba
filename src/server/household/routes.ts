@@ -9,7 +9,8 @@ import { isAllowlisted } from "../auth/policy";
 import { validateJson } from "../lib/validate";
 import {
   createHousehold,
-  deleteInvite,
+  disableInvite,
+  enableInvite,
   findInvite,
   getInviteToken,
   hideChecklist,
@@ -97,13 +98,17 @@ export const householdRoutes = new Hono<SessionEnv>()
       return c.json({ ok: true }, 200);
     },
   )
-  // Switching the link on, or resetting it, always makes a new one, so old links stay dead.
-  .post("/invite", requireHousehold, requireOwner, async (c) => {
+  // Switching the link off and on keeps it; resetting it makes a new one, so the old one dies.
+  .put("/invite", requireHousehold, requireOwner, async (c) => {
+    const token = await enableInvite(c.get("membership").id, c.get("user").id);
+    return c.json({ inviteUrl: inviteUrl(c.req.url, token) }, 200);
+  })
+  .post("/invite/reset", requireHousehold, requireOwner, async (c) => {
     const token = await resetInviteToken(c.get("membership").id, c.get("user").id);
     return c.json({ inviteUrl: inviteUrl(c.req.url, token) }, 200);
   })
   .delete("/invite", requireHousehold, requireOwner, async (c) => {
-    await deleteInvite(c.get("membership").id);
+    await disableInvite(c.get("membership").id);
     return c.json({ ok: true }, 200);
   })
   .delete("/members/:userId", requireHousehold, requireOwner, async (c) => {

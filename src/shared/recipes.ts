@@ -17,6 +17,11 @@ export type Recipe = {
   ingredients: RecipeSection[];
   instructions: RecipeSection[];
   tagIds: string[];
+  // The recipe's link (see recipeSharePath), made the first time it's shared and kept while
+  // sharing is off, so sharing again brings it back.
+  shareToken: string | null;
+  // Whether anyone with the link can view it.
+  isShared: boolean;
   // User IDs; names and photos come from the household's members.
   createdBy: string;
   updatedBy: string;
@@ -58,4 +63,18 @@ export function sameTagName(left: string, right: string) {
       sensitivity: "base",
     }) === 0
   );
+}
+
+// A shared recipe's token: 128 random bits as base64url, made by the app like recipe IDs, so the
+// link exists the moment sharing is turned on.
+export const shareTokenPattern = /^[\w-]{22}$/u;
+
+// Where anyone can view a shared recipe, without logging in.
+export function recipeSharePath(shareToken: string) {
+  return `/r/${shareToken}`;
+}
+
+// Where the Worker serves a shared recipe's uploaded photo, without a session.
+export function sharedPhotoPath(shareToken: string) {
+  return `/api/public/recipes/${shareToken}/photo`;
 }

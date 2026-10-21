@@ -9,10 +9,12 @@ import { cn } from "cn";
 import { createContext, useContext } from "react";
 import type { ComponentProps } from "react";
 
+// Its icon is centered on the title's line, with its right edge on the content's, at either
+// button size, like the drawer's.
 const closeButton = (
   <Button
     aria-label="Close dialog"
-    className="absolute top-2 right-2 text-olive-500 dark:text-olive-400"
+    className="absolute top-4 right-4 text-olive-500 dark:text-olive-400 pointer-coarse:top-3 pointer-coarse:right-3"
     size="icon"
     variant="ghost"
   />
@@ -62,6 +64,27 @@ export function DialogContent({
     );
   }
   return (
+    <DialogPopup align={align} className={className} {...props}>
+      {children}
+      {showCloseButton && (
+        <DialogPrimitive.Close render={closeButton}>
+          <Cancel01Icon />
+        </DialogPrimitive.Close>
+      )}
+    </DialogPopup>
+  );
+}
+
+// The centered popup and its backdrop, for dialogs and alert dialogs, which share these parts.
+export function DialogPopup({
+  align = "center",
+  className,
+  ...props
+}: Omit<DialogPrimitive.Popup.Props, "className" | "render" | "style"> & {
+  align?: "center" | "top";
+  className?: string | undefined;
+}) {
+  return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Backdrop
         className="fixed inset-0 z-50 bg-black/20 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 dark:bg-black/40"
@@ -76,7 +99,7 @@ export function DialogContent({
       >
         <DialogPrimitive.Popup
           className={cn(
-            "relative flex max-h-[calc(100dvh-2rem)] min-h-0 w-full max-w-lg flex-col gap-6 rounded-2xl border-[0.5px] border-black/40 bg-white p-6 text-olive-900 transition-[scale,opacity] duration-200 ease-in-out will-change-transform outline-none",
+            "relative flex max-h-[calc(100dvh-2rem)] min-h-0 w-full max-w-lg flex-col gap-6 rounded-2xl border-[0.5px] border-black/40 bg-white p-6 pt-5.5 text-olive-900 transition-[scale,opacity] duration-200 ease-in-out will-change-transform outline-none",
             "before:pointer-events-none before:absolute before:inset-0 before:rounded-[calc(var(--radius-2xl)-0.5px)] before:shadow-md before:content-['']",
             "data-ending-style:scale-98 data-ending-style:opacity-0 data-starting-style:scale-98 data-starting-style:opacity-0",
             "dark:border-white/12 dark:bg-olive-900 dark:text-olive-100 dark:before:inset-[-0.5px] dark:before:rounded-2xl dark:before:inset-shadow-[0_0.5px_0_var(--color-white)]/14 dark:before:shadow-black/40",
@@ -84,14 +107,7 @@ export function DialogContent({
           )}
           data-slot="dialog-content"
           {...props}
-        >
-          {children}
-          {showCloseButton && (
-            <DialogPrimitive.Close render={closeButton}>
-              <Cancel01Icon />
-            </DialogPrimitive.Close>
-          )}
-        </DialogPrimitive.Popup>
+        />
       </DialogPrimitive.Viewport>
     </DialogPrimitive.Portal>
   );
@@ -127,16 +143,19 @@ export function DialogBody({
   );
 }
 
+// List the main action first. Phones stack it on top; wider screens put it at the right.
 export function DialogFooter({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex shrink-0 flex-col gap-2 sm:flex-row", className)}
+      className={cn("flex shrink-0 flex-col gap-2 sm:flex-row-reverse", className)}
       data-slot="dialog-footer"
       {...props}
     />
   );
 }
 
+// The popup's top padding is a little less than its sides, as the title's capitals sit below the
+// top of its line.
 export function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
     <DialogPrimitive.Title

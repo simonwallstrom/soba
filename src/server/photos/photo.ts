@@ -57,6 +57,12 @@ export async function deletePhotos(bucket: R2Bucket, householdId: string, photoI
   }
 }
 
+// The uploaded photo a recipe's image URL refers to, or null for an image elsewhere, or none.
+export function uploadedPhotoId(imageUrl: string | null) {
+  const photoId = imageUrl?.startsWith(photoUrlPrefix) && imageUrl.slice(photoUrlPrefix.length);
+  return photoId && isPhotoId(photoId) ? photoId : null;
+}
+
 // Removes a recipe's uploaded photo, given the recipe's image URL. An image elsewhere, or none,
 // is left alone.
 export async function deleteRecipePhoto(
@@ -64,6 +70,23 @@ export async function deleteRecipePhoto(
   householdId: string,
   imageUrl: string | null,
 ) {
-  const photoId = imageUrl?.startsWith(photoUrlPrefix) && imageUrl.slice(photoUrlPrefix.length);
-  if (photoId && isPhotoId(photoId)) await deletePhotos(bucket, householdId, [photoId]);
+  const photoId = uploadedPhotoId(imageUrl);
+  if (photoId) await deletePhotos(bucket, householdId, [photoId]);
+}
+
+// Copies another household's photo into this one's, for a shared recipe saved here. Returns the
+// copy's ID, or null if the photo is gone.
+export async function copyPhoto(
+  bucket: R2Bucket,
+  from: { householdId: string; photoId: string },
+  to: { householdId: string; uploadedBy: string },
+) {
+  const object = await bucket.get(photoKey(from.householdId, from.photoId));
+  if (!object) return null;
+  const photoId = crypto.randomUUID();
+  await bucket.put(photoKey(to.householdId, photoId), object.body, {
+    ...(object.httpMetadata ? { httpMetadata: object.httpMetadata } : {}),
+    customMetadata: { uploadedBy: to.uploadedBy },
+  });
+  return photoId;
 }

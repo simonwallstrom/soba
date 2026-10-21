@@ -1,12 +1,12 @@
-import { Button, buttonVariants } from "@client/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@client/components/ui/dialog";
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@client/components/ui/alert-dialog";
+import { Button, buttonVariants } from "@client/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,31 +20,40 @@ import {
   Cancel01Icon,
   FileEditIcon,
   MoreHorizontalIcon,
+  Share08Icon,
   StarIcon,
 } from "@client/components/ui/icons";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@client/components/ui/tooltip";
 import { Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 
 // Deleting asks first, as the recipe disappears for the whole household. The route opens its
-// own meal plan dialog, so recipes don't depend on meal planning.
+// own meal plan dialog, so recipes don't depend on meal planning. The list and the recipe page
+// share this menu, so its order is the same in both.
 export function RecipeActionsMenu({
   className,
   isFavorite,
   onAddToMealPlan,
   onDelete,
+  onShare,
   onToggleFavorite,
   recipeId,
   recipeTitle,
   size = "icon-sm",
+  tooltip,
 }: {
   className?: string;
   isFavorite: boolean;
   onAddToMealPlan: () => void;
   onDelete: () => void;
+  onShare: () => void;
   onToggleFavorite: () => void;
   recipeId: string;
   recipeTitle: string;
   size?: "icon" | "icon-sm";
+  // Shown where the menu sits among other labeled icons, like the recipe's header, but not on
+  // every row of a list.
+  tooltip?: string;
 }) {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -52,12 +61,19 @@ export function RecipeActionsMenu({
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger
-          aria-label={`More actions for ${recipeTitle}`}
-          className={buttonVariants({ className, size, variant: "ghost" })}
-        >
-          <MoreHorizontalIcon />
-        </DropdownMenuTrigger>
+        <Tooltip disabled={!tooltip}>
+          <TooltipTrigger
+            render={
+              <DropdownMenuTrigger
+                aria-label={`More actions for ${recipeTitle}`}
+                className={buttonVariants({ className, size, variant: "ghost" })}
+              />
+            }
+          >
+            <MoreHorizontalIcon />
+          </TooltipTrigger>
+          <TooltipContent>{tooltip}</TooltipContent>
+        </Tooltip>
         <DropdownMenuContent align="end" className="min-w-52">
           <DropdownMenuGroup>
             <DropdownMenuItem render={<Link params={{ recipeId }} to="/recipes/$recipeId/edit" />}>
@@ -67,6 +83,10 @@ export function RecipeActionsMenu({
             <DropdownMenuItem onClick={onAddToMealPlan}>
               <Calendar03Icon />
               Add to meal plan…
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onShare}>
+              <Share08Icon />
+              Share recipe…
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onToggleFavorite}>
               <StarIcon />
@@ -80,15 +100,15 @@ export function RecipeActionsMenu({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Dialog onOpenChange={setIsConfirmingDelete} open={isConfirmingDelete}>
-        <DialogContent initialFocus={cancelRef} showCloseButton={false}>
-          <DialogHeader>
-            <DialogTitle>Delete {recipeTitle}?</DialogTitle>
-            <DialogDescription>
+      <AlertDialog onOpenChange={setIsConfirmingDelete} open={isConfirmingDelete}>
+        <AlertDialogContent initialFocus={cancelRef}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {recipeTitle}?</AlertDialogTitle>
+            <AlertDialogDescription>
               It will be removed for everyone in your household.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
             <Button
               onClick={() => {
                 setIsConfirmingDelete(false);
@@ -102,9 +122,9 @@ export function RecipeActionsMenu({
             <Button onClick={() => setIsConfirmingDelete(false)} ref={cancelRef}>
               Cancel
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

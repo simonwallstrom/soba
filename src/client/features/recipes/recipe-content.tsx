@@ -11,6 +11,14 @@ import { cn } from "cn";
 import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
+// How the household writes decimals, such as "," in Swedish.
+export function decimalSeparatorFor(language: string) {
+  return (
+    new Intl.NumberFormat(language).formatToParts(1.5).find(({ type }) => type === "decimal")
+      ?.value ?? "."
+  );
+}
+
 type ContentProps = {
   // Writes scaled decimals the household's way, such as "2,5" in Swedish.
   decimalSeparator: string;

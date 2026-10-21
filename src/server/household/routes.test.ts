@@ -15,7 +15,7 @@ await mock.module(new URL("../auth/auth.ts", import.meta.url).pathname, () => ({
 await mock.module(new URL("../db/client.ts", import.meta.url).pathname, () => ({
   getDatabase: () => db,
 }));
-const { householdRoutes } = await import("./routes");
+const { householdRoutes, inviteRoutes } = await import("./routes");
 
 function rename(user: string, name: string) {
   return householdRoutes.request(
@@ -67,23 +67,42 @@ test("a blank name is rejected", async () => {
   expect(householdName()).toBe("The Smiths");
 });
 
-test("the owner switches the invite link off and back on, as a new link", async () => {
-  const first = await readInviteUrl(await send("alice", "POST", "/invite"));
+test("the owner switches the invite link off and back on, as the same link", async () => {
+  const first = await readInviteUrl(await send("alice", "PUT", "/invite"));
   expect(first).not.toBeNull();
   expect(await inviteUrl("alice")).toBe(first);
 
   expect((await send("alice", "DELETE", "/invite")).status).toBe(200);
   expect(await inviteUrl("alice")).toBeNull();
 
-  await send("alice", "POST", "/invite");
-  const second = await inviteUrl("alice");
-  expect(second).not.toBeNull();
-  expect(second).not.toBe(first);
+  expect(await readInviteUrl(await send("alice", "PUT", "/invite"))).toBe(first);
+  expect(await inviteUrl("alice")).toBe(first);
 });
 
-test("members can't switch the invite link", async () => {
+test("a switched-off invite link stops working until it's switched on again", async () => {
+  const url = (await inviteUrl("alice")) ?? "";
+  const token = new URL(url).pathname.split("/").pop() ?? "";
+  const invitePage = async () => (await inviteRoutes.request(`/${token}`, {}, {})).status;
+  expect(await invitePage()).toBe(200);
+  await send("alice", "DELETE", "/invite");
+  expect(await invitePage()).toBe(404);
+  await send("alice", "PUT", "/invite");
+  expect(await invitePage()).toBe(200);
+});
+
+test("resetting the invite link makes a new one, and switches it on", async () => {
+  const first = await inviteUrl("alice");
+  await send("alice", "DELETE", "/invite");
+  const reset = await readInviteUrl(await send("alice", "POST", "/invite/reset"));
+  expect(reset).not.toBeNull();
+  expect(reset).not.toBe(first);
+  expect(await inviteUrl("alice")).toBe(reset);
+});
+
+test("members can't switch or reset the invite link", async () => {
   expect((await send("bob", "DELETE", "/invite")).status).toBe(403);
-  expect((await send("bob", "POST", "/invite")).status).toBe(403);
+  expect((await send("bob", "PUT", "/invite")).status).toBe(403);
+  expect((await send("bob", "POST", "/invite/reset")).status).toBe(403);
 });
 
 test("members hide their own checklist, for good", async () => {

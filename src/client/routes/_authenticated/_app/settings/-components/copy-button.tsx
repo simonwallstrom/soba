@@ -1,5 +1,6 @@
 import { Button } from "@client/components/ui/button";
 import { CheckIcon, Copy01Icon } from "@client/components/ui/icons";
+import { WithTooltip } from "@client/components/ui/tooltip";
 import { useState } from "react";
 
 // Copies a value to paste somewhere else, like the connector URL. Just the icon, which turns to a
@@ -14,13 +15,15 @@ export function CopyButton({ value }: { value: string }) {
   }
 
   return (
-    <Button
-      aria-label={copied ? "Copied" : "Copy"}
-      className="shrink-0 rounded-lg"
-      onClick={() => void copy()}
-      size="icon"
-    >
-      {copied ? <CheckIcon /> : <Copy01Icon />}
-    </Button>
+    <WithTooltip>
+      <Button
+        aria-label={copied ? "Copied" : "Copy"}
+        className="shrink-0 rounded-lg"
+        onClick={() => void copy()}
+        size="icon"
+      >
+        {copied ? <CheckIcon /> : <Copy01Icon />}
+      </Button>
+    </WithTooltip>
   );
 }

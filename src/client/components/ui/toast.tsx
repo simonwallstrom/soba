@@ -43,7 +43,7 @@ function ToastList() {
     >
       <ToastPrimitive.Content className="flex h-full items-center gap-3 overflow-hidden py-3 pr-2.5 pl-4 transition-opacity duration-250 data-behind:opacity-0 data-expanded:opacity-100">
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <ToastPrimitive.Title className="truncate text-sm font-medium" />
+          <ToastPrimitive.Title className="truncate font-medium" />
           <ToastPrimitive.Description className="text-sm text-olive-500 dark:text-olive-400" />
         </div>
         {item.actionProps && (

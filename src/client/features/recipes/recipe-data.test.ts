@@ -16,6 +16,8 @@ const collection: RecipeCollection = {
       servings: 2,
       imageUrl: null,
       sourceUrl: null,
+      shareToken: null,
+      isShared: false,
       ingredients: [{ heading: "Sauce", items: ["Soy"] }, { items: ["Soba"] }],
       instructions: [],
       tagIds: ["t1"],

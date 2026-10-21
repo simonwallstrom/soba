@@ -10,6 +10,7 @@ import {
 import { ImagePlaceholder, ImageThumbnail } from "@client/components/ui/image-thumbnail";
 import { ScrollArea } from "@client/components/ui/scroll-area";
 import { toast } from "@client/components/ui/toast";
+import { WithTooltip } from "@client/components/ui/tooltip";
 import { useDayDrop } from "@client/features/meal-plan/day-drop";
 import type { DayDrag } from "@client/features/meal-plan/day-drop";
 import { mealDragData } from "@client/features/meal-plan/meal-drag";
@@ -103,27 +104,33 @@ export function MealPlannerSidebar({
               Week {week.number}
             </span>
             <div>
-              <Button
-                aria-label="Previous week"
-                onClick={() => changeWeek(-1)}
-                size="icon"
-                variant="ghost"
-              >
-                <ChevronLeftIcon className="-translate-x-px" />
-              </Button>
-              <Button
-                aria-label="Next week"
-                onClick={() => changeWeek(1)}
-                size="icon"
-                variant="ghost"
-              >
-                <ChevronRightIcon className="translate-x-px" />
-              </Button>
+              <WithTooltip>
+                <Button
+                  aria-label="Previous week"
+                  onClick={() => changeWeek(-1)}
+                  size="icon"
+                  variant="ghost"
+                >
+                  <ChevronLeftIcon className="-translate-x-px" />
+                </Button>
+              </WithTooltip>
+              <WithTooltip>
+                <Button
+                  aria-label="Next week"
+                  onClick={() => changeWeek(1)}
+                  size="icon"
+                  variant="ghost"
+                >
+                  <ChevronRightIcon className="translate-x-px" />
+                </Button>
+              </WithTooltip>
             </div>
             <div className="mx-2 h-3.5 w-px bg-black/12 dark:bg-white/8" />
-            <Button aria-label="Close meal planner" onClick={onClose} size="icon" variant="ghost">
-              <Cancel01Icon />
-            </Button>
+            <WithTooltip>
+              <Button aria-label="Close meal planner" onClick={onClose} size="icon" variant="ghost">
+                <Cancel01Icon />
+              </Button>
+            </WithTooltip>
           </div>
         </header>
         <ScrollArea className="flex-1" scrollFade>
@@ -297,16 +304,17 @@ function PlannedMeal({
         </div>
       </div>
       {onRemove && (
-        <Button
-          aria-label={`Remove ${recipe.title} from the plan`}
-          className="relative z-10 mr-1 ml-auto"
-          onClick={onRemove}
-          size="icon"
-          title="Remove"
-          variant="ghost"
-        >
-          <Cancel01Icon />
-        </Button>
+        <WithTooltip label="Remove">
+          <Button
+            aria-label={`Remove ${recipe.title} from the plan`}
+            className="relative z-10 mr-1 ml-auto"
+            onClick={onRemove}
+            size="icon"
+            variant="ghost"
+          >
+            <Cancel01Icon />
+          </Button>
+        </WithTooltip>
       )}
     </div>
   );

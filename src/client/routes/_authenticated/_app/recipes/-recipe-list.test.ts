@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import type { Recipe, Tag } from "@shared/recipes";
 
-import { filterRecipes, parseRecipeListSearch, pinFirst } from "./-recipe-list";
+import { filterRecipes, hasFilters, parseRecipeListSearch, pinFirst } from "./-recipe-list";
 
 function recipe(id: string, title: string, overrides: Partial<Recipe> = {}): Recipe {
   const date = new Date("2026-01-01T00:00:00Z");
@@ -13,6 +13,8 @@ function recipe(id: string, title: string, overrides: Partial<Recipe> = {}): Rec
     servings: null,
     imageUrl: null,
     sourceUrl: null,
+    shareToken: null,
+    isShared: false,
     ingredients: [],
     instructions: [],
     createdBy: "anna",
@@ -122,6 +124,18 @@ test("the favorites filter keeps only the member's favorites", () => {
   expect(parseRecipeListSearch({ favorites: true })).toEqual({ favorites: true });
   expect(parseRecipeListSearch({ favorites: "yes" })).toEqual({});
   expect(parseRecipeListSearch({ favorites: false })).toEqual({});
+});
+
+test("the shared filter keeps only recipes shared with a link", () => {
+  const pasta = recipe("pasta", "Pasta");
+  const buns = recipe("buns", "Buns", { shareToken: "abcdefghijklmnopqrstuv", isShared: true });
+  const ids = (filters: Parameters<typeof filterRecipes>[2]) =>
+    filterRecipes([pasta, buns], new Map(), filters, "name").map((item) => item.id);
+  expect(ids({ shared: true })).toEqual(["buns"]);
+  expect(ids({})).toEqual(["buns", "pasta"]);
+  expect(hasFilters({ shared: true })).toBe(true);
+  expect(parseRecipeListSearch({ shared: true })).toEqual({ shared: true });
+  expect(parseRecipeListSearch({ shared: "yes" })).toEqual({});
 });
 
 describe("parseRecipeListSearch", () => {

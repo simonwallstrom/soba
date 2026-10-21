@@ -7,13 +7,15 @@ export type RecipeFilterField = (typeof recipeFilterFields)[number];
 export type RecipeFilters = Partial<Record<RecipeFilterField, string[]>>;
 
 // The search text stays as typed; matching ignores surrounding spaces and case. `favorites`
-// keeps only the member's own favorites, so a shared link shows each member theirs.
-export type RecipeListFilters = RecipeFilters & { q?: string; favorites?: true };
+// keeps only the member's own favorites, so a shared link shows each member theirs. `shared`
+// keeps only recipes anyone with their link can view.
+export type RecipeListFilters = RecipeFilters & { q?: string; favorites?: true; shared?: true };
 
 /** Whether anything but the search text narrows the list. */
 export function hasFilters(filters: RecipeListFilters) {
   return (
     filters.favorites === true ||
+    filters.shared === true ||
     recipeFilterFields.some((field) => (filters[field]?.length ?? 0) > 0)
   );
 }
@@ -34,6 +36,7 @@ export function parseRecipeListSearch(search: Record<string, unknown>): RecipeLi
   const q = search["q"];
   if (typeof q === "string" && q.trim() !== "") result.q = q;
   if (search["favorites"] === true) result.favorites = true;
+  if (search["shared"] === true) result.shared = true;
   return result;
 }
 
@@ -52,7 +55,8 @@ function searchableText(recipe: Recipe, tags: readonly Tag[]) {
 }
 
 // A recipe matches the search, every selected tag (each one narrows the list), the selected
-// author, and so every field with a selection. With `favorites`, it must be one of the member's.
+// author, and so every field with a selection. With `favorites`, it must be one of the member's,
+// and with `shared`, shared with a link.
 export function filterRecipes(
   recipes: readonly Recipe[],
   tagsByRecipe: ReadonlyMap<string, readonly Tag[]>,
@@ -70,7 +74,8 @@ export function filterRecipes(
         )) &&
       tags.every((id) => (tagsByRecipe.get(recipe.id) ?? []).some((tag) => tag.id === id)) &&
       (authors.length === 0 || authors.includes(recipe.createdBy)) &&
-      (filters.favorites !== true || favoriteIds.has(recipe.id)),
+      (filters.favorites !== true || favoriteIds.has(recipe.id)) &&
+      (filters.shared !== true || recipe.isShared),
   );
   return matches.toSorted((left, right) => {
     if (sort === "created") {

@@ -12,11 +12,24 @@
     <link rel="icon" type="image/svg+xml" href="/favicon-kana.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-soba.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- Lora, which headings use, fetched beside the CSS rather than after it. -->
+    <link rel="preload" href="/fonts/lora.woff2" as="font" type="font/woff2" crossorigin />
     <meta name="theme-color" content="#fbfbf9" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#13130f" media="(prefers-color-scheme: dark)" />
     <!-- An opaque bar: on iOS 27, black-translucent leaves the page 62px short of the bottom. -->
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Soba" />
+    <!-- Link previews. A shared recipe's page replaces these (src/server/recipes/shared-page.ts). -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Soba" />
+    <meta property="og:title" content="Soba" />
+    <meta property="og:description" content="Recipe organizer for families" />
+    <meta property="og:image" content="https://soba.family/og-image.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="2400" />
+    <meta property="og:image:height" content="1260" />
+    <meta property="og:image:alt" content="Soba, recipe organizer for families" />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body class="relative flex h-full overflow-hidden text-base">
     <div class="isolate flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden" id="root"></div>

@@ -12,6 +12,8 @@ The goal is still speed, not offline use: the app keeps the household's data in 
 | `POST /api/recipes`, `PUT /api/recipes/:id` | Save a recipe, with any new tags it uses. The last save wins       |
 | `DELETE /api/recipes/:id`                   | Delete a recipe, with its favorites and planned meals              |
 | `PUT`/`DELETE /api/recipes/:id/favorite`    | Favorite or unfavorite it, for the signed-in member                |
+| `PUT`/`DELETE /api/recipes/:id/share`       | Share it, or make it private again, keeping its link               |
+| `POST /api/recipes/:id/share/reset`         | Give it a new link, so the old one stops working                   |
 | `POST /api/tags`, `PUT /api/tags/:id`       | Add or rename a tag. A name another tag has, in any case, is a 409 |
 | `POST /api/tags/:id/merge`                  | Move a tag's recipes to another tag (`into`) and delete it         |
 | `DELETE /api/tags/:id`                      | Delete a tag and take it off its recipes                           |
@@ -24,6 +26,25 @@ Routes are in `src/server/recipes/`, `src/server/tags/`, and `src/server/meal-pl
 - **Scoped to the household:** `requireSession` and `requireHousehold` run on every request, and every query filters by the member's household. A recipe ID from another household is a 404.
 - **IDs come from the client:** the app makes recipe and tag IDs, so a new recipe's page can open before the server answers.
 - **One round trip:** `GET /api/recipes` and writes that touch several tables use `db.batch`, which D1 runs as one transaction. D1 allows 100 bound values per statement, which is why tag and day counts are capped.
+
+## Shared recipes
+
+A member can share a recipe from its menu, so anyone with the link (`/r/<token>`) can view it without logging in. The app makes the token (128 random bits, as base64url) the first time, so the link shows at once. `recipe.is_shared` says whether the link works. Turning sharing off keeps the token, so turning it on again brings the same link back, and a mis-tap doesn't break links already sent. Resetting the link, for one shared too widely, gives the recipe a new token, so the old link stays dead. Sharing has its own routes, not `PUT /api/recipes/:id`, where the last save wins and an open edit would undo it.
+
+| Route                                  | What it does                                                           |
+| -------------------------------------- | ---------------------------------------------------------------------- |
+| `GET /api/public/recipes/:token`       | What the shared page shows, and whether the visitor's household has it |
+| `GET /api/public/recipes/:token/photo` | The recipe's uploaded photo, without a session                         |
+| `POST /api/public/recipes/:token/save` | Copy it into the member's household, once, under an ID the app made    |
+| `GET /r/:token`                        | The app, with link preview tags added to `index.html`                  |
+| `GET /r/:token/og.jpg`                 | The recipe's photo, as a link preview image                            |
+
+Routes are in `src/server/recipes/shared-routes.ts`, `shared-page.ts`, and `shared-preview.ts`. Keep these properties when changing them:
+
+- **Only what the page shows:** title, description, servings, ingredients, instructions, photo, source link, and the household's name and language. No IDs, tags, or members.
+- **Off means off:** responses are `no-store` (the card is cached for 5 minutes) and `noindex`, and rate-limited by address.
+- **A member of the recipe's household** is sent to the recipe in the app. A member of another household can save a copy, without tags and with its own copy of the photo. `recipe.copied_from` remembers which shared recipe it came from, so the page shows "Saved" and saving again returns the same copy. Logged out, "Log in to save" returns to the page with `?save=true`, and the page saves it.
+- **Link previews** show the recipe's title and description, and its photo, cropped to 1600 × 840 and made a JPEG by the Images binding, as some chat apps can't read WebP. A recipe without a photo shows Soba's own preview, `public/og-image.jpg`, which `index.html` names for every other page. The page's `og:image` URL names the recipe's `updatedAt`, so chat apps fetch the photo again after an edit.
 
 ## Reading and changing data in the app
 

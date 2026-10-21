@@ -29,6 +29,9 @@ export const storedCollection = v.object({
       ingredients: storedSections,
       instructions: storedSections,
       tagIds: v.array(v.string()),
+      // Copies stored before sharing existed.
+      shareToken: v.optional(v.nullable(v.string()), null),
+      isShared: v.optional(v.boolean(), false),
       createdBy: v.string(),
       updatedBy: v.string(),
       createdAt: storedDate,
@@ -132,6 +135,8 @@ export function createRecipe(
     ...recipeContent(fields),
     imageUrl: photoId ? recipePhotoUrl(photoId) : null,
     sourceUrl: null,
+    shareToken: null,
+    isShared: false,
     createdBy: userId,
     updatedBy: userId,
     createdAt: at,
@@ -171,6 +176,92 @@ export function updateRecipe(
         json: { ...fields, ...(photoId === undefined ? {} : { photoId }) },
       }),
   );
+}
+
+// Shares the recipe, or makes it private, keeping its link: sharing again brings the same one
+// back. The first time, the token is made here, so the link shows at once.
+export function setRecipeSharing(recipe: Pick<Recipe, "id" | "shareToken">, isShared: boolean) {
+  const { id } = recipe;
+  const shareToken = recipe.shareToken ?? makeShareToken();
+  return recipeData.save(
+    (data) => ({
+      ...data,
+      recipes: data.recipes.map((other) =>
+        other.id === id ? { ...other, shareToken, isShared } : other,
+      ),
+    }),
+    () =>
+      isShared
+        ? api.recipes[":id"].share.$put({ param: { id }, json: { token: shareToken } })
+        : api.recipes[":id"].share.$delete({ param: { id } }),
+  );
+}
+
+// Gives the recipe a new link, so the old one stops working, for a link shared too widely.
+export function resetRecipeShareLink(id: string) {
+  const shareToken = makeShareToken();
+  return recipeData.save(
+    (data) => ({
+      ...data,
+      recipes: data.recipes.map((other) =>
+        other.id === id ? { ...other, shareToken, isShared: true } : other,
+      ),
+    }),
+    () => api.recipes[":id"].share.reset.$post({ param: { id }, json: { token: shareToken } }),
+  );
+}
+
+// 128 random bits, as base64url.
+function makeShareToken() {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return btoa(String.fromCharCode(...bytes))
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/=+$/u, "");
+}
+
+// Saves a copy of another household's shared recipe, under an ID made here, so it can open before
+// the server answers. Until the next fetch, the copy shows the shared photo. Resolves to the
+// copy's ID, which is an earlier copy's if the household saved it already, or null if it failed.
+export async function saveSharedRecipe(
+  shareToken: string,
+  shared: Pick<
+    Recipe,
+    "title" | "description" | "servings" | "imageUrl" | "sourceUrl" | "ingredients" | "instructions"
+  >,
+  { id, userId }: { id: string; userId: string },
+) {
+  const at = new Date();
+  const recipe: Recipe = {
+    ...shared,
+    id,
+    tagIds: [],
+    shareToken: null,
+    isShared: false,
+    createdBy: userId,
+    updatedBy: userId,
+    createdAt: at,
+    updatedAt: at,
+  };
+  let savedId: string | null = null;
+  const saved = await recipeData.save(
+    (data) => ({
+      ...data,
+      recipes: [...data.recipes.filter((other) => other.id !== id), recipe],
+    }),
+    async () => {
+      const response = await api.public.recipes[":token"].save.$post({
+        param: { token: shareToken },
+        json: { id },
+      });
+      if (response.ok) {
+        const result = await response.json();
+        if ("recipeId" in result) savedId = result.recipeId;
+      }
+      return response;
+    },
+  );
+  return saved ? savedId : null;
 }
 
 // Takes the recipe's favorites and planned meals with it.

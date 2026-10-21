@@ -19,6 +19,7 @@ import { Route as PublicPrivacyRouteImport } from './routes/_public/privacy'
 import { Route as PublicTermsRouteImport } from './routes/_public/terms'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as OauthConsentRouteImport } from './routes/oauth.consent'
+import { Route as RTokenRouteImport } from './routes/r/$token'
 import { Route as AuthenticatedAppSplatRouteImport } from './routes/_authenticated/_app/$'
 import { Route as AuthenticatedAppDesignSystemIndexRouteImport } from './routes/_authenticated/_app/design-system/index'
 import { Route as AuthenticatedAppMealPlannerIndexRouteImport } from './routes/_authenticated/_app/meal-planner/index'
@@ -73,6 +74,11 @@ const InviteTokenRoute = InviteTokenRouteImport.update({
 const OauthConsentRoute = OauthConsentRouteImport.update({
   id: '/oauth/consent',
   path: '/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RTokenRoute = RTokenRouteImport.update({
+  id: '/r/$token',
+  path: '/r/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppSplatRoute = AuthenticatedAppSplatRouteImport.update({
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof PublicTermsRoute
   '/invite/$token': typeof InviteTokenRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/r/$token': typeof RTokenRoute
   '/$': typeof AuthenticatedAppSplatRoute
   '/recipes/$recipeId': typeof AuthenticatedAppRecipesRecipeIdRoute
   '/recipes/new': typeof AuthenticatedAppRecipesNewRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByTo {
   '/terms': typeof PublicTermsRoute
   '/invite/$token': typeof InviteTokenRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/r/$token': typeof RTokenRoute
   '/$': typeof AuthenticatedAppSplatRoute
   '/recipes/$recipeId': typeof AuthenticatedAppRecipesRecipeIdRoute
   '/recipes/new': typeof AuthenticatedAppRecipesNewRoute
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/_public/terms': typeof PublicTermsRoute
   '/invite/$token': typeof InviteTokenRoute
   '/oauth/consent': typeof OauthConsentRoute
+  '/r/$token': typeof RTokenRoute
   '/_authenticated/_app/$': typeof AuthenticatedAppSplatRoute
   '/_authenticated/_app/recipes/$recipeId': typeof AuthenticatedAppRecipesRecipeIdRoute
   '/_authenticated/_app/recipes/new': typeof AuthenticatedAppRecipesNewRoute
@@ -188,6 +197,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/invite/$token'
     | '/oauth/consent'
+    | '/r/$token'
     | '/$'
     | '/recipes/$recipeId'
     | '/recipes/new'
@@ -205,6 +215,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/invite/$token'
     | '/oauth/consent'
+    | '/r/$token'
     | '/$'
     | '/recipes/$recipeId'
     | '/recipes/new'
@@ -225,6 +236,7 @@ export interface FileRouteTypes {
     | '/_public/terms'
     | '/invite/$token'
     | '/oauth/consent'
+    | '/r/$token'
     | '/_authenticated/_app/$'
     | '/_authenticated/_app/recipes/$recipeId'
     | '/_authenticated/_app/recipes/new'
@@ -242,6 +254,7 @@ export interface RootRouteChildren {
   RequestAccessRoute: typeof RequestAccessRoute
   InviteTokenRoute: typeof InviteTokenRoute
   OauthConsentRoute: typeof OauthConsentRoute
+  RTokenRoute: typeof RTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -314,6 +327,13 @@ declare module '@tanstack/react-router' {
       path: '/oauth/consent'
       fullPath: '/oauth/consent'
       preLoaderRoute: typeof OauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/r/$token': {
+      id: '/r/$token'
+      path: '/r/$token'
+      fullPath: '/r/$token'
+      preLoaderRoute: typeof RTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_app/$': {
@@ -440,6 +460,7 @@ const rootRouteChildren: RootRouteChildren = {
   RequestAccessRoute: RequestAccessRoute,
   InviteTokenRoute: InviteTokenRoute,
   OauthConsentRoute: OauthConsentRoute,
+  RTokenRoute: RTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

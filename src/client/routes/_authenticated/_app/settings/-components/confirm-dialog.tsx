@@ -1,12 +1,12 @@
-import { Button } from "@client/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@client/components/ui/dialog";
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@client/components/ui/alert-dialog";
+import { Button } from "@client/components/ui/button";
 import { useRef } from "react";
 
 // Asks before an action that can't be undone. Cancel is the safe choice, so it takes focus.
@@ -28,13 +28,13 @@ export function ConfirmDialog({
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent initialFocus={cancelRef} showCloseButton={false}>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
+    <AlertDialog onOpenChange={onOpenChange} open={open}>
+      <AlertDialogContent initialFocus={cancelRef}>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
           <Button
             onClick={() => {
               onOpenChange(false);
@@ -47,8 +47,8 @@ export function ConfirmDialog({
           <Button onClick={() => onOpenChange(false)} ref={cancelRef}>
             Cancel
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

@@ -62,6 +62,7 @@ import {
   ToggleExamples,
   ToggleGroupExamples,
 } from "./-components/selection-examples";
+import { TooltipExamples } from "./-components/tooltip-examples";
 
 export const Route = createFileRoute("/_authenticated/_app/design-system/")({
   staticData: {
@@ -418,6 +419,10 @@ function DesignSystem() {
 
         <Section title="Toggle group">
           <ToggleGroupExamples />
+        </Section>
+
+        <Section title="Tooltip">
+          <TooltipExamples />
         </Section>
       </div>
     </>

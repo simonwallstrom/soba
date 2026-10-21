@@ -1,4 +1,4 @@
-import { recipePhotoUrl } from "@shared/recipes";
+import { recipePhotoUrl, shareTokenPattern } from "@shared/recipes";
 import { Hono } from "hono";
 import * as v from "valibot";
 
@@ -13,6 +13,7 @@ import {
   getRecipe,
   listRecipes,
   setFavorite,
+  setSharing,
   updateRecipe,
 } from "./recipes";
 
@@ -59,6 +60,7 @@ function recipeInput({
 }
 
 const notFound = { error: "Recipe not found" };
+const shareTokenBody = v.object({ token: v.pipe(v.string(), v.regex(shareTokenPattern)) });
 
 // The household's recipes, tags, and the member's favorites. The app generates recipe and tag
 // IDs, so it can show a new recipe before the server has answered.
@@ -120,5 +122,34 @@ export const recipeRoutes = new Hono<HouseholdEnv>()
   })
   .delete("/:id/favorite", async (c) => {
     await setFavorite(c.req.param("id"), c.get("user").id, false);
+    return c.json({ ok: true }, 200);
+  })
+  // Kept apart from saving the recipe, where the last save wins: an edit open on another device
+  // would otherwise turn sharing back on, or off. Sharing keeps the recipe's link, or gives it
+  // `token` the first time; resetting gives it `token` in place of the old one.
+  .put("/:id/share", validateJson(shareTokenBody), async (c) => {
+    const shared = await setSharing(c.get("membership").id, c.req.param("id"), {
+      isShared: true,
+      token: c.req.valid("json").token,
+    });
+    if (shared === "taken") return c.json({ error: "Try sharing again" }, 409);
+    if (!shared) return c.json(notFound, 404);
+    return c.json({ ok: true }, 200);
+  })
+  .post("/:id/share/reset", validateJson(shareTokenBody), async (c) => {
+    const shared = await setSharing(c.get("membership").id, c.req.param("id"), {
+      isShared: true,
+      token: c.req.valid("json").token,
+      reset: true,
+    });
+    if (shared === "taken") return c.json({ error: "Try sharing again" }, 409);
+    if (!shared) return c.json(notFound, 404);
+    return c.json({ ok: true }, 200);
+  })
+  .delete("/:id/share", async (c) => {
+    const unshared = await setSharing(c.get("membership").id, c.req.param("id"), {
+      isShared: false,
+    });
+    if (!unshared) return c.json(notFound, 404);
     return c.json({ ok: true }, 200);
   });

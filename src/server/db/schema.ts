@@ -325,7 +325,8 @@ export const householdMembers = sqliteTable(
   (table) => [index("household_member_household_id_idx").on(table.householdId)],
 );
 
-// Each household has one active invite link; resetting it replaces the token.
+// Each household has one invite link. Switching it off keeps the token, so switching it back on
+// brings the same link back; resetting it replaces the token, so the old link stops working.
 export const householdInvites = sqliteTable(
   "household_invite",
   {
@@ -333,6 +334,7 @@ export const householdInvites = sqliteTable(
       .primaryKey()
       .references(() => households.id, { onDelete: "cascade" }),
     token: text().notNull(),
+    enabled: integer({ mode: "boolean" }).default(true).notNull(),
     createdBy: text("created_by")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -391,13 +393,26 @@ export const recipes = sqliteTable(
     sourceUrl: text("source_url"),
     ingredients: text({ mode: "json" }).$type<RecipeSection[]>().notNull(),
     instructions: text({ mode: "json" }).$type<RecipeSection[]>().notNull(),
+    // Anyone with the link /r/<token> can view the recipe while it's shared. The token is made
+    // the first time it's shared, and kept while sharing is off, so sharing again brings the same
+    // link back. Resetting the link replaces it, so the old one stops working.
+    shareToken: text("share_token"),
+    isShared: integer("is_shared", { mode: "boolean" }).default(false).notNull(),
+    // The shared recipe this one was saved from, if any, so the shared page can link to the copy.
+    // No foreign key: a copy outlives the recipe it came from.
+    copiedFrom: text("copied_from"),
     // User IDs without a foreign key: a recipe outlives the member who wrote it.
     createdBy: text("created_by").notNull(),
     updatedBy: text("updated_by").notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (table) => [index("recipe_household_id_idx").on(table.householdId)],
+  (table) => [
+    index("recipe_household_id_idx").on(table.householdId),
+    uniqueIndex("recipe_share_token_unique").on(table.shareToken),
+    // A household saves a shared recipe once.
+    uniqueIndex("recipe_household_copied_from_unique").on(table.householdId, table.copiedFrom),
+  ],
 );
 
 // Tags belong to the household, so renaming one updates every recipe that uses it.

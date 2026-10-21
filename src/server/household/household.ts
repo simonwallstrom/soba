@@ -98,16 +98,27 @@ export async function listMembers(householdId: string) {
     .orderBy(householdMembers.createdAt);
 }
 
+/** The household's invite token while its link is switched on. */
 export async function getInviteToken(householdId: string) {
   const [invite] = await getDatabase()
     .select({ token: householdInvites.token })
     .from(householdInvites)
-    .where(eq(householdInvites.householdId, householdId))
+    .where(and(eq(householdInvites.householdId, householdId), eq(householdInvites.enabled, true)))
     .limit(1);
   return invite?.token ?? null;
 }
 
-/** Replaces the household's invite link with a new one, or creates it when it's switched off. */
+/** Switches the invite link on, with the token it had, or a new one if it never had one. */
+export async function enableInvite(householdId: string, userId: string) {
+  const [invite] = await getDatabase()
+    .insert(householdInvites)
+    .values({ householdId, token: crypto.randomUUID(), createdBy: userId })
+    .onConflictDoUpdate({ target: householdInvites.householdId, set: { enabled: true } })
+    .returning({ token: householdInvites.token });
+  return invite!.token;
+}
+
+/** Replaces the household's invite link with a new one, and switches it on. */
 export async function resetInviteToken(householdId: string, userId: string) {
   const token = crypto.randomUUID();
   await getDatabase()
@@ -115,14 +126,17 @@ export async function resetInviteToken(householdId: string, userId: string) {
     .values({ householdId, token, createdBy: userId })
     .onConflictDoUpdate({
       target: householdInvites.householdId,
-      set: { token, createdBy: userId, createdAt: new Date() },
+      set: { token, enabled: true, createdBy: userId, createdAt: new Date() },
     });
   return token;
 }
 
-/** Switches the invite link off: the old link stops working until a new one is made. */
-export async function deleteInvite(householdId: string) {
-  await getDatabase().delete(householdInvites).where(eq(householdInvites.householdId, householdId));
+/** Switches the invite link off. It keeps its token, so switching it on brings it back. */
+export async function disableInvite(householdId: string) {
+  await getDatabase()
+    .update(householdInvites)
+    .set({ enabled: false })
+    .where(eq(householdInvites.householdId, householdId));
 }
 
 export async function findInvite(token: string) {
@@ -136,7 +150,7 @@ export async function findInvite(token: string) {
     .from(householdInvites)
     .innerJoin(households, eq(householdInvites.householdId, households.id))
     .innerJoin(users, eq(householdInvites.createdBy, users.id))
-    .where(eq(householdInvites.token, token))
+    .where(and(eq(householdInvites.token, token), eq(householdInvites.enabled, true)))
     .limit(1);
   return invite ?? null;
 }
