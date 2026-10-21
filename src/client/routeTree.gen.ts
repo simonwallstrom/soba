@@ -21,6 +21,7 @@ import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as OauthConsentRouteImport } from './routes/oauth.consent'
 import { Route as RTokenRouteImport } from './routes/r/$token'
 import { Route as AuthenticatedAppSplatRouteImport } from './routes/_authenticated/_app/$'
+import { Route as AuthenticatedAppAdminIndexRouteImport } from './routes/_authenticated/_app/admin/index'
 import { Route as AuthenticatedAppDesignSystemIndexRouteImport } from './routes/_authenticated/_app/design-system/index'
 import { Route as AuthenticatedAppMealPlannerIndexRouteImport } from './routes/_authenticated/_app/meal-planner/index'
 import { Route as AuthenticatedAppRecipesIndexRouteImport } from './routes/_authenticated/_app/recipes/index'
@@ -86,6 +87,12 @@ const AuthenticatedAppSplatRoute = AuthenticatedAppSplatRouteImport.update({
   path: '/$',
   getParentRoute: () => AuthenticatedAppLayoutRoute,
 } as any)
+const AuthenticatedAppAdminIndexRoute =
+  AuthenticatedAppAdminIndexRouteImport.update({
+    id: '/admin/',
+    path: '/admin/',
+    getParentRoute: () => AuthenticatedAppLayoutRoute,
+  } as any)
 const AuthenticatedAppDesignSystemIndexRoute =
   AuthenticatedAppDesignSystemIndexRouteImport.update({
     id: '/design-system/',
@@ -141,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/$': typeof AuthenticatedAppSplatRoute
   '/recipes/$recipeId': typeof AuthenticatedAppRecipesRecipeIdRoute
   '/recipes/new': typeof AuthenticatedAppRecipesNewRoute
+  '/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/design-system/': typeof AuthenticatedAppDesignSystemIndexRoute
   '/meal-planner/': typeof AuthenticatedAppMealPlannerIndexRoute
   '/recipes/': typeof AuthenticatedAppRecipesIndexRoute
@@ -159,6 +167,7 @@ export interface FileRoutesByTo {
   '/$': typeof AuthenticatedAppSplatRoute
   '/recipes/$recipeId': typeof AuthenticatedAppRecipesRecipeIdRoute
   '/recipes/new': typeof AuthenticatedAppRecipesNewRoute
+  '/admin': typeof AuthenticatedAppAdminIndexRoute
   '/design-system': typeof AuthenticatedAppDesignSystemIndexRoute
   '/meal-planner': typeof AuthenticatedAppMealPlannerIndexRoute
   '/recipes': typeof AuthenticatedAppRecipesIndexRoute
@@ -181,6 +190,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/$': typeof AuthenticatedAppSplatRoute
   '/_authenticated/_app/recipes/$recipeId': typeof AuthenticatedAppRecipesRecipeIdRoute
   '/_authenticated/_app/recipes/new': typeof AuthenticatedAppRecipesNewRoute
+  '/_authenticated/_app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/_authenticated/_app/design-system/': typeof AuthenticatedAppDesignSystemIndexRoute
   '/_authenticated/_app/meal-planner/': typeof AuthenticatedAppMealPlannerIndexRoute
   '/_authenticated/_app/recipes/': typeof AuthenticatedAppRecipesIndexRoute
@@ -201,6 +211,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/recipes/$recipeId'
     | '/recipes/new'
+    | '/admin/'
     | '/design-system/'
     | '/meal-planner/'
     | '/recipes/'
@@ -219,6 +230,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/recipes/$recipeId'
     | '/recipes/new'
+    | '/admin'
     | '/design-system'
     | '/meal-planner'
     | '/recipes'
@@ -240,6 +252,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/$'
     | '/_authenticated/_app/recipes/$recipeId'
     | '/_authenticated/_app/recipes/new'
+    | '/_authenticated/_app/admin/'
     | '/_authenticated/_app/design-system/'
     | '/_authenticated/_app/meal-planner/'
     | '/_authenticated/_app/recipes/'
@@ -343,6 +356,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSplatRouteImport
       parentRoute: typeof AuthenticatedAppLayoutRoute
     }
+    '/_authenticated/_app/admin/': {
+      id: '/_authenticated/_app/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAppAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAppLayoutRoute
+    }
     '/_authenticated/_app/design-system/': {
       id: '/_authenticated/_app/design-system/'
       path: '/design-system'
@@ -399,6 +419,7 @@ interface AuthenticatedAppLayoutRouteChildren {
   AuthenticatedAppSplatRoute: typeof AuthenticatedAppSplatRoute
   AuthenticatedAppRecipesRecipeIdRoute: typeof AuthenticatedAppRecipesRecipeIdRoute
   AuthenticatedAppRecipesNewRoute: typeof AuthenticatedAppRecipesNewRoute
+  AuthenticatedAppAdminIndexRoute: typeof AuthenticatedAppAdminIndexRoute
   AuthenticatedAppDesignSystemIndexRoute: typeof AuthenticatedAppDesignSystemIndexRoute
   AuthenticatedAppMealPlannerIndexRoute: typeof AuthenticatedAppMealPlannerIndexRoute
   AuthenticatedAppRecipesIndexRoute: typeof AuthenticatedAppRecipesIndexRoute
@@ -411,6 +432,7 @@ const AuthenticatedAppLayoutRouteChildren: AuthenticatedAppLayoutRouteChildren =
     AuthenticatedAppSplatRoute: AuthenticatedAppSplatRoute,
     AuthenticatedAppRecipesRecipeIdRoute: AuthenticatedAppRecipesRecipeIdRoute,
     AuthenticatedAppRecipesNewRoute: AuthenticatedAppRecipesNewRoute,
+    AuthenticatedAppAdminIndexRoute: AuthenticatedAppAdminIndexRoute,
     AuthenticatedAppDesignSystemIndexRoute:
       AuthenticatedAppDesignSystemIndexRoute,
     AuthenticatedAppMealPlannerIndexRoute:

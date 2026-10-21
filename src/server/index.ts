@@ -2,10 +2,12 @@ import { getSessionCookie } from "better-auth/cookies";
 import { Hono } from "hono";
 import { csrf } from "hono/csrf";
 
+import { isAllowlisted } from "./admin/beta";
+import { adminRoutes } from "./admin/routes";
 import { getSession, handleAuth } from "./auth/auth";
 import { deviceRoutes } from "./auth/device-routes";
 import { rateLimit } from "./auth/middleware";
-import { isAllowlisted } from "./auth/policy";
+import { isListed } from "./auth/policy";
 import { getMembership } from "./household/household";
 import { householdRoutes, inviteRoutes } from "./household/routes";
 import { connectionRoutes } from "./mcp/connection-routes";
@@ -79,10 +81,11 @@ const app = new Hono<{ Bindings: Env }>()
         name: session.user.name,
         email: session.user.email,
         image: session.user.image ?? null,
+        isAdmin: isListed(session.user.email, c.env.ADMIN_EMAILS),
       },
       household,
       canCreateHousehold:
-        !household && isAllowlisted(session.user.email, c.env.AUTH_ALLOWED_EMAILS),
+        !household && (await isAllowlisted(session.user.email, c.env.ADMIN_EMAILS)),
     });
   })
   // Deletes what this browser stored, such as the cached session, after logout or removal.
@@ -90,6 +93,7 @@ const app = new Hono<{ Bindings: Env }>()
     c.header("Clear-Site-Data", '"storage"');
     return c.body(null, 204);
   })
+  .route("/api/admin", adminRoutes)
   .route("/api/connections", connectionRoutes)
   .route("/api/devices", deviceRoutes)
   .route("/api/household", householdRoutes)

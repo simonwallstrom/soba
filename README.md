@@ -18,7 +18,7 @@ bun run db:migrate:local
 bun run dev
 ```
 
-Fill in `.dev.vars` before starting: Google OAuth credentials, a random `BETTER_AUTH_SECRET`, your Google email in `AUTH_ALLOWED_EMAILS`, and the AI Gateway URL and token. The app runs at `http://localhost:5173/`.
+Fill in `.dev.vars` before starting: Google OAuth credentials, a random `BETTER_AUTH_SECRET`, your Google email in `ADMIN_EMAILS`, and the AI Gateway URL and token. The app runs at `http://localhost:5173/`.
 
 `hooks:install` sets up a pre-commit hook that formats, lints, and typechecks staged changes.
 

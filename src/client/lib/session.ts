@@ -19,6 +19,8 @@ const snapshotSchema = v.object({
     email: v.string(),
     // Snapshots saved before avatars were added have no image.
     image: v.optional(v.nullable(v.string()), null),
+    // Snapshots saved before the admin page.
+    isAdmin: v.optional(v.boolean(), false),
   }),
   household: v.nullable(
     v.object({

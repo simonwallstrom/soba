@@ -1,3 +1,4 @@
+import { SettingsRowIcon, settingsRowStyles } from "@client/components/particles/settings-group";
 import { Button } from "@client/components/ui/button";
 import { CheckIcon, Copy01Icon, UserAdd01Icon } from "@client/components/ui/icons";
 import { Input } from "@client/components/ui/input";
@@ -5,8 +6,6 @@ import { Switch } from "@client/components/ui/switch";
 import { WithTooltip } from "@client/components/ui/tooltip";
 import { cn } from "cn";
 import { useState } from "react";
-
-import { SettingsRowIcon, settingsRowStyles } from "./settings-group";
 
 // The household's invite link, switched on while family members are joining. Switching it off
 // stops the link working, and switching it on brings the same link back; resetting makes a new

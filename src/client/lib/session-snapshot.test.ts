@@ -13,7 +13,7 @@ Object.assign(globalThis, {
 });
 
 const cached: Session = {
-  user: { id: "user-1", name: "Test", email: "test@example.com", image: null },
+  user: { id: "user-1", name: "Test", email: "test@example.com", image: null, isAdmin: false },
   household: {
     id: "household-1",
     name: "Test household",

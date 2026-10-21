@@ -54,7 +54,8 @@ export default defineConfig({
       BETTER_AUTH_URL: bindings.secret(),
       GOOGLE_CLIENT_ID: bindings.secret(),
       GOOGLE_CLIENT_SECRET: bindings.secret(),
-      AUTH_ALLOWED_EMAILS: bindings.secret(),
+      // Admins, comma-separated. They're always let into the beta, and can manage it at /admin.
+      ADMIN_EMAILS: bindings.secret(),
       // Recipe imports call models through AI Gateway, which holds the provider keys or bills
       // through Unified Billing. The URL is https://gateway.ai.cloudflare.com/v1/<account>/<gateway>.
       AI_GATEWAY_URL: bindings.secret(),

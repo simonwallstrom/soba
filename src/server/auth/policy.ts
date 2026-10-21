@@ -2,9 +2,10 @@ export function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
-export function isAllowlisted(email: string, allowlist: string) {
+/** Whether a comma-separated list of emails, like ADMIN_EMAILS, includes this one. */
+export function isListed(email: string, list: string) {
   const normalizedEmail = normalizeEmail(email);
-  return allowlist.split(",").some((allowed) => normalizeEmail(allowed) === normalizedEmail);
+  return list.split(",").some((listed) => normalizeEmail(listed) === normalizedEmail);
 }
 
 export const MAX_USER_NAME_LENGTH = 80;

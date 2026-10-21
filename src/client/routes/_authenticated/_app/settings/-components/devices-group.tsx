@@ -1,3 +1,10 @@
+import { ConfirmDialog } from "@client/components/particles/confirm-dialog";
+import {
+  SettingsGroup,
+  SettingsRowIcon,
+  settingsButtonRowStyles,
+  settingsRowStyles,
+} from "@client/components/particles/settings-group";
 import { Badge } from "@client/components/ui/badge";
 import { Button } from "@client/components/ui/button";
 import {
@@ -14,14 +21,7 @@ import { cn } from "cn";
 import type { InferResponseType } from "hono/client";
 import { useState } from "react";
 
-import { ConfirmDialog } from "./confirm-dialog";
 import { describeActivity, describeDevice } from "./describe-device";
-import {
-  SettingsGroup,
-  SettingsRowIcon,
-  settingsButtonRowStyles,
-  settingsRowStyles,
-} from "./settings-group";
 
 export const devicesOptions = queryOptions({
   queryKey: ["devices"],

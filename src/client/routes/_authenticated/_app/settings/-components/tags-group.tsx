@@ -1,3 +1,11 @@
+import { ConfirmDialog } from "@client/components/particles/confirm-dialog";
+import {
+  inlineEditActionsStyles,
+  SettingsGroup,
+  SettingsRowIcon,
+  settingsButtonRowStyles,
+  settingsRowStyles,
+} from "@client/components/particles/settings-group";
 import { Button, buttonVariants } from "@client/components/ui/button";
 import {
   Combobox,
@@ -46,15 +54,7 @@ import { cn } from "cn";
 import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
-import { ConfirmDialog } from "./confirm-dialog";
 import { useInlineEdit } from "./editable-text-row";
-import {
-  inlineEditActionsStyles,
-  SettingsGroup,
-  SettingsRowIcon,
-  settingsButtonRowStyles,
-  settingsRowStyles,
-} from "./settings-group";
 
 // Tighter than other settings rows, since a household can have dozens of tags.
 const tagRowStyles = cn(settingsRowStyles, "min-h-0 py-1.5");

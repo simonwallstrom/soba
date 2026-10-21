@@ -6,12 +6,20 @@ Everyone signs in with Google through [Better Auth](https://www.better-auth.com/
 
 Soba is invite-only. A new Google account can sign up when either:
 
-- its email is listed in `AUTH_ALLOWED_EMAILS`, or
+- its email is on the beta list (the `beta_invite` table) or in `ADMIN_EMAILS`, or
 - it signs in from an invite link with a valid token.
 
 The invite page passes its token through Google sign-in as OAuth state. A database hook (`assertCanSignUp` in `src/server/auth/auth.ts`) checks it before the user row is created. Anyone else gets a "not invited" error.
 
-Only allowlisted users can create a household. Everyone else joins one through an invite.
+Only users on the beta list or in `ADMIN_EMAILS` can create a household. Everyone else joins one through an invite. `isAllowlisted` (`src/server/admin/beta.ts`) checks both; admins are always let in, so nobody can lock themselves out.
+
+## Admin
+
+Admins, listed in the `ADMIN_EMAILS` secret, get `/admin`: everyone who has signed up, with their household, counts, "Get started" progress and last activity, and the beta list, which they add emails to and remove them from. Removing an email only stops new sign-ups and household creation; an account already made stays.
+
+- `requireAdmin` (`src/server/admin/routes.ts`) answers everyone else with the same 404 as a path that doesn't exist, logged in or not.
+- The session carries `user.isAdmin`, which shows "Admin" in the account menu and in Settings, for phones. Non-admins who open `/admin` see "Page not found".
+- Last activity is the newest session's `updatedAt`, which moves at most once a day.
 
 ## Names and photos
 

@@ -343,6 +343,15 @@ export const householdInvites = sqliteTable(
   (table) => [uniqueIndex("household_invite_token_unique").on(table.token)],
 );
 
+// Emails let into the beta, besides ADMIN_EMAILS, which are always let in. Removing one stops only
+// new sign-ups; an account already made stays. Managed on the admin page.
+export const betaInvites = sqliteTable("beta_invite", {
+  // Normalized, like users' emails.
+  email: text().primaryKey(),
+  addedBy: text("added_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: createdAt(),
+});
+
 // Recipe imports a Workflow is still working on, or that failed. The Workflow saves a finished
 // import as a recipe under the same ID; its row stays until the importer's app has announced it.
 export const recipeImports = sqliteTable(

@@ -1,3 +1,7 @@
+import {
+  inlineEditActionsStyles,
+  settingsRowStyles,
+} from "@client/components/particles/settings-group";
 import { Avatar, AvatarFallback, AvatarImage } from "@client/components/ui/avatar";
 import { Button, buttonVariants } from "@client/components/ui/button";
 import {
@@ -13,7 +17,6 @@ import { cn } from "cn";
 import { useRef } from "react";
 
 import { useInlineEdit } from "./editable-text-row";
-import { inlineEditActionsStyles, settingsRowStyles } from "./settings-group";
 
 // You, as your household sees you. Phones get one menu, as two buttons don't fit beside the name.
 // Changing the photo does nothing yet.

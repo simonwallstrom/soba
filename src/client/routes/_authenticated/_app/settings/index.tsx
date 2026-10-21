@@ -1,3 +1,11 @@
+import { ConfirmDialog } from "@client/components/particles/confirm-dialog";
+import {
+  SettingsField,
+  SettingsGroup,
+  SettingsRowIcon,
+  settingsButtonRowStyles,
+  settingsRowStyles,
+} from "@client/components/particles/settings-group";
 import { Avatar, AvatarFallback, AvatarImage } from "@client/components/ui/avatar";
 import { Badge } from "@client/components/ui/badge";
 import { buttonVariants } from "@client/components/ui/button";
@@ -7,7 +15,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@client/components/ui/dropdown-menu";
-import { Delete02Icon, Logout03Icon, MoreHorizontalIcon } from "@client/components/ui/icons";
+import {
+  Delete02Icon,
+  Logout03Icon,
+  MoreHorizontalIcon,
+  SecurityCheckIcon,
+} from "@client/components/ui/icons";
 import {
   Select,
   SelectContent,
@@ -21,30 +34,23 @@ import type { HouseholdMember } from "@client/features/household/members";
 import { api } from "@client/lib/api";
 import { formatMetaTitle } from "@client/lib/meta";
 import { queryClient } from "@client/lib/query";
+import { sendRequest } from "@client/lib/send-request";
 import { invalidateSession } from "@client/lib/session";
 import { useSignOut } from "@client/lib/use-sign-out";
 import { householdLanguages, householdUnits } from "@shared/household";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Suspense, useState } from "react";
 
 import { AssistantsGroup } from "./-components/assistants-group";
-import { ConfirmDialog } from "./-components/confirm-dialog";
 import { DevicesGroup, devicesOptions } from "./-components/devices-group";
 import { EditableTextRow } from "./-components/editable-text-row";
 import { InviteLinkRow } from "./-components/invite-link-row";
 import { ProfileRow } from "./-components/profile-row";
-import {
-  SettingsField,
-  SettingsGroup,
-  SettingsRowIcon,
-  settingsButtonRowStyles,
-  settingsRowStyles,
-} from "./-components/settings-group";
 import { TagsGroup } from "./-components/tags-group";
 import { TimeZoneField } from "./-components/time-zone-field";
-import { renameUser, sendHouseholdRequest, updateHousehold } from "./-settings-requests";
+import { renameUser, updateHousehold } from "./-settings-requests";
 
 export const Route = createFileRoute("/_authenticated/_app/settings/")({
   // Starts the members, devices, and assistants requests without blocking navigation.
@@ -62,7 +68,7 @@ async function refreshMembers() {
 }
 
 async function removeMember(member: HouseholdMember) {
-  const removed = await sendHouseholdRequest(() =>
+  const removed = await sendRequest(() =>
     api.household.members[":userId"].$delete({ param: { userId: member.id } }),
   );
   if (removed) await refreshMembers();
@@ -85,7 +91,7 @@ function Settings() {
   async function leave() {
     setLeaving(true);
     // The authenticated layout clears local data and redirects once the session changes.
-    if (await sendHouseholdRequest(() => api.household.leave.$post())) await invalidateSession();
+    if (await sendRequest(() => api.household.leave.$post())) await invalidateSession();
     else setLeaving(false);
   }
 
@@ -95,6 +101,15 @@ function Settings() {
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 p-5 sm:gap-12 sm:py-16 md:px-6 xl:py-20">
         <SettingsGroup note="How you appear to your household." title="Profile">
           <ProfileRow onRename={(name) => void renameUser(name)} user={user} />
+          {/* Also in the account menu, which phones don't have. */}
+          {user.isAdmin && (
+            <Link className={cn(settingsButtonRowStyles)} to="/admin">
+              <SettingsRowIcon>
+                <SecurityCheckIcon />
+              </SettingsRowIcon>
+              Admin
+            </Link>
+          )}
           <button
             className={cn(settingsButtonRowStyles)}
             disabled={signingOut}
@@ -264,11 +279,11 @@ function Settings() {
             <InviteLinkRow
               inviteUrl={data?.inviteUrl}
               onReset={async () => {
-                const reset = await sendHouseholdRequest(() => api.household.invite.reset.$post());
+                const reset = await sendRequest(() => api.household.invite.reset.$post());
                 if (reset) await refreshMembers();
               }}
               onSwitch={async (on) => {
-                const switched = await sendHouseholdRequest(() =>
+                const switched = await sendRequest(() =>
                   on ? api.household.invite.$put() : api.household.invite.$delete(),
                 );
                 if (switched) await refreshMembers();

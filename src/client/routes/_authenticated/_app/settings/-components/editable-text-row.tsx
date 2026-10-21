@@ -1,10 +1,9 @@
+import { SettingsField } from "@client/components/particles/settings-group";
 import { Button } from "@client/components/ui/button";
 import { Input } from "@client/components/ui/input";
 import { useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent, SubmitEvent } from "react";
 import { flushSync } from "react-dom";
-
-import { SettingsField } from "./settings-group";
 
 // Editing a name in place. Focus moves into the field when editing starts, and `onStop` puts it
 // back on the control that started it, so the keyboard stays where the row is.

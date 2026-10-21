@@ -3,9 +3,9 @@ import { Hono } from "hono";
 import { createMiddleware } from "hono/factory";
 import * as v from "valibot";
 
+import { isAllowlisted } from "../admin/beta";
 import { requireSession } from "../auth/middleware";
 import type { SessionEnv } from "../auth/middleware";
-import { isAllowlisted } from "../auth/policy";
 import { validateJson } from "../lib/validate";
 import {
   createHousehold,
@@ -67,7 +67,7 @@ export const householdRoutes = new Hono<SessionEnv>()
     ),
     async (c) => {
       const user = c.get("user");
-      if (!isAllowlisted(user.email, c.env.AUTH_ALLOWED_EMAILS)) {
+      if (!(await isAllowlisted(user.email, c.env.ADMIN_EMAILS))) {
         return c.json({ error: "Ask your family for an invite link to join their household" }, 403);
       }
       const created = await createHousehold(c.req.valid("json"), user.id);

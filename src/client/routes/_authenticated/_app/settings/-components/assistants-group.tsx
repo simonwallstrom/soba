@@ -1,3 +1,11 @@
+import { ConfirmDialog } from "@client/components/particles/confirm-dialog";
+import {
+  SettingsField,
+  SettingsGroup,
+  SettingsRowIcon,
+  settingsButtonRowStyles,
+  settingsRowStyles,
+} from "@client/components/particles/settings-group";
 import { Button } from "@client/components/ui/button";
 import { Add01Icon, ChevronRightIcon, Plug01Icon } from "@client/components/ui/icons";
 import { Input } from "@client/components/ui/input";
@@ -11,15 +19,7 @@ import { cn } from "cn";
 import { useState } from "react";
 import type { ReactNode } from "react";
 
-import { ConfirmDialog } from "./confirm-dialog";
 import { CopyButton } from "./copy-button";
-import {
-  SettingsField,
-  SettingsGroup,
-  SettingsRowIcon,
-  settingsButtonRowStyles,
-  settingsRowStyles,
-} from "./settings-group";
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" });
 

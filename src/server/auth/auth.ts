@@ -7,6 +7,7 @@ import { jwt } from "better-auth/plugins/jwt";
 import { env } from "cloudflare:workers";
 import { serialize } from "hono/utils/cookie";
 
+import { isAllowlisted } from "../admin/beta";
 import { getDatabase } from "../db/client";
 import {
   accounts,
@@ -23,7 +24,7 @@ import {
   verifications,
 } from "../db/schema";
 import { findInvite } from "../household/household";
-import { cleanUserUpdate, isAllowlisted, normalizeEmail, signUpName } from "./policy";
+import { cleanUserUpdate, normalizeEmail, signUpName } from "./policy";
 
 // The invite page passes its token through Google login as OAuth `additionalData`.
 // Clients control that value, which is fine: the token itself is the invite.
@@ -34,7 +35,7 @@ async function getInviteToken() {
 }
 
 async function assertCanSignUp(email: string) {
-  if (isAllowlisted(email, env.AUTH_ALLOWED_EMAILS)) return;
+  if (await isAllowlisted(email, env.ADMIN_EMAILS)) return;
   const inviteToken = await getInviteToken();
   if (inviteToken && (await findInvite(inviteToken))) return;
   throw new APIError("FORBIDDEN", {
