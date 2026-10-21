@@ -67,6 +67,14 @@
     @apply bg-amber-200/60 dark:bg-amber-300/20;
   }
 
+  /* Dark mode draws only backdrops, shadows, and scrims over photos in black, which must darken
+     what's beneath. The olive black is lighter than the dark page, so it would wash it out. */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-black: oklch(0% 0 0);
+    }
+  }
+
   /* Touch screens are held closer and read smaller, so text steps up a size: 16px and 14px. */
   @media (pointer: coarse) {
     :root {
