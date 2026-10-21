@@ -35,9 +35,9 @@ export const buttonVariants = cva(
         ],
         // Confirms an action that cannot be undone, like deleting.
         destructive: [
-          "bg-red-600 text-white dark:bg-red-500",
-          "hover:bg-red-700 dark:hover:bg-red-600",
-          "[:active,[data-pressed]]:bg-red-800 dark:[:active,[data-pressed]]:bg-red-700",
+          "bg-red-500/20 text-red-700 dark:text-red-400",
+          "hover:bg-red-500/24",
+          "[:active,[data-pressed]]:bg-red-500/30",
         ],
         ghost: [
           "hover:bg-black/5 dark:hover:bg-white/6",
