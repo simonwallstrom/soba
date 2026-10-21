@@ -9,6 +9,8 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
     />
+    <!-- The .ico is for Google Search, which skips SVG icons; browsers that read SVG take the second. -->
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/svg+xml" href="/favicon-kana.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-soba.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
@@ -19,11 +21,19 @@
     <!-- An opaque bar: on iOS 27, black-translucent leaves the page 62px short of the bottom. -->
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Soba" />
+    <meta
+      name="description"
+      content="Save recipes from any website or photo, plan the week’s dinners, and keep your family’s favorite recipes in one place, on every device."
+    />
     <!-- Link previews. A shared recipe's page replaces these (src/server/recipes/shared-page.ts). -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Soba" />
-    <meta property="og:title" content="Soba" />
-    <meta property="og:description" content="Recipe organizer for families" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:title" content="Soba · Recipe organizer for families" />
+    <meta
+      property="og:description"
+      content="Save recipes from any website or photo, plan the week’s dinners, and keep your family’s favorite recipes in one place, on every device."
+    />
     <meta property="og:image" content="https://soba.family/og-image.jpg" />
     <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="2400" />

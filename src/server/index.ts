@@ -30,6 +30,19 @@ const oauthClientPaths = new Set([
   "/api/auth/oauth2/introspect",
 ]);
 
+// What search engines and link previews read from the start page without running the app. Only
+// here, as index.html serves every page. The app's own <title> goes ahead of this one.
+function startPageHead(requestUrl: string) {
+  const url = new URL("/", requestUrl).toString();
+  const site = { "@context": "https://schema.org", "@type": "WebSite", name: "Soba", url };
+  return [
+    "<title>Soba · Recipe organizer for families</title>",
+    `<link rel="canonical" href="${url}" />`,
+    `<meta property="og:url" content="${url}" />`,
+    `<script type="application/ld+json">${JSON.stringify(site)}</script>`,
+  ].join("");
+}
+
 const app = new Hono<{ Bindings: Env }>()
   .use("/api/*", (c, next) =>
     oauthClientPaths.has(c.req.path)
@@ -47,7 +60,9 @@ const app = new Hono<{ Bindings: Env }>()
     const asset = await c.env.ASSETS.fetch(c.req.raw);
     const response = new Response(asset.body, asset);
     response.headers.set("Cache-Control", "no-store");
-    return response;
+    return new HTMLRewriter()
+      .on("head", { element: (head) => void head.append(startPageHead(c.req.url), { html: true }) })
+      .transform(response);
   })
   .get("/r/:token", sharedRecipePage)
   .get("/r/:token/og.jpg", sharedRecipePreview)
