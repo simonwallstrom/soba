@@ -10,7 +10,7 @@ import { requireHousehold } from "../household/middleware";
 import type { HouseholdEnv } from "../household/middleware";
 import { validateJson } from "../lib/validate";
 import { copyPhoto, deletePhotos, photoKey, uploadedPhotoId } from "../photos/photo";
-import { createRecipe, findCopy, findSharedRecipe } from "./recipes";
+import { createRecipe, findCopy, findSharedRecipe, restoreRecipe } from "./recipes";
 
 const notFound = { error: "Recipe not found" };
 
@@ -43,7 +43,8 @@ export const sharedRecipeRoutes = new Hono<HouseholdEnv>()
     const session = await getSession(c.req.raw.headers);
     const membership = session && (await getMembership(session.user.id));
     const isOwn = membership?.id === recipe.householdId;
-    const savedRecipeId = membership && !isOwn ? await findCopy(membership.id, recipe.id) : null;
+    const copy = membership && !isOwn ? await findCopy(membership.id, recipe.id) : null;
+    const savedRecipeId = copy && !copy.isDeleted ? copy.id : null;
 
     return c.json(
       {
@@ -92,8 +93,10 @@ export const sharedRecipeRoutes = new Hono<HouseholdEnv>()
       if (recipe.householdId === householdId) {
         return c.json({ error: "This recipe is already in your household" }, 409);
       }
+      // A copy in Recently deleted comes back, rather than being saved twice.
       const saved = await findCopy(householdId, recipe.id);
-      if (saved) return c.json({ recipeId: saved }, 200);
+      if (saved?.isDeleted) await restoreRecipe(householdId, saved.id);
+      if (saved) return c.json({ recipeId: saved.id }, 200);
 
       const { id } = c.req.valid("json");
       // An uploaded photo is copied, so it stays when the original goes; an image elsewhere is
@@ -126,7 +129,7 @@ export const sharedRecipeRoutes = new Hono<HouseholdEnv>()
         c.executionCtx.waitUntil(deletePhotos(c.env.PHOTOS, householdId, [copiedPhotoId]));
       // Saved meanwhile, perhaps on another device.
       const savedMeanwhile = await findCopy(householdId, recipe.id);
-      if (savedMeanwhile) return c.json({ recipeId: savedMeanwhile }, 200);
+      if (savedMeanwhile) return c.json({ recipeId: savedMeanwhile.id }, 200);
       return c.json({ error: "This recipe is already saved" }, 409);
     },
   );

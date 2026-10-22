@@ -36,6 +36,13 @@
       "when": 1792609521125,
       "tag": "0004_beta_invites",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1792695422889,
+      "tag": "0005_recipe_soft_delete",
+      "breakpoints": true
     }
   ]
 }

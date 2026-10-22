@@ -8,9 +8,11 @@ The goal is still speed, not offline use: the app keeps the household's data in 
 
 | Route                                       | What it does                                                       |
 | ------------------------------------------- | ------------------------------------------------------------------ |
-| `GET /api/recipes`                          | Recipes with tag IDs, the tags, and your favorite IDs              |
+| `GET /api/recipes`                          | Recipes with tag IDs, deleted ones, the tags, and your favorites   |
 | `POST /api/recipes`, `PUT /api/recipes/:id` | Save a recipe, with any new tags it uses. The last save wins       |
-| `DELETE /api/recipes/:id`                   | Delete a recipe, with its favorites and planned meals              |
+| `DELETE /api/recipes/:id`                   | Move a recipe to Recently deleted                                  |
+| `POST /api/recipes/:id/restore`             | Bring it back, with its tags, favorites, and planned meals         |
+| `DELETE /api/recipes/:id/permanently`       | Delete it for good, with its photo, favorites, and planned meals   |
 | `PUT`/`DELETE /api/recipes/:id/favorite`    | Favorite or unfavorite it, for the signed-in member                |
 | `PUT`/`DELETE /api/recipes/:id/share`       | Share it, or make it private again, keeping its link               |
 | `POST /api/recipes/:id/share/reset`         | Give it a new link, so the old one stops working                   |
@@ -26,6 +28,14 @@ Routes are in `src/server/recipes/`, `src/server/tags/`, and `src/server/meal-pl
 - **Scoped to the household:** `requireSession` and `requireHousehold` run on every request, and every query filters by the member's household. A recipe ID from another household is a 404.
 - **IDs come from the client:** the app makes recipe and tag IDs, so a new recipe's page can open before the server answers.
 - **One round trip:** `GET /api/recipes` and writes that touch several tables use `db.batch`, which D1 runs as one transaction. D1 allows 100 bound values per statement, which is why tag and day counts are capped.
+
+## Recently deleted
+
+Deleting a recipe sets `recipe.deleted_at` rather than removing the row, and the toast that confirms it can undo it. A deleted recipe is hidden everywhere: the recipe list, its page, search, the meal plan, MCP tools, shared links, and admin counts. Its tags, favorites, planned meals, and photo stay, so restoring brings it all back. `GET /api/recipes` lists deleted recipes apart, as `deletedRecipes`, for the Recently deleted page (`/recipes/deleted`, linked from the list's display menu). A daily cron trigger (`purgeDeletedRecipes`) deletes for good the recipes deleted 30 days ago or more, with their photos. Keep these properties when changing recipe queries:
+
+- **Filter deleted recipes** (`isNull(recipes.deletedAt)`) in every read that isn't for Recently deleted, and in writes that need a live recipe, like favoriting, planning, and sharing.
+- **A planned meal of a deleted recipe** is kept but hidden. Moving a meal onto its day treats the day as open and replaces it, and planning that day replaces it too.
+- **Saving a shared recipe again** restores the household's deleted copy, rather than making a second one.
 
 ## Shared recipes
 
@@ -53,7 +63,7 @@ Routes are in `src/server/recipes/shared-routes.ts`, `shared-page.ts`, and `shar
 - **Reads** use `useData()`, which suspends until the first fetch. The app layout starts both fetches as it mounts, and pages filter, sort, and search in memory.
 - **Between visits**, the server's last copy of each is kept in `localStorage` (`soba-recipes`, `soba-meal-plan`), so the app opens with it and fetches behind it. A copy only shows to the member and household it was saved for, and one that no longer matches its schema is dropped. Unsaved changes are never stored. The household's members are kept the same way (`soba-members`), so author names show at once.
 - **Loading and errors:** only a first visit waits, with "Loading…" in the page area. If that first fetch fails, the app layout's error screen offers to try again. With a stored copy, a failed fetch changes nothing.
-- **Photos** live in R2 under the household's prefix. The server removes a recipe's uploaded photo when the recipe is deleted or its photo is replaced or removed. A photo uploaded for a recipe that is never saved is left behind.
+- **Photos** live in R2 under the household's prefix. The server removes a recipe's uploaded photo when the recipe is deleted for good or its photo is replaced or removed. A photo uploaded for a recipe that is never saved is left behind.
 - **Changes** go through `save(update, send)`. `update` is applied on top of the cached server copy right away, and `send` goes to the server. Sends run one at a time, in order, so a quick undo never overtakes the change it takes back.
 - **After saving,** the data is fetched again, and a change stops being applied once a fetch that began after it was saved comes back. A fetch can bring a change back while it still shows, so write `update` to give the same result then: set values rather than toggling or appending.
 - **A failed save** removes the change and shows a toast. The cached copy was never edited, so nothing needs rolling back.

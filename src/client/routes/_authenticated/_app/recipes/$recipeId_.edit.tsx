@@ -37,11 +37,12 @@ function RecipeTitle(): string {
 }
 
 function EditRecipePage() {
+  const { recipeId } = Route.useParams();
   const recipe = useRecipe();
   const tags = useTags();
 
   // A wrong link, or a recipe deleted while open, perhaps on another device.
-  if (!recipe) return <RecipeNotFound />;
+  if (!recipe) return <RecipeNotFound recipeId={recipeId} />;
 
   return <EditRecipe recipe={recipe} tags={tags} />;
 }

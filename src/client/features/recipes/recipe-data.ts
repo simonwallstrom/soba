@@ -1,11 +1,24 @@
+import { toast } from "@client/components/ui/toast";
 import { createHouseholdData } from "@client/features/household/data";
 import { api } from "@client/lib/api";
 import { normalizeTagName, recipePhotoUrl } from "@shared/recipes";
 import type { Recipe, RecipeSection, Tag } from "@shared/recipes";
 import * as v from "valibot";
 
+// A recipe in Recently deleted: hidden everywhere else until it's restored, or deleted for good
+// after `deletedRecipeDays`. `deletedBy` is a user ID.
+export type DeletedRecipe = Recipe & { deletedAt: Date; deletedBy: string };
+
+export const deletedRecipeDays = 30;
+
 // The household's recipes and tags, and the signed-in member's favorite recipe IDs, newest first.
-export type RecipeCollection = { recipes: Recipe[]; tags: Tag[]; favoriteIds: string[] };
+// Favorites keep deleted recipes, so a restore brings them back.
+export type RecipeCollection = {
+  recipes: Recipe[];
+  deletedRecipes: DeletedRecipe[];
+  tags: Tag[];
+  favoriteIds: string[];
+};
 
 const storedDate = v.pipe(
   v.string(),
@@ -16,27 +29,32 @@ const storedSections = v.array(
   v.object({ heading: v.optional(v.string()), items: v.array(v.string()) }),
 );
 
+const storedRecipe = v.object({
+  id: v.string(),
+  title: v.string(),
+  description: v.nullable(v.string()),
+  servings: v.nullable(v.number()),
+  imageUrl: v.nullable(v.string()),
+  sourceUrl: v.nullable(v.string()),
+  ingredients: storedSections,
+  instructions: storedSections,
+  tagIds: v.array(v.string()),
+  // Copies stored before sharing existed.
+  shareToken: v.optional(v.nullable(v.string()), null),
+  isShared: v.optional(v.boolean(), false),
+  createdBy: v.string(),
+  updatedBy: v.string(),
+  createdAt: storedDate,
+  updatedAt: storedDate,
+});
+
 // The copy kept in this browser between visits, as JSON.
 export const storedCollection = v.object({
-  recipes: v.array(
-    v.object({
-      id: v.string(),
-      title: v.string(),
-      description: v.nullable(v.string()),
-      servings: v.nullable(v.number()),
-      imageUrl: v.nullable(v.string()),
-      sourceUrl: v.nullable(v.string()),
-      ingredients: storedSections,
-      instructions: storedSections,
-      tagIds: v.array(v.string()),
-      // Copies stored before sharing existed.
-      shareToken: v.optional(v.nullable(v.string()), null),
-      isShared: v.optional(v.boolean(), false),
-      createdBy: v.string(),
-      updatedBy: v.string(),
-      createdAt: storedDate,
-      updatedAt: storedDate,
-    }),
+  recipes: v.array(storedRecipe),
+  // Copies stored before Recently deleted existed.
+  deletedRecipes: v.optional(
+    v.array(v.object({ ...storedRecipe.entries, deletedAt: storedDate, deletedBy: v.string() })),
+    [],
   ),
   tags: v.array(v.object({ id: v.string(), name: v.string(), createdAt: storedDate })),
   favoriteIds: v.array(v.string()),
@@ -49,15 +67,23 @@ export const recipeData = createHouseholdData<RecipeCollection>({
   fetchData: fetchRecipes,
 });
 
+function withDates<T extends { createdAt: string; updatedAt: string }>(recipe: T) {
+  return {
+    ...recipe,
+    createdAt: new Date(recipe.createdAt),
+    updatedAt: new Date(recipe.updatedAt),
+  };
+}
+
 async function fetchRecipes(signal: AbortSignal): Promise<RecipeCollection> {
   const response = await api.recipes.$get({}, { init: { signal, cache: "no-store" } });
   if (!response.ok) throw new Error(`API returned ${response.status}`);
-  const { recipes, tags, favoriteIds } = await response.json();
+  const { recipes, deletedRecipes, tags, favoriteIds } = await response.json();
   return {
-    recipes: recipes.map((recipe) => ({
-      ...recipe,
-      createdAt: new Date(recipe.createdAt),
-      updatedAt: new Date(recipe.updatedAt),
+    recipes: recipes.map(withDates),
+    deletedRecipes: deletedRecipes.map((recipe) => ({
+      ...withDates(recipe),
+      deletedAt: new Date(recipe.deletedAt),
     })),
     tags: tags.map((tag) => ({ ...tag, createdAt: new Date(tag.createdAt) })),
     favoriteIds,
@@ -66,6 +92,13 @@ async function fetchRecipes(signal: AbortSignal): Promise<RecipeCollection> {
 
 export function useRecipes() {
   return recipeData.useData().recipes;
+}
+
+// Most recently deleted first.
+export function useDeletedRecipes() {
+  return recipeData
+    .useData()
+    .deletedRecipes.toSorted((left, right) => right.deletedAt.getTime() - left.deletedAt.getTime());
 }
 
 export function useTags() {
@@ -264,15 +297,67 @@ export async function saveSharedRecipe(
   return saved ? savedId : null;
 }
 
-// Takes the recipe's favorites and planned meals with it.
-export function deleteRecipe(id: string) {
+// Moves the recipe to Recently deleted, hiding its planned meals, with a toast to take it back.
+// Asking first would be slower, and still not undo a mistake.
+export function deleteRecipe(recipe: Pick<Recipe, "id" | "title">, userId: string) {
+  const { id } = recipe;
+  const deletedAt = new Date();
+  void recipeData.save(
+    (data) => {
+      const live = data.recipes.find((other) => other.id === id);
+      if (!live) return data;
+      return {
+        ...data,
+        recipes: data.recipes.filter((other) => other.id !== id),
+        deletedRecipes: [
+          ...data.deletedRecipes.filter((other) => other.id !== id),
+          { ...live, deletedAt, deletedBy: userId },
+        ],
+      };
+    },
+    () => api.recipes[":id"].$delete({ param: { id } }),
+  );
+  toast.add({
+    title: `Deleted ${recipe.title}`,
+    description: `It’s in Recently deleted for ${deletedRecipeDays} days.`,
+    actionProps: {
+      children: "Undo",
+      // Says so, as the recipe may come back somewhere out of view, like further down the list.
+      onClick: () => {
+        void restoreRecipe(id);
+        toast.add({ title: `Restored ${recipe.title}` });
+      },
+    },
+  });
+}
+
+// Brings the recipe back from Recently deleted, with its tags, favorites, and planned meals.
+export function restoreRecipe(id: string) {
+  return recipeData.save(
+    (data) => {
+      const deleted = data.deletedRecipes.find((other) => other.id === id);
+      if (!deleted) return data;
+      const { deletedAt: _, deletedBy: __, ...recipe } = deleted;
+      return {
+        ...data,
+        recipes: [...data.recipes.filter((other) => other.id !== id), recipe],
+        deletedRecipes: data.deletedRecipes.filter((other) => other.id !== id),
+      };
+    },
+    () => api.recipes[":id"].restore.$post({ param: { id } }),
+  );
+}
+
+// Deletes the recipe for good, with its photo, favorites, and planned meals.
+export function deleteRecipePermanently(id: string) {
   return recipeData.save(
     (data) => ({
       ...data,
       recipes: data.recipes.filter((recipe) => recipe.id !== id),
+      deletedRecipes: data.deletedRecipes.filter((recipe) => recipe.id !== id),
       favoriteIds: data.favoriteIds.filter((recipeId) => recipeId !== id),
     }),
-    () => api.recipes[":id"].$delete({ param: { id } }),
+    () => api.recipes[":id"].permanently.$delete({ param: { id } }),
   );
 }
 

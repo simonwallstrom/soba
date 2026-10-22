@@ -1,5 +1,6 @@
 import { toast } from "@client/components/ui/toast";
 import { createHouseholdData } from "@client/features/household/data";
+import { useRecipes } from "@client/features/recipes/recipe-data";
 import { api } from "@client/lib/api";
 import { withMealMoved, withMealsPlanned, withMealsUnplanned } from "@shared/meal-plan";
 import type { PlannedMealRow } from "@shared/meal-plan";
@@ -31,8 +32,11 @@ export const mealPlanData = createHouseholdData<PlannedMealRow[]>({
   },
 });
 
+// A meal whose recipe is in Recently deleted stays planned, to come back with it, but is hidden,
+// leaving its day open.
 export function usePlannedMeals() {
-  return mealPlanData.useData();
+  const recipeIds = new Set(useRecipes().map((recipe) => recipe.id));
+  return mealPlanData.useData().filter((meal) => recipeIds.has(meal.recipeId));
 }
 
 type MealToPlan = { date: string; recipeId: string };

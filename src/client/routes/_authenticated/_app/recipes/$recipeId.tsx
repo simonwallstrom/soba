@@ -40,6 +40,7 @@ function RecipeTitle(): string {
 }
 
 function RecipeDetail() {
+  const { recipeId } = Route.useParams();
   const { household, user } = Route.useRouteContext();
   const navigate = useNavigate();
   const recipe = useRecipe();
@@ -50,7 +51,7 @@ function RecipeDetail() {
   const [isSharing, setIsSharing] = useState(false);
 
   // A wrong link, or a recipe deleted while open, perhaps on another device.
-  if (!recipe) return <RecipeNotFound />;
+  if (!recipe) return <RecipeNotFound recipeId={recipeId} />;
 
   const recipeTags = tags
     .filter((tag) => recipe.tagIds.includes(tag.id))
@@ -59,9 +60,9 @@ function RecipeDetail() {
   const isFavorite = favoriteIds.has(recipe.id);
 
   // Leaves first, so the page does not flash as not found. Replaces it, so back skips it.
-  async function deleteRecipe(id: string) {
+  async function deleteRecipe(deleted: Recipe) {
     await navigate({ to: "/recipes", replace: true });
-    void saveRecipeDeleted(id);
+    saveRecipeDeleted(deleted, user.id);
   }
 
   return (
@@ -76,7 +77,7 @@ function RecipeDetail() {
           className="-mr-2"
           isFavorite={isFavorite}
           onAddToMealPlan={() => setIsPlanning(true)}
-          onDelete={() => void deleteRecipe(recipe.id)}
+          onDelete={() => void deleteRecipe(recipe)}
           onShare={() => setIsSharing(true)}
           onToggleFavorite={() => toggleFavorite(recipe.id)}
           recipeId={recipe.id}

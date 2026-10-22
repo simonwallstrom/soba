@@ -46,8 +46,12 @@ function ToastList() {
           <ToastPrimitive.Title className="truncate font-medium" />
           <ToastPrimitive.Description className="text-sm text-olive-500 dark:text-olive-400" />
         </div>
+        {/* Acting on a toast is done with it, like Undo; the action's own handler runs too. */}
         {item.actionProps && (
-          <ToastPrimitive.Action className={cn(buttonVariants({ size: "sm" }), "shrink-0")} />
+          <ToastPrimitive.Action
+            className={cn(buttonVariants({ size: "sm" }), "shrink-0")}
+            onClick={() => toast.close(item.id)}
+          />
         )}
         <ToastPrimitive.Close
           aria-label="Dismiss"

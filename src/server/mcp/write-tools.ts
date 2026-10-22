@@ -7,6 +7,7 @@ import { downloadPhoto } from "../photos/download";
 import { deleteRecipePhoto } from "../photos/photo";
 import {
   createRecipe,
+  deletedRecipeDays,
   deleteRecipe,
   findRecipeBySource,
   listRecipes,
@@ -211,14 +212,14 @@ export async function deleteMcpRecipe(context: WriteContext, id: string): Promis
     listMeals(household.id),
   ]);
   const recipe = recipes.find((candidate) => candidate.id === id);
-  const deleted = recipe && (await deleteRecipe(household.id, id));
+  const deleted = recipe && (await deleteRecipe(household.id, userId, id));
   if (!deleted) return fail("No recipe with that ID in this household.");
-  await deleteRecipePhoto(context.photos, household.id, deleted.unusedImageUrl);
   const days = planned.filter((meal) => meal.recipeId === id).map((meal) => meal.date);
   return {
     ok: true,
     value: {
       deleted: recipe.title,
+      restorable: `For ${deletedRecipeDays} days, from Recently deleted in Soba's recipe list.`,
       removedFromMealPlan: days.filter((date) => date >= context.today).toSorted(),
       pastDinnersRemoved: days.filter((date) => date < context.today).length,
     },

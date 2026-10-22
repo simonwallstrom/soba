@@ -385,7 +385,8 @@ export const recipeImports = sqliteTable(
   (table) => [index("recipe_import_user_id_idx").on(table.userId)],
 );
 
-// A household's recipes. Deleting one takes its tags, favorites, and planned meals too.
+// A household's recipes. Deleting one takes its tags, favorites, and planned meals too, but the app
+// only marks it deleted at first, so it can be restored; see purgeDeletedRecipes.
 export const recipes = sqliteTable(
   "recipe",
   {
@@ -415,9 +416,14 @@ export const recipes = sqliteTable(
     updatedBy: text("updated_by").notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
+    // Set while the recipe is in Recently deleted: hidden everywhere, with its tags, favorites,
+    // and planned meals kept for a restore.
+    deletedAt: timestamp("deleted_at"),
+    deletedBy: text("deleted_by"),
   },
   (table) => [
     index("recipe_household_id_idx").on(table.householdId),
+    index("recipe_deleted_at_idx").on(table.deletedAt),
     uniqueIndex("recipe_share_token_unique").on(table.shareToken),
     // A household saves a shared recipe once.
     uniqueIndex("recipe_household_copied_from_unique").on(table.householdId, table.copiedFrom),

@@ -10,8 +10,10 @@ import { deleteRecipePhoto } from "../photos/photo";
 import {
   createRecipe,
   deleteRecipe,
+  deleteRecipePermanently,
   getRecipe,
   listRecipes,
+  restoreRecipe,
   setFavorite,
   setSharing,
   updateRecipe,
@@ -106,8 +108,19 @@ export const recipeRoutes = new Hono<HouseholdEnv>()
       return c.json({ ok: true }, 200);
     },
   )
+  // Moves it to Recently deleted, from where it can be restored, or deleted for good.
   .delete("/:id", async (c) => {
-    const deleted = await deleteRecipe(c.get("membership").id, c.req.param("id"));
+    const deleted = await deleteRecipe(c.get("membership").id, c.get("user").id, c.req.param("id"));
+    if (!deleted) return c.json(notFound, 404);
+    return c.json({ ok: true }, 200);
+  })
+  .post("/:id/restore", async (c) => {
+    const restored = await restoreRecipe(c.get("membership").id, c.req.param("id"));
+    if (!restored) return c.json(notFound, 404);
+    return c.json({ ok: true }, 200);
+  })
+  .delete("/:id/permanently", async (c) => {
+    const deleted = await deleteRecipePermanently(c.get("membership").id, c.req.param("id"));
     if (!deleted) return c.json(notFound, 404);
     c.executionCtx.waitUntil(
       deleteRecipePhoto(c.env.PHOTOS, c.get("membership").id, deleted.unusedImageUrl),

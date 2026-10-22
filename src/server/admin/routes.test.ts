@@ -59,10 +59,12 @@ test("lists every user with their household and progress", async () => {
   const { users } = (await (await send("alice", "GET", "/users")).json()) as {
     users: {
       id: string;
+      recipes: number;
       household: { role: string; members: number; recipes: number; checklist: object } | null;
     }[];
   };
   const bob = users.find(({ id }) => id === "bob");
+  expect(bob?.recipes).toBe(1);
   expect(bob?.household).toMatchObject({
     role: "member",
     members: 2,
@@ -72,6 +74,7 @@ test("lists every user with their household and progress", async () => {
   const alice = users.find(({ id }) => id === "alice");
   // Created the household, and Bob joined.
   expect(alice?.household?.checklist).toEqual({ done: 2, total: 5 });
+  expect(alice?.recipes).toBe(0);
 });
 
 test("admins are let in without being on the list", async () => {

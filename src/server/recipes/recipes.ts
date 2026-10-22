@@ -1,6 +1,6 @@
 import { normalizeTagName } from "@shared/recipes";
 import type { RecipeSection } from "@shared/recipes";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, lt, sql } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 
 import { getDatabase } from "../db/client";
@@ -37,13 +37,23 @@ const recipeColumns = {
   updatedAt: recipes.updatedAt,
 };
 
+// Recipes in Recently deleted are hidden everywhere else.
+const isLive = isNull(recipes.deletedAt);
+
+// How long a deleted recipe can be restored before purgeDeletedRecipes removes it for good.
+export const deletedRecipeDays = 30;
+
 // Everything the app shows about a household's recipes, in one round trip: the recipes with
-// their tags, the household's tags, and the member's favorites, newest first.
+// their tags, the household's tags, and the member's favorites, newest first. Deleted recipes
+// come apart from the others, for Recently deleted, and keep their tags and favorites.
 export async function listRecipes(householdId: string, userId: string) {
   const db = getDatabase();
   const inHousehold = eq(recipes.householdId, householdId);
   const [recipeRows, tagRows, links, favoriteRows] = await db.batch([
-    db.select(recipeColumns).from(recipes).where(inHousehold),
+    db
+      .select({ ...recipeColumns, deletedAt: recipes.deletedAt, deletedBy: recipes.deletedBy })
+      .from(recipes)
+      .where(inHousehold),
     db
       .select({ id: tags.id, name: tags.name, createdAt: tags.createdAt })
       .from(tags)
@@ -67,11 +77,16 @@ export async function listRecipes(householdId: string, userId: string) {
     if (tagIds) tagIds.push(tagId);
     else tagIdsByRecipe.set(recipeId, [tagId]);
   }
+  const live = [];
+  const deleted = [];
+  for (const { deletedAt, deletedBy, ...row } of recipeRows) {
+    const recipe = { ...row, tagIds: tagIdsByRecipe.get(row.id) ?? [] };
+    if (deletedAt) deleted.push({ ...recipe, deletedAt, deletedBy: deletedBy ?? row.updatedBy });
+    else live.push(recipe);
+  }
   return {
-    recipes: recipeRows.map((recipe) => ({
-      ...recipe,
-      tagIds: tagIdsByRecipe.get(recipe.id) ?? [],
-    })),
+    recipes: live,
+    deletedRecipes: deleted,
     tags: tagRows,
     favoriteIds: favoriteRows.map(({ recipeId }) => recipeId),
   };
@@ -81,7 +96,7 @@ export async function getRecipe(householdId: string, id: string) {
   const [recipe] = await getDatabase()
     .select(recipeColumns)
     .from(recipes)
-    .where(and(eq(recipes.id, id), eq(recipes.householdId, householdId)))
+    .where(and(eq(recipes.id, id), eq(recipes.householdId, householdId), isLive))
     .limit(1);
   return recipe ?? null;
 }
@@ -91,7 +106,7 @@ export async function findRecipeBySource(householdId: string, sourceUrl: string)
   const [recipe] = await getDatabase()
     .select({ id: recipes.id, title: recipes.title })
     .from(recipes)
-    .where(and(eq(recipes.householdId, householdId), eq(recipes.sourceUrl, sourceUrl)))
+    .where(and(eq(recipes.householdId, householdId), eq(recipes.sourceUrl, sourceUrl), isLive))
     .limit(1);
   return recipe ?? null;
 }
@@ -205,13 +220,51 @@ export async function updateRecipe(
   return { unusedImageUrl: replaced ? current.imageUrl : null };
 }
 
-/** Returns false for a recipe that isn't the household's, and otherwise its image URL. */
-export async function deleteRecipe(householdId: string, id: string) {
+/**
+ * Moves the recipe to Recently deleted, keeping when it was first deleted if it already is.
+ * Returns false for a recipe that isn't the household's.
+ */
+export async function deleteRecipe(householdId: string, userId: string, id: string) {
+  const [deleted] = await getDatabase()
+    .update(recipes)
+    .set({
+      deletedAt: sql`coalesce(${recipes.deletedAt}, ${Date.now()})`,
+      deletedBy: sql`coalesce(${recipes.deletedBy}, ${userId})`,
+    })
+    .where(and(eq(recipes.id, id), eq(recipes.householdId, householdId)))
+    .returning({ id: recipes.id });
+  return deleted !== undefined;
+}
+
+/** Brings a recipe back from Recently deleted. Returns false for one that isn't the household's. */
+export async function restoreRecipe(householdId: string, id: string) {
+  const [restored] = await getDatabase()
+    .update(recipes)
+    .set({ deletedAt: null, deletedBy: null })
+    .where(and(eq(recipes.id, id), eq(recipes.householdId, householdId)))
+    .returning({ id: recipes.id });
+  return restored !== undefined;
+}
+
+/**
+ * Deletes a recipe for good, with its tags, favorites, and planned meals. Returns false for one
+ * that isn't the household's, and otherwise its image URL.
+ */
+export async function deleteRecipePermanently(householdId: string, id: string) {
   const [deleted] = await getDatabase()
     .delete(recipes)
     .where(and(eq(recipes.id, id), eq(recipes.householdId, householdId)))
     .returning({ imageUrl: recipes.imageUrl });
   return deleted ? { unusedImageUrl: deleted.imageUrl } : false;
+}
+
+/** Deletes for good the recipes deleted `deletedRecipeDays` ago or more, and returns their photos. */
+export async function purgeDeletedRecipes(now = Date.now()) {
+  const cutoff = new Date(now - deletedRecipeDays * 86_400_000);
+  return getDatabase()
+    .delete(recipes)
+    .where(and(isNotNull(recipes.deletedAt), lt(recipes.deletedAt, cutoff)))
+    .returning({ householdId: recipes.householdId, imageUrl: recipes.imageUrl });
 }
 
 // Two devices may favorite the same recipe; the first stays.
@@ -248,7 +301,7 @@ export async function setSharing(
     const [updated] = await getDatabase()
       .update(recipes)
       .set({ isShared: sharing.isShared, ...(shareToken && { shareToken }) })
-      .where(and(eq(recipes.id, id), eq(recipes.householdId, householdId)))
+      .where(and(eq(recipes.id, id), eq(recipes.householdId, householdId), isLive))
       .returning({ id: recipes.id });
     return updated !== undefined;
   } catch (error) {
@@ -268,17 +321,17 @@ export async function findSharedRecipe(shareToken: string) {
     })
     .from(recipes)
     .innerJoin(households, eq(recipes.householdId, households.id))
-    .where(and(eq(recipes.shareToken, shareToken), eq(recipes.isShared, true)))
+    .where(and(eq(recipes.shareToken, shareToken), eq(recipes.isShared, true), isLive))
     .limit(1);
   return recipe ?? null;
 }
 
-// The household's copy of a shared recipe, if it saved one.
+// The household's copy of a shared recipe, if it saved one, which may be in Recently deleted.
 export async function findCopy(householdId: string, copiedFrom: string) {
   const [recipe] = await getDatabase()
-    .select({ id: recipes.id })
+    .select({ id: recipes.id, deletedAt: recipes.deletedAt })
     .from(recipes)
     .where(and(eq(recipes.householdId, householdId), eq(recipes.copiedFrom, copiedFrom)))
     .limit(1);
-  return recipe?.id ?? null;
+  return recipe ? { id: recipe.id, isDeleted: recipe.deletedAt !== null } : null;
 }

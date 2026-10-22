@@ -14,6 +14,7 @@ import {
 import {
   Add01Icon,
   Calendar03Icon,
+  Delete02Icon,
   FileEditIcon,
   ImageUploadIcon,
   LinkSquare02Icon,
@@ -107,8 +108,10 @@ export function RecipesHeaderActions({
   );
 }
 
-// How the list looks: its view, its order, and the details each recipe shows.
+// How the list looks: its view, its order, and the details each recipe shows. Recently deleted
+// sits last, as a place to go rather than a filter, since filters only narrow the list.
 export function RecipesDisplayMenu({
+  deletedCount,
   onSortChange,
   onViewChange,
   onVisibleDetailsChange,
@@ -116,6 +119,7 @@ export function RecipesDisplayMenu({
   view,
   visibleDetails,
 }: {
+  deletedCount: number;
   onSortChange: (sort: RecipeSort) => void;
   onViewChange: (view: RecipeView) => void;
   onVisibleDetailsChange: (details: RecipeDetail[]) => void;
@@ -174,6 +178,14 @@ export function RecipesDisplayMenu({
             </DropdownMenuCheckboxItem>
           ))}
         </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem render={<Link to="/recipes/deleted" />}>
+          <Delete02Icon />
+          Recently deleted
+          {deletedCount > 0 && (
+            <span className="ml-auto text-olive-500 tabular-nums">{deletedCount}</span>
+          )}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

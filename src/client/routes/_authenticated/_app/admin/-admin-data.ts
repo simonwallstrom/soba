@@ -77,6 +77,38 @@ export function formatDay(iso: string, now = new Date()) {
   return dateFormat.format(then);
 }
 
+// Most recently active first; those never seen after signing up go last.
+function byActivity(a: { lastActiveAt: string | null }, b: { lastActiveAt: string | null }) {
+  return (b.lastActiveAt ?? "").localeCompare(a.lastActiveAt ?? "");
+}
+
+export function sortUsers(users: readonly AdminUser[]) {
+  return users.toSorted(byActivity);
+}
+
+export type AdminHousehold = Omit<NonNullable<AdminUser["household"]>, "role" | "checklist"> & {
+  ownerName: string | null;
+  // When its most recently active member was last seen.
+  lastActiveAt: string | null;
+};
+
+/** Each household once, from its members' rows, most recently active first. */
+export function listHouseholds(users: readonly AdminUser[]): AdminHousehold[] {
+  const households = new Map<string, AdminHousehold>();
+  for (const user of users.toSorted(byActivity)) {
+    if (!user.household) continue;
+    const { role, checklist: _, ...household } = user.household;
+    const entry = households.get(household.id) ?? {
+      ...household,
+      ownerName: null,
+      lastActiveAt: user.lastActiveAt,
+    };
+    if (role === "owner") entry.ownerName = user.name;
+    households.set(household.id, entry);
+  }
+  return [...households.values()];
+}
+
 /** Whether a user was active in the last week. */
 export function isActiveThisWeek(user: AdminUser, now = Date.now()) {
   return user.lastActiveAt !== null && now - Date.parse(user.lastActiveAt) < 7 * 86_400_000;

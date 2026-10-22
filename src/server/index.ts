@@ -13,8 +13,10 @@ import { householdRoutes, inviteRoutes } from "./household/routes";
 import { connectionRoutes } from "./mcp/connection-routes";
 import { mcpRoutes } from "./mcp/routes";
 import { mealPlanRoutes } from "./meal-plan/routes";
+import { deleteRecipePhoto } from "./photos/photo";
 import { photoRoutes } from "./photos/routes";
 import { recipeImportRoutes } from "./recipe-import/routes";
+import { purgeDeletedRecipes } from "./recipes/recipes";
 import { recipeRoutes } from "./recipes/routes";
 import { sharedRecipePage } from "./recipes/shared-page";
 import { sharedRecipePreview } from "./recipes/shared-preview";
@@ -110,4 +112,18 @@ const app = new Hono<{ Bindings: Env }>()
   .route("/mcp", mcpRoutes);
 
 export type AppType = typeof app;
-export default { fetch: app.fetch } satisfies ExportedHandler<Env>;
+export default {
+  fetch: app.fetch,
+  // Daily; see the trigger in cloudflare.config.ts.
+  scheduled(_controller, env, ctx) {
+    ctx.waitUntil(
+      purgeDeletedRecipes().then((purged) =>
+        Promise.all(
+          purged.map(({ householdId, imageUrl }) =>
+            deleteRecipePhoto(env.PHOTOS, householdId, imageUrl),
+          ),
+        ),
+      ),
+    );
+  },
+} satisfies ExportedHandler<Env>;
