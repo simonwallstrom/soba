@@ -1,7 +1,5 @@
 import { AppAsideSlot } from "@client/components/particles/app-aside";
 import { AppHeaderActionsSlot } from "@client/components/particles/app-header-actions";
-import { Button } from "@client/components/ui/button";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@client/components/ui/empty";
 import { mealPlanData } from "@client/features/meal-plan/meal-plan-data";
 import { recipeData } from "@client/features/recipes/recipe-data";
 import { RecipeImportWatcher } from "@client/features/recipes/recipe-import-watcher";
@@ -10,13 +8,21 @@ import {
   useRequestRecipeSearch,
 } from "@client/features/recipes/search-request";
 import { formatMetaTitle } from "@client/lib/meta";
-import { usePrefetchQuery, useQueryErrorResetBoundary } from "@tanstack/react-query";
-import { createFileRoute, Outlet, redirect, useRouter } from "@tanstack/react-router";
+import { usePrefetchQuery } from "@tanstack/react-query";
+import {
+  CatchBoundary,
+  createFileRoute,
+  Outlet,
+  redirect,
+  useLocation,
+  useRouter,
+} from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { Suspense, useEffect, useState } from "react";
 
 import { AppHeader } from "./-components/app-header";
 import { MobileNav } from "./-components/mobile-nav";
+import { PageError } from "./-components/page-error";
 import { Sidebar } from "./-components/sidebar";
 
 export const Route = createFileRoute("/_authenticated/_app")({
@@ -38,6 +44,7 @@ const appPageIds = [
 function AppLayout() {
   const { user, household } = Route.useRouteContext();
   const router = useRouter();
+  const pathname = useLocation({ select: (location) => location.pathname });
   const [actionsSlot, setActionsSlot] = useState<HTMLDivElement | null>(null);
   const [asideSlot, setAsideSlot] = useState<HTMLDivElement | null>(null);
   // Fetch the household's data together, before the first page asks for either.
@@ -73,7 +80,11 @@ function AppLayout() {
                 <RecipeImportWatcher />
                 <AppHeaderActionsSlot value={actionsSlot}>
                   <AppAsideSlot value={asideSlot}>
-                    <Outlet />
+                    {/* Pages have no error boundaries of their own, so theirs land here, inside
+                        the layout. Going to another page clears it. */}
+                    <CatchBoundary errorComponent={PageError} getResetKey={() => pathname}>
+                      <Outlet />
+                    </CatchBoundary>
                   </AppAsideSlot>
                 </AppHeaderActionsSlot>
               </Suspense>
@@ -116,29 +127,11 @@ function SearchShortcuts() {
   return null;
 }
 
-// Mostly a first visit that couldn't fetch the household's data: with a stored copy to show, a
-// failed fetch changes nothing. Trying again fetches whatever failed.
-function AppError({ error, reset }: ErrorComponentProps) {
-  const { reset: resetQueries } = useQueryErrorResetBoundary();
-  // Keeps the cause visible in the console behind the generic message.
-  useEffect(() => console.error(error), [error]);
+// Only for an error in the layout itself, like the sidebar; a page's error keeps the layout around it.
+function AppError(props: ErrorComponentProps) {
   return (
-    <main className="flex h-dvh items-center justify-center p-6">
-      <title>{formatMetaTitle("Couldn’t load page")}</title>
-      <Empty>
-        <EmptyHeader>
-          <EmptyTitle>Couldn’t load this page</EmptyTitle>
-          <EmptyDescription>Check your connection and try again.</EmptyDescription>
-        </EmptyHeader>
-        <Button
-          onClick={() => {
-            resetQueries();
-            reset();
-          }}
-        >
-          Try again
-        </Button>
-      </Empty>
+    <main className="flex h-dvh">
+      <PageError {...props} />
     </main>
   );
 }
