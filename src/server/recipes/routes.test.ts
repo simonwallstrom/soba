@@ -21,6 +21,7 @@ await mock.module(new URL("../db/client.ts", import.meta.url).pathname, () => ({
 const { recipeRoutes } = await import("./routes");
 const { mealPlanRoutes } = await import("../meal-plan/routes");
 const { claimImport, saveImportedRecipe } = await import("../recipe-import/imports");
+const { purgeDeletedRecipes } = await import("./recipes");
 
 type Routes = {
   request: (
@@ -75,6 +76,7 @@ type Collection = {
     tagIds: string[];
     updatedBy: string;
   }[];
+  deletedRecipes: { id: string; deletedBy: string }[];
   tags: { id: string; name: string }[];
   favoriteIds: string[];
 };
@@ -256,13 +258,47 @@ describe("meal plan routes", () => {
     expect(await plan("alice")).toHaveLength(2);
   });
 
-  test("unplanning clears the days, and deleting a recipe takes its meals and favorites", async () => {
+  test("unplanning clears the days, and a deleted recipe's meals hide until it's restored", async () => {
     await send(mealPlanRoutes, "alice", "POST", "/remove", { dates: ["2026-10-15"] });
     expect(await plan("alice")).toEqual([day("2026-10-12", soba, "bob")]);
-    expect((await send(recipeRoutes, "alice", "DELETE", `/${soba}`)).status).toBe(200);
+    expect((await send(recipeRoutes, "bob", "DELETE", `/${soba}`)).status).toBe(200);
     expect(await plan("alice")).toEqual([]);
-    const { recipes, favoriteIds } = await collection("alice");
+    const deleted = await collection("alice");
+    expect(deleted.recipes.map((recipe) => recipe.id)).toEqual([ramen]);
+    expect(deleted.deletedRecipes).toMatchObject([{ id: soba, deletedBy: "bob" }]);
+    // Kept for a restore.
+    expect(deleted.favoriteIds).toEqual([soba]);
+
+    // Hidden from everything that changes recipes, but another household still can't reach it.
+    expect((await send(recipeRoutes, "alice", "PUT", `/${soba}/favorite`)).status).toBe(404);
+    expect(
+      (await send(mealPlanRoutes, "alice", "PUT", "/", meals(["2026-10-20", soba]))).status,
+    ).toBe(404);
+    expect((await send(recipeRoutes, "stranger", "POST", `/${soba}/restore`)).status).toBe(404);
+
+    expect((await send(recipeRoutes, "alice", "POST", `/${soba}/restore`)).status).toBe(200);
+    expect(await plan("alice")).toEqual([day("2026-10-12", soba, "bob")]);
+    const restored = await collection("alice");
+    expect(restored.recipes.map((recipe) => recipe.id).toSorted()).toEqual([soba, ramen]);
+    expect(restored.deletedRecipes).toEqual([]);
+  });
+
+  test("a hidden meal counts as an open day when moving onto it", async () => {
+    await send(mealPlanRoutes, "alice", "PUT", "/", meals(["2026-10-13", ramen]));
+    await send(recipeRoutes, "alice", "DELETE", `/${soba}`);
+    await send(mealPlanRoutes, "alice", "POST", "/move", { from: "2026-10-13", to: "2026-10-12" });
+    await send(recipeRoutes, "alice", "POST", `/${soba}/restore`);
+    expect(await plan("alice")).toEqual([day("2026-10-12", ramen)]);
+  });
+
+  test("deleting for good takes the recipe's meals and favorites", async () => {
+    await send(mealPlanRoutes, "alice", "PUT", "/", meals(["2026-10-14", soba]));
+    expect((await send(recipeRoutes, "alice", "DELETE", `/${soba}/permanently`)).status).toBe(200);
+    expect((await send(recipeRoutes, "alice", "POST", `/${soba}/restore`)).status).toBe(404);
+    expect(await plan("alice")).toEqual([day("2026-10-12", ramen)]);
+    const { recipes, deletedRecipes, favoriteIds } = await collection("alice");
     expect(recipes.map((recipe) => recipe.id)).toEqual([ramen]);
+    expect(deletedRecipes).toEqual([]);
     expect(favoriteIds).toEqual([]);
   });
 });
@@ -308,10 +344,36 @@ describe("recipe imports", () => {
     expect(await saveImportedRecipe("00000000-0000-4000-8000-000000000005", recipe)).toBeNull();
   });
 
-  test("deleting the recipe removes its photo", async () => {
+  test("deleting the recipe keeps its photo for a restore, and deleting it for good removes it", async () => {
     deletedPhotos.length = 0;
     await send(recipeRoutes, "alice", "DELETE", `/${imported}`);
     await settled();
+    expect(deletedPhotos).toEqual([]);
+    await send(recipeRoutes, "alice", "DELETE", `/${imported}/permanently`);
+    await settled();
     expect(deletedPhotos).toEqual([`households/h1/photos/${cover}`]);
+  });
+});
+
+describe("purging deleted recipes", () => {
+  test("removes only recipes deleted 30 days ago or more", async () => {
+    const old = "00000000-0000-4000-8000-000000000006";
+    const recent = "00000000-0000-4000-8000-000000000007";
+    const now = Date.UTC(2026, 9, 31);
+    for (const [id, daysAgo] of [
+      [old, 31],
+      [recent, 29],
+    ] as const) {
+      sqlite.run(
+        "INSERT INTO recipe (id, household_id, title, ingredients, instructions, image_url, created_by, updated_by, deleted_at, deleted_by) VALUES (?, 'h1', 'Old', '[]', '[]', ?, 'alice', 'alice', ?, 'alice')",
+        [id, `/api/photos/${photo}`, now - daysAgo * 86_400_000],
+      );
+    }
+    expect(await purgeDeletedRecipes(now)).toEqual([
+      { householdId: "h1", imageUrl: `/api/photos/${photo}` },
+    ]);
+    const { recipes, deletedRecipes } = await collection("alice");
+    expect(deletedRecipes.map((recipe) => recipe.id)).toEqual([recent]);
+    expect(recipes.map((recipe) => recipe.id)).toEqual([ramen]);
   });
 });

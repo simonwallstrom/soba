@@ -73,10 +73,7 @@ function MealPlanner() {
     author: membersById?.get(recipe.createdBy),
   }));
   const entriesById = new Map(entries.map((entry) => [entry.recipe.id, entry]));
-  // A meal whose recipe was deleted leaves its day open.
-  const plan = new Map(
-    rows.filter((row) => entriesById.has(row.recipeId)).map((row) => [row.date, row]),
-  );
+  const plan = new Map(rows.map((row) => [row.date, row]));
   // Past weeks can't change, so the weeks are worked out once.
   const [{ weeks, currentWeekIndex }] = useState(() => getPlannerWeeks(today, plan));
   const [isCurrentWeekVisible, setIsCurrentWeekVisible] = useState(true);

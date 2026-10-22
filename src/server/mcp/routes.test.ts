@@ -559,9 +559,9 @@ describe("tags", () => {
   });
 });
 
-test("deleting a recipe takes its photo and planned days with it", async () => {
+test("deleting a recipe moves it to Recently deleted, hiding its planned days", async () => {
   const { id } = await create({ ...soup, imageUrl });
-  const [photoKey] = savedPhotos.splice(0);
+  deletedPhotos.length = 0;
   for (const date of ["2020-05-01", "2099-11-01"]) {
     sqlite.run(
       "INSERT INTO planned_meal (household_id, date, recipe_id, planned_by, planned_at) VALUES ('h1', ?, ?, 'alice', 0)",
@@ -571,10 +571,13 @@ test("deleting a recipe takes its photo and planned days with it", async () => {
   expect((await callTool("stranger", "delete_recipe", { id })).isError).toBe(true);
   expect(await toolJson("bob", "delete_recipe", { id })).toEqual({
     deleted: "Tomatsoppa",
+    restorable: "For 30 days, from Recently deleted in Soba's recipe list.",
     removedFromMealPlan: ["2099-11-01"],
     pastDinnersRemoved: 1,
   });
-  expect(deletedPhotos).toContain(photoKey ?? "a saved photo");
+  // Kept for a restore: the photo, and the planned days, which no tool sees meanwhile.
+  expect(deletedPhotos).toEqual([]);
+  expect(sqlite.query("SELECT date FROM planned_meal WHERE recipe_id = ?").all(id)).toHaveLength(2);
   expect((await callTool("alice", "get_recipe", { id })).isError).toBe(true);
   expect((await callTool("alice", "delete_recipe", { id })).isError).toBe(true);
 });

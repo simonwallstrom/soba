@@ -13,6 +13,7 @@ import { useRecipeListSettings } from "@client/features/recipes/list-settings";
 import { RecipeActionsMenu } from "@client/features/recipes/recipe-actions-menu";
 import {
   deleteRecipe,
+  useDeletedRecipes,
   useFavorites,
   useRecipes,
   useTags,
@@ -57,6 +58,7 @@ function Recipes() {
   const search = Route.useSearch();
   const { favoriteIds, toggleFavorite } = useFavorites();
   const recipes = useRecipes();
+  const deletedCount = useDeletedRecipes().length;
   const tags = useTags();
   const [settings, updateSettings] = useRecipeListSettings();
   const membersById = useMembersById();
@@ -128,17 +130,23 @@ function Recipes() {
       <AppHeaderActions>
         <RecipesHeaderActions
           isMealPlannerOpen={settings.isMealPlannerOpen}
-          // With no recipes yet, there is nothing to search or sort.
+          // With no recipes yet, there is nothing to search or sort, but deleted ones can still
+          // be restored.
           listControls={
-            recipes.length > 0 && (
+            (recipes.length > 0 || deletedCount > 0) && (
               <>
-                <RecipesSearch
-                  className="min-w-0 max-sm:data-[expanded=true]:mr-2 max-sm:data-[expanded=true]:flex-1 sm:mr-1 sm:max-w-64 sm:flex-1"
-                  onChange={(q) => changeSearch({ q })}
-                  value={search.q ?? ""}
-                />
-                <RecipesFilter {...filterProps} />
+                {recipes.length > 0 && (
+                  <>
+                    <RecipesSearch
+                      className="min-w-0 max-sm:data-[expanded=true]:mr-2 max-sm:data-[expanded=true]:flex-1 sm:mr-1 sm:max-w-64 sm:flex-1"
+                      onChange={(q) => changeSearch({ q })}
+                      value={search.q ?? ""}
+                    />
+                    <RecipesFilter {...filterProps} />
+                  </>
+                )}
                 <RecipesDisplayMenu
+                  deletedCount={deletedCount}
                   onSortChange={(nextSort) => updateSettings({ sort: nextSort })}
                   onViewChange={(view) => updateSettings({ view })}
                   onVisibleDetailsChange={(visibleDetails) => updateSettings({ visibleDetails })}
@@ -213,7 +221,7 @@ function Recipes() {
               <RecipeActionsMenu
                 isFavorite={favoriteIds.has(recipe.id)}
                 onAddToMealPlan={() => setPlanning({ open: true, recipe })}
-                onDelete={() => void deleteRecipe(recipe.id)}
+                onDelete={() => deleteRecipe(recipe, user.id)}
                 onShare={() => setSharing({ open: true, recipeId: recipe.id })}
                 onToggleFavorite={() => toggleFavorite(recipe.id)}
                 recipeId={recipe.id}

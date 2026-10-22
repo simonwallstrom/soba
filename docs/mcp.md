@@ -14,7 +14,7 @@ All scoped to the member's household:
 | `get_meal_plan`  | Planned dinners between two dates, past ones included; the last 8 weeks and next 2 by default |
 | `create_recipe`  | Saves a new recipe, such as one Claude read from a link or photos                             |
 | `update_recipe`  | Changes only the fields given                                                                 |
-| `delete_recipe`  | Deletes a recipe, with its photo and planned days                                             |
+| `delete_recipe`  | Moves a recipe to Recently deleted, hiding its planned days, as the app does                  |
 | `plan_meals`     | Plans dinners on up to 14 days, replacing what's there, and says what it replaced             |
 | `clear_days`     | Removes the dinners on up to 14 days                                                          |
 | `create_tag`     | Adds a tag, when the member wants one                                                         |

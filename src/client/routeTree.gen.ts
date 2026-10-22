@@ -26,6 +26,7 @@ import { Route as AuthenticatedAppDesignSystemIndexRouteImport } from './routes/
 import { Route as AuthenticatedAppMealPlannerIndexRouteImport } from './routes/_authenticated/_app/meal-planner/index'
 import { Route as AuthenticatedAppRecipesIndexRouteImport } from './routes/_authenticated/_app/recipes/index'
 import { Route as AuthenticatedAppRecipesRecipeIdRouteImport } from './routes/_authenticated/_app/recipes/$recipeId'
+import { Route as AuthenticatedAppRecipesDeletedRouteImport } from './routes/_authenticated/_app/recipes/deleted'
 import { Route as AuthenticatedAppRecipesNewRouteImport } from './routes/_authenticated/_app/recipes/new'
 import { Route as AuthenticatedAppSettingsIndexRouteImport } from './routes/_authenticated/_app/settings/index'
 import { Route as AuthenticatedAppRecipesRecipeIdEditRouteImport } from './routes/_authenticated/_app/recipes/$recipeId_.edit'
@@ -117,6 +118,12 @@ const AuthenticatedAppRecipesRecipeIdRoute =
     path: '/recipes/$recipeId',
     getParentRoute: () => AuthenticatedAppLayoutRoute,
   } as any)
+const AuthenticatedAppRecipesDeletedRoute =
+  AuthenticatedAppRecipesDeletedRouteImport.update({
+    id: '/recipes/deleted',
+    path: '/recipes/deleted',
+    getParentRoute: () => AuthenticatedAppLayoutRoute,
+  } as any)
 const AuthenticatedAppRecipesNewRoute =
   AuthenticatedAppRecipesNewRouteImport.update({
     id: '/recipes/new',
@@ -147,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/r/$token': typeof RTokenRoute
   '/$': typeof AuthenticatedAppSplatRoute
   '/recipes/$recipeId': typeof AuthenticatedAppRecipesRecipeIdRoute
+  '/recipes/deleted': typeof AuthenticatedAppRecipesDeletedRoute
   '/recipes/new': typeof AuthenticatedAppRecipesNewRoute
   '/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/design-system/': typeof AuthenticatedAppDesignSystemIndexRoute
@@ -166,6 +174,7 @@ export interface FileRoutesByTo {
   '/r/$token': typeof RTokenRoute
   '/$': typeof AuthenticatedAppSplatRoute
   '/recipes/$recipeId': typeof AuthenticatedAppRecipesRecipeIdRoute
+  '/recipes/deleted': typeof AuthenticatedAppRecipesDeletedRoute
   '/recipes/new': typeof AuthenticatedAppRecipesNewRoute
   '/admin': typeof AuthenticatedAppAdminIndexRoute
   '/design-system': typeof AuthenticatedAppDesignSystemIndexRoute
@@ -189,6 +198,7 @@ export interface FileRoutesById {
   '/r/$token': typeof RTokenRoute
   '/_authenticated/_app/$': typeof AuthenticatedAppSplatRoute
   '/_authenticated/_app/recipes/$recipeId': typeof AuthenticatedAppRecipesRecipeIdRoute
+  '/_authenticated/_app/recipes/deleted': typeof AuthenticatedAppRecipesDeletedRoute
   '/_authenticated/_app/recipes/new': typeof AuthenticatedAppRecipesNewRoute
   '/_authenticated/_app/admin/': typeof AuthenticatedAppAdminIndexRoute
   '/_authenticated/_app/design-system/': typeof AuthenticatedAppDesignSystemIndexRoute
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/r/$token'
     | '/$'
     | '/recipes/$recipeId'
+    | '/recipes/deleted'
     | '/recipes/new'
     | '/admin/'
     | '/design-system/'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/r/$token'
     | '/$'
     | '/recipes/$recipeId'
+    | '/recipes/deleted'
     | '/recipes/new'
     | '/admin'
     | '/design-system'
@@ -251,6 +263,7 @@ export interface FileRouteTypes {
     | '/r/$token'
     | '/_authenticated/_app/$'
     | '/_authenticated/_app/recipes/$recipeId'
+    | '/_authenticated/_app/recipes/deleted'
     | '/_authenticated/_app/recipes/new'
     | '/_authenticated/_app/admin/'
     | '/_authenticated/_app/design-system/'
@@ -391,6 +404,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRecipesRecipeIdRouteImport
       parentRoute: typeof AuthenticatedAppLayoutRoute
     }
+    '/_authenticated/_app/recipes/deleted': {
+      id: '/_authenticated/_app/recipes/deleted'
+      path: '/recipes/deleted'
+      fullPath: '/recipes/deleted'
+      preLoaderRoute: typeof AuthenticatedAppRecipesDeletedRouteImport
+      parentRoute: typeof AuthenticatedAppLayoutRoute
+    }
     '/_authenticated/_app/recipes/new': {
       id: '/_authenticated/_app/recipes/new'
       path: '/recipes/new'
@@ -418,6 +438,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAppLayoutRouteChildren {
   AuthenticatedAppSplatRoute: typeof AuthenticatedAppSplatRoute
   AuthenticatedAppRecipesRecipeIdRoute: typeof AuthenticatedAppRecipesRecipeIdRoute
+  AuthenticatedAppRecipesDeletedRoute: typeof AuthenticatedAppRecipesDeletedRoute
   AuthenticatedAppRecipesNewRoute: typeof AuthenticatedAppRecipesNewRoute
   AuthenticatedAppAdminIndexRoute: typeof AuthenticatedAppAdminIndexRoute
   AuthenticatedAppDesignSystemIndexRoute: typeof AuthenticatedAppDesignSystemIndexRoute
@@ -431,6 +452,7 @@ const AuthenticatedAppLayoutRouteChildren: AuthenticatedAppLayoutRouteChildren =
   {
     AuthenticatedAppSplatRoute: AuthenticatedAppSplatRoute,
     AuthenticatedAppRecipesRecipeIdRoute: AuthenticatedAppRecipesRecipeIdRoute,
+    AuthenticatedAppRecipesDeletedRoute: AuthenticatedAppRecipesDeletedRoute,
     AuthenticatedAppRecipesNewRoute: AuthenticatedAppRecipesNewRoute,
     AuthenticatedAppAdminIndexRoute: AuthenticatedAppAdminIndexRoute,
     AuthenticatedAppDesignSystemIndexRoute:

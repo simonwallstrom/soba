@@ -1,4 +1,4 @@
-import { bindings, defineConfig, exports } from "cf/config";
+import { bindings, defineConfig, exports, triggers } from "cf/config";
 
 export default defineConfig({
   worker: {
@@ -10,6 +10,8 @@ export default defineConfig({
     workersDev: false,
     previewUrls: false,
     observability: { enabled: true },
+    // Deletes for good the recipes in Recently deleted for 30 days. See purgeDeletedRecipes.
+    triggers: [triggers.scheduled({ schedule: "0 3 * * *" })],
     assets: {
       notFoundHandling: "single-page-application",
       runWorkerFirst: ["/", "/r/*", "/api/*", "/.well-known/*", "/mcp"],
