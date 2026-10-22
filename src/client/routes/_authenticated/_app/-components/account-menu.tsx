@@ -11,7 +11,6 @@ import {
 import {
   LegalDocument01Icon,
   Logout03Icon,
-  SecurityCheckIcon,
   SelectorIcon,
   Settings01Icon,
   SparklesIcon,
@@ -29,7 +28,7 @@ export function AccountMenu({
   user,
   household,
 }: {
-  user: { name: string; image: string | null; isAdmin: boolean };
+  user: { name: string; image: string | null };
   household: { name: string; role: "owner" | "member" };
 }) {
   const { logOut, signingOut, signOutError } = useSignOut();
@@ -97,12 +96,6 @@ export function AccountMenu({
             <SparklesIcon />
             AI assistants
           </DropdownMenuItem>
-          {user.isAdmin && (
-            <DropdownMenuItem render={<Link to="/admin" />}>
-              <SecurityCheckIcon />
-              Admin
-            </DropdownMenuItem>
-          )}
           <DropdownMenuItem render={<Link to="/terms" />}>
             <LegalDocument01Icon />
             Terms &amp; privacy

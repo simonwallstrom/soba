@@ -16,10 +16,10 @@ import {
   DropdownMenuTrigger,
 } from "@client/components/ui/dropdown-menu";
 import {
+  CookBookIcon,
   Delete02Icon,
   Logout03Icon,
   MoreHorizontalIcon,
-  SecurityCheckIcon,
 } from "@client/components/ui/icons";
 import {
   Select,
@@ -101,15 +101,6 @@ function Settings() {
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 p-5 sm:gap-12 sm:py-16 md:px-6 xl:py-20">
         <SettingsGroup note="How you appear to your household." title="Profile">
           <ProfileRow onRename={(name) => void renameUser(name)} user={user} />
-          {/* Also in the account menu, which phones don't have. */}
-          {user.isAdmin && (
-            <Link className={cn(settingsButtonRowStyles)} to="/admin">
-              <SettingsRowIcon>
-                <SecurityCheckIcon />
-              </SettingsRowIcon>
-              Admin
-            </Link>
-          )}
           <button
             className={cn(settingsButtonRowStyles)}
             disabled={signingOut}
@@ -247,19 +238,25 @@ function Settings() {
               ) : (
                 <Badge>Member</Badge>
               )}
-              {isOwner && member.role !== "owner" && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    aria-label={`More actions for ${member.name}`}
-                    className={buttonVariants({
-                      className: "-mr-2",
-                      size: "icon",
-                      variant: "ghost",
-                    })}
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  aria-label={`More actions for ${member.name}`}
+                  className={buttonVariants({
+                    className: "-mr-2",
+                    size: "icon",
+                    variant: "ghost",
+                  })}
+                >
+                  <MoreHorizontalIcon />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-52">
+                  <DropdownMenuItem
+                    render={<Link search={{ authors: [member.id] }} to="/recipes" />}
                   >
-                    <MoreHorizontalIcon />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="min-w-52">
+                    <CookBookIcon />
+                    View recipes
+                  </DropdownMenuItem>
+                  {isOwner && member.role !== "owner" && (
                     <DropdownMenuItem
                       onClick={() => {
                         setRemoving(member);
@@ -270,9 +267,9 @@ function Settings() {
                       <Delete02Icon />
                       Remove from household…
                     </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           ))}
           {isOwner && (
