@@ -1,4 +1,4 @@
-import { count, countDistinct, desc, eq, max } from "drizzle-orm";
+import { count, countDistinct, desc, eq, isNull, max } from "drizzle-orm";
 
 import { getDatabase } from "../db/client";
 import {
@@ -63,10 +63,12 @@ export async function listUsers() {
     db
       .select({ householdId: recipes.householdId, count: count() })
       .from(recipes)
+      .where(isNull(recipes.deletedAt))
       .groupBy(recipes.householdId),
     db
       .select({ userId: recipes.createdBy, count: count() })
       .from(recipes)
+      .where(isNull(recipes.deletedAt))
       .groupBy(recipes.createdBy),
     db
       .select({
@@ -108,6 +110,7 @@ export async function listUsers() {
       signedUpAt: createdAt.toISOString(),
       lastActiveAt: lastActiveAt ? new Date(lastActiveAt).toISOString() : null,
       assistants: connected,
+      recipes: userRecipes.get(user.id) ?? 0,
       household:
         householdId && householdName && role
           ? {

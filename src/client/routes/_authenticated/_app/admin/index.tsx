@@ -25,10 +25,12 @@ import {
   betaOptions,
   formatDay,
   isActiveThisWeek,
+  listHouseholds,
   removeFromBeta,
+  sortUsers,
   usersOptions,
 } from "./-admin-data";
-import { UserRow, UserTableHeader } from "./-components/user-row";
+import { HouseholdsTable, UsersTable } from "./-components/admin-tables";
 
 // Everyone else sees the same "Page not found" as a wrong link, header included; the server
 // answers them 404 too.
@@ -69,17 +71,12 @@ function AdminPage({ adminName }: { adminName: string }) {
   const [removing, setRemoving] = useState<string | null>(null);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
 
-  // Most recently active first; those never seen after signing up go last.
-  const sortedUsers = users.data?.toSorted((a, b) =>
-    (b.lastActiveAt ?? "").localeCompare(a.lastActiveAt ?? ""),
-  );
+  const sortedUsers = users.data && sortUsers(users.data);
+  const households = users.data && listHouseholds(users.data);
   const signedUpEmails = new Set(users.data?.map((entry) => entry.email));
   const stats = users.data && [
     { label: "Users", value: users.data.length },
-    {
-      label: "Households",
-      value: new Set(users.data.flatMap(({ household }) => household?.id ?? [])).size,
-    },
+    { label: "Households", value: households?.length ?? 0 },
     {
       label: "Active this week",
       value: users.data.filter((entry) => isActiveThisWeek(entry)).length,
@@ -115,6 +112,18 @@ function AdminPage({ adminName }: { adminName: string }) {
           </dl>
         )}
 
+        <SettingsGroup note="Most recently active first." title="Households">
+          {users.isError && !users.data && (
+            <p className={cn(settingsRowStyles, "text-olive-500")} role="alert">
+              Could not load households. Check your connection.
+            </p>
+          )}
+          {users.isPending && (
+            <p className={cn(settingsRowStyles, "text-olive-500")}>Loading households…</p>
+          )}
+          {households && <HouseholdsTable households={households} />}
+        </SettingsGroup>
+
         <SettingsGroup
           note="Most recently active first. Activity is updated at most once a day."
           title="Users"
@@ -127,10 +136,7 @@ function AdminPage({ adminName }: { adminName: string }) {
           {users.isPending && (
             <p className={cn(settingsRowStyles, "text-olive-500")}>Loading users…</p>
           )}
-          {sortedUsers && <UserTableHeader />}
-          {sortedUsers?.map((entry) => (
-            <UserRow key={entry.id} user={entry} />
-          ))}
+          {sortedUsers && <UsersTable users={sortedUsers} />}
         </SettingsGroup>
 
         <SettingsGroup
